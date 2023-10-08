@@ -4,7 +4,6 @@ import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.account.Account
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.network.Authorization
-import com.arnyminerz.filamagenta.ui.browser.BrowserManager
 import io.ktor.http.Parameters
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
@@ -22,10 +21,6 @@ class MainViewModel : ViewModel() {
      */
     val isRequestingToken: StateFlow<Boolean> get() = _isRequestingToken
 
-    /**
-     * Uses [BrowserManager] to launch the url that requests the user to log in through the official website and
-     * get a code, which can then be used with [requestToken].
-     */
     fun getAuthorizeUrl() =
         // First, request the server
         URLBuilder(
