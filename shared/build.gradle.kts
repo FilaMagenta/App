@@ -38,9 +38,11 @@ kotlin {
                 implementation(compose.foundation)
                 implementation(compose.material3)
                 implementation(compose.materialIconsExtended)
+                api(libs.compose.webview)
 
                 // Kotlin libraries
                 implementation(libs.kotlinx.datetime)
+                implementation(libs.kotlinx.coroutines)
 
                 // Multiplatform libraries
                 api(libs.multiplatform.settings)
@@ -48,6 +50,9 @@ kotlin {
                 // Moko Resources
                 api(libs.moko.resources)
                 api(libs.moko.resourcescompose)
+
+                // Ktor
+                implementation(libs.ktor.core)
             }
         }
         val commonTest by getting {
@@ -65,6 +70,7 @@ kotlin {
                 implementation(libs.androidx.browser)
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
+                implementation(libs.ktor.okhttp)
             }
         }
 
@@ -76,6 +82,10 @@ kotlin {
             iosX64Main.dependsOn(this)
             iosArm64Main.dependsOn(this)
             iosSimulatorArm64Main.dependsOn(this)
+
+            dependencies {
+                implementation(libs.ktor.darwin)
+            }
         }
     }
 }
