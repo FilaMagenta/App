@@ -9,4 +9,5 @@ plugins {
     alias(libs.plugins.ktorfit).apply(false)
     alias(libs.plugins.composeMultiplatform).apply(false)
     alias(libs.plugins.mokoResources).apply(false)
+    alias(libs.plugins.sqldelight).apply(false)
 }

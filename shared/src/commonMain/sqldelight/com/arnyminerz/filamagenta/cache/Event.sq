@@ -1,0 +1,19 @@
+import kotlinx.datetime.LocalDateTime;
+
+CREATE TABLE Event (
+    id INTEGER PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    date INTEGER AS LocalDateTime DEFAULT NULL
+);
+
+getAll:
+SELECT * FROM Event;
+
+getById:
+SELECT * FROM Event WHERE id = ?;
+
+insert:
+INSERT INTO Event(id, name) VALUES (?, ?);
+
+update:
+UPDATE Event SET name=? WHERE id=?;

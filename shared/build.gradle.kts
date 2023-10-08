@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.ktorfit)
     alias(libs.plugins.mokoResources)
+    alias(libs.plugins.sqldelight)
 }
 
 @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
@@ -66,6 +67,9 @@ kotlin {
                 implementation(libs.ktor.client.auth)
                 implementation(libs.ktor.serialization.json)
                 implementation(libs.ktorfit.lib)
+
+                // SQlDelight
+                implementation(libs.sqldelight.coroutines)
             }
         }
         val commonTest by getting {
@@ -84,6 +88,7 @@ kotlin {
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.ktor.okhttp)
+                implementation(libs.sqldelight.android)
             }
         }
 
@@ -98,6 +103,7 @@ kotlin {
 
             dependencies {
                 implementation(libs.ktor.darwin)
+                implementation(libs.sqldelight.native)
             }
         }
     }
@@ -136,5 +142,13 @@ buildkonfig {
 
         buildConfigField(STRING, "WooClientId", properties.getProperty("woo.clientId"))
         buildConfigField(STRING, "WooClientSecret", properties.getProperty("woo.clientSecret"))
+    }
+}
+
+sqldelight {
+    databases {
+        create("Database") {
+            packageName.set("com.arnyminerz.filamagenta.cache")
+        }
     }
 }

@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 class Product {
 
-    var id: Int = 0
+    var id: Long = 0
     lateinit var name: String
     var slug: String? = null
     var permalink: String? = null

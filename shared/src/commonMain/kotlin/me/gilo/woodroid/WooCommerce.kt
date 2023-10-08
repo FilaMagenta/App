@@ -64,9 +64,6 @@ class WooCommerce(siteUrl: String, apiVersion: ApiVersion, consumerKey: String, 
         paymentGatewayRepository = PaymentGatewayRepository(baseUrl, consumerKey, consumerSecret)
         settingsRepository = SettingsRepository(baseUrl, consumerKey, consumerSecret)
         shippingMethodRepository = ShippingMethodRepository(baseUrl, consumerKey, consumerSecret)
-
-        println("baseURL: $baseUrl")
-        println("Consumer key: $consumerKey, Consumer Secret: $consumerSecret")
     }
 
     fun OrderNoteRepository(): OrderNoteRepository {
