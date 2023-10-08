@@ -75,7 +75,6 @@ kotlin {
             dependsOn(commonMain)
 
             dependencies {
-                implementation(libs.androidx.browser)
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.ktor.okhttp)
