@@ -24,7 +24,6 @@ class MainActivity : AppCompatActivity() {
         setContent {
             AppTheme {
                 MainScreen(
-                    intent.dataString,
                     intent.getBooleanExtra(EXTRA_NEW_ACCOUNT, false),
                     viewModel
                 )

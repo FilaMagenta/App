@@ -1,7 +1,12 @@
 package com.arnyminerz.filamagenta.account
 
 import android.accounts.AccountManager
+import android.accounts.OnAccountsUpdateListener
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.Instant
 
 actual class Accounts(private val am: AccountManager) {
@@ -14,16 +19,14 @@ actual class Accounts(private val am: AccountManager) {
     }
 
     actual fun getAccounts(): List<Account> {
-        return am.getAccountsByType(AccountType).map { Account(it.name, it.type) }
+        return am.getAccountsByType(AccountType).map { Account(it.name) }
     }
 
     actual fun addAccount(account: Account, token: AccessToken) {
         /** The equivalent of [account] for Android. */
         val aa = account.androidAccount
-        if (!am.addAccountExplicitly(aa, "", Bundle())) {
-            throw RuntimeException(
-                "Could not add account. Either  the account already exists, the user is locked, or another error has occurred."
-            )
+        check(am.addAccountExplicitly(aa, "", Bundle())) {
+            "Could not add account. Either account already exists, user is locked, or another error has occurred."
         }
         am.setAuthToken(aa, TokenType, token.token)
         am.setUserData(aa, UserDataExpiration, token.expiration.toEpochMilliseconds().toString())
@@ -33,10 +36,8 @@ actual class Accounts(private val am: AccountManager) {
     actual fun removeAccount(account: Account) {
         /** The equivalent of [account] for Android. */
         val aa = account.androidAccount
-        if (!am.removeAccountExplicitly(aa)) {
-            throw RuntimeException(
-                "Could not remove account. Either the account does not exist, or another error has occurred."
-            )
+        check(am.removeAccountExplicitly(aa)) {
+            "Could not remove account. Either account does not exist, or another error has occurred."
         }
     }
 
@@ -45,5 +46,28 @@ actual class Accounts(private val am: AccountManager) {
         val aa = account.androidAccount
         am.setAuthToken(aa, TokenType, token)
         am.setUserData(aa, UserDataExpiration, expiration.toEpochMilliseconds().toString())
+    }
+
+    private val accountsLive = MutableStateFlow<List<Account>>(value = emptyList())
+
+    private val accountsUpdatedListener = OnAccountsUpdateListener {
+        accountsLive.value = it.map(android.accounts.Account::commonAccount)
+    }
+
+    /**
+     * Provides a live feed of the account list.
+     */
+    actual fun getAccountsLive(): StateFlow<List<Account>> = accountsLive
+
+    fun startWatchingAccounts(looper: Looper) {
+        am.addOnAccountsUpdatedListener(
+            accountsUpdatedListener,
+            Handler(looper),
+            true
+        )
+    }
+
+    fun stopWatchingAccounts() {
+        am.removeOnAccountsUpdatedListener(accountsUpdatedListener)
     }
 }

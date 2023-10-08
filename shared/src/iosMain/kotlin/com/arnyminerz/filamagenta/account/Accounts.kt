@@ -5,6 +5,8 @@ import com.russhwolf.settings.KeychainSettings
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.int
 import com.russhwolf.settings.set
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.Instant
 
 @OptIn(ExperimentalSettingsImplementation::class)
@@ -21,15 +23,16 @@ actual class Accounts {
 
     private var length: Int by settings.int("accounts_count", 0)
 
+    private val accountsLive = MutableStateFlow(value = getAccounts())
+
     actual fun getAccounts(): List<Account> {
         if (length <= 0) return emptyList()
 
         val accounts = arrayListOf<Account>()
         for (c in 0 until length) {
-            val name = settings.getStringOrNull("account_${c}_name") ?: continue
-            val type = settings.getStringOrNull("account_${c}_type") ?: continue
+            val name = settings.getStringOrNull(accountName(c)) ?: continue
             accounts.add(
-                Account(name, type)
+                Account(name)
             )
         }
         return accounts
@@ -37,11 +40,12 @@ actual class Accounts {
 
     actual fun addAccount(account: Account, token: AccessToken) {
         settings[accountName(length)] = account.name
-        settings[accountType(length)] = account.type
         settings[accountToken(length)] = token.token
         settings[accountTExpiration(length)] = token.expiration.toEpochMilliseconds()
         settings[accountTRefresh(length)] = token.refreshToken
         length += 1
+
+        accountsLive.value = getAccounts()
     }
 
     actual fun removeAccount(account: Account) {
@@ -52,6 +56,8 @@ actual class Accounts {
         settings.remove(accountTExpiration(newIndex))
         settings.remove(accountTRefresh(newIndex))
         length = newIndex
+
+        accountsLive.value = getAccounts()
     }
 
     /**
@@ -69,4 +75,9 @@ actual class Accounts {
     ) {
         throw UnsupportedOperationException()
     }
+
+    /**
+     * Provides a live feed of the account list.
+     */
+    actual fun getAccountsLive(): StateFlow<List<Account>> = accountsLive
 }

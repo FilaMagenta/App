@@ -1,5 +1,6 @@
 package com.arnyminerz.filamagenta.account
 
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.Instant
 
 /**
@@ -10,6 +11,11 @@ expect class Accounts {
      * Returns a list of all the accounts currently added to the system's storage.
      */
     fun getAccounts(): List<Account>
+
+    /**
+     * Provides a live feed of the account list.
+     */
+    fun getAccountsLive(): StateFlow<List<Account>>
 
     /**
      * Adds the given account to the system storage. This method is blocking, which means that
