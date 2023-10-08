@@ -3,6 +3,7 @@ package com.arnyminerz.filamagenta.ui.browser
 import android.content.Context
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
+import com.arnyminerz.filamagenta.device.PlatformInformation
 
 actual object CustomBrowserUi {
     private var applicationContext: Context? = null
