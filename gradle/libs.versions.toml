@@ -4,6 +4,7 @@ androidx-activityCompose = "1.8.0"
 androidx-appCompat = "1.6.1"
 androidx-browser = "1.6.0"
 androidx-lifecycle = "2.6.2"
+build-konfig = "0.14.0"
 compose = "1.5.3"
 compose-compiler = "1.5.3"
 compose-material3 = "1.1.2"
@@ -45,6 +46,7 @@ moko-resourcestest = { module = "dev.icerock.moko:resources-test", version.ref =
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
+buildKonfig = { id = "com.codingfeline.buildkonfig", version.ref = "build-konfig" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

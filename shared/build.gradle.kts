@@ -1,7 +1,11 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import java.util.Properties
+
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.buildKonfig)
     alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.mokoResources)
 }
 
@@ -100,4 +104,18 @@ android {
 
 multiplatformResources {
     multiplatformResourcesPackage = "com.arnyminerz.filamagenta" // required
+}
+
+buildkonfig {
+    packageName = "com.arnyminerz.filamagenta"
+
+    defaultConfigs {
+        val properties = Properties().apply {
+            load(rootProject.file("local.properties").inputStream())
+        }
+
+        buildConfigField(STRING, "ServerHostname", properties.getProperty("server.hostname"))
+        buildConfigField(STRING, "OAuthClientId", properties.getProperty("oauth.clientId"))
+        buildConfigField(STRING, "OAuthClientSecret", properties.getProperty("oauth.clientSecret"))
+    }
 }
