@@ -35,6 +35,7 @@ kotlin {
         }
     }
 
+    @Suppress("UnusedPrivateProperty")
     sourceSets {
         val commonMain by getting {
             dependencies {
@@ -75,6 +76,7 @@ kotlin {
             dependsOn(commonMain)
 
             dependencies {
+                implementation(libs.compose.material3.windowSizeClass)
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.ktor.okhttp)
