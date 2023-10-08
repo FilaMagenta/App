@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+    <string name="app_name">Filà Magenta</string>
+
+    <!-- Generic Strings -->
+    <string name="back">Back</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Login</string>
+    <string name="login_message">Welcome to the Filà Magenta app. Please press the button below, and a browser will open. Log in through the website. Then authorize the app, and we will work on the rest for you.</string>
+    <string name="login_action">Login</string>
+</resources>
