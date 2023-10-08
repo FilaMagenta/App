@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.ktorfit)
     alias(libs.plugins.mokoResources)
 }
 
@@ -61,7 +63,9 @@ kotlin {
                 // Ktor
                 implementation(libs.ktor.core)
                 implementation(libs.ktor.client.contentNegotiation)
+                implementation(libs.ktor.client.auth)
                 implementation(libs.ktor.serialization.json)
+                implementation(libs.ktorfit.lib)
             }
         }
         val commonTest by getting {
@@ -99,6 +103,12 @@ kotlin {
     }
 }
 
+dependencies {
+    val ktorfitVersion = libs.versions.ktorfit.get()
+    add("kspCommonMainMetadata", "de.jensklingenberg.ktorfit:ktorfit-ksp:$ktorfitVersion")
+    add("kspAndroid", "de.jensklingenberg.ktorfit:ktorfit-ksp:$ktorfitVersion")
+}
+
 android {
     namespace = "com.arnyminerz.filamagenta"
     compileSdk = 34
@@ -120,7 +130,11 @@ buildkonfig {
         }
 
         buildConfigField(STRING, "ServerHostname", properties.getProperty("server.hostname"))
+
         buildConfigField(STRING, "OAuthClientId", properties.getProperty("oauth.clientId"))
         buildConfigField(STRING, "OAuthClientSecret", properties.getProperty("oauth.clientSecret"))
+
+        buildConfigField(STRING, "WooClientId", properties.getProperty("woo.clientId"))
+        buildConfigField(STRING, "WooClientSecret", properties.getProperty("woo.clientSecret"))
     }
 }

@@ -49,7 +49,7 @@ class MainViewModel : ViewModel() {
             val me = Authorization.requestMe(token)
 
             val account = Account(me.userLogin)
-            accounts!!.addAccount(account, token.toAccessToken())
+            accounts!!.addAccount(account, token.toAccessToken(), me.userRoles.contains("administrator"))
         }.invokeOnCompletion { _isRequestingToken.value = false }
     }
 }

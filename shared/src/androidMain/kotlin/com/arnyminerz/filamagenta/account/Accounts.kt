@@ -16,13 +16,14 @@ actual class Accounts(private val am: AccountManager) {
 
         const val UserDataExpiration = "token_expiration"
         const val UserDataRefreshToken = "refresh_token"
+        const val UserDataAdmin = "is_admin"
     }
 
     actual fun getAccounts(): List<Account> {
         return am.getAccountsByType(AccountType).map { Account(it.name) }
     }
 
-    actual fun addAccount(account: Account, token: AccessToken) {
+    actual fun addAccount(account: Account, token: AccessToken, isAdmin: Boolean) {
         /** The equivalent of [account] for Android. */
         val aa = account.androidAccount
         check(am.addAccountExplicitly(aa, "", Bundle())) {
@@ -31,6 +32,7 @@ actual class Accounts(private val am: AccountManager) {
         am.setAuthToken(aa, TokenType, token.token)
         am.setUserData(aa, UserDataExpiration, token.expiration.toEpochMilliseconds().toString())
         am.setUserData(aa, UserDataRefreshToken, token.refreshToken)
+        am.setUserData(aa, UserDataAdmin, isAdmin.toString())
     }
 
     actual fun removeAccount(account: Account) {
@@ -69,5 +71,17 @@ actual class Accounts(private val am: AccountManager) {
 
     fun stopWatchingAccounts() {
         am.removeOnAccountsUpdatedListener(accountsUpdatedListener)
+    }
+
+    /**
+     * Checks the local storage to see whether the given user is an administrator or not.
+     * This has been stored by [addAccount].
+     *
+     * @param account The account to check whether it's an admin or not.
+     *
+     * @return `true` if [account] is an administrator, `false` otherwise.
+     */
+    actual fun isAdmin(account: Account): Boolean {
+        return am.getUserData(account.androidAccount, UserDataAdmin).toBoolean()
     }
 }

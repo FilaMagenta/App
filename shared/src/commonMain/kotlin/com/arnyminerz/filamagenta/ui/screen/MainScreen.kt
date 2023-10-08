@@ -108,6 +108,8 @@ fun MainScreen(
             }
         )
     } else {
-        AppScreen()
+        val isUserAdmin = remember { accounts!!.isAdmin(accountsList.first()) }
+
+        AppScreen(isUserAdmin)
     }
 }

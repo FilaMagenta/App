@@ -17,6 +17,7 @@ actual class Accounts {
         private val accountToken = StringIndex("account_%d_token")
         private val accountTExpiration = StringIndex("account_%d_token_expiration")
         private val accountTRefresh = StringIndex("account_%d_token_refresh")
+        private val accountIsAdmin = StringIndex("account_%d_admin")
     }
 
     private val settings: Settings = KeychainSettings("accounts")
@@ -38,11 +39,12 @@ actual class Accounts {
         return accounts
     }
 
-    actual fun addAccount(account: Account, token: AccessToken) {
+    actual fun addAccount(account: Account, token: AccessToken, isAdmin: Boolean) {
         settings[accountName(length)] = account.name
         settings[accountToken(length)] = token.token
         settings[accountTExpiration(length)] = token.expiration.toEpochMilliseconds()
         settings[accountTRefresh(length)] = token.refreshToken
+        settings[accountIsAdmin(length)] = isAdmin
         length += 1
 
         accountsLive.value = getAccounts()
@@ -55,6 +57,7 @@ actual class Accounts {
         settings.remove(accountToken(newIndex))
         settings.remove(accountTExpiration(newIndex))
         settings.remove(accountTRefresh(newIndex))
+        settings.remove(accountIsAdmin(newIndex))
         length = newIndex
 
         accountsLive.value = getAccounts()
@@ -80,4 +83,16 @@ actual class Accounts {
      * Provides a live feed of the account list.
      */
     actual fun getAccountsLive(): StateFlow<List<Account>> = accountsLive
+
+    /**
+     * Checks the local storage to see whether the given user is an administrator or not.
+     * This has been stored by [addAccount].
+     *
+     * @param account The account to check whether it's an admin or not.
+     *
+     * @return `true` if [account] is an administrator, `false` otherwise.
+     */
+    actual fun isAdmin(account: Account): Boolean {
+        return settings.getBoolean(accountIsAdmin(length), false)
+    }
 }
