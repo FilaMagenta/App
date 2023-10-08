@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.buildKonfig)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.mokoResources)
 }
 
@@ -45,8 +46,9 @@ kotlin {
                 api(libs.compose.webview)
 
                 // Kotlin libraries
-                implementation(libs.kotlinx.datetime)
+                api(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.coroutines)
+                implementation(libs.kotlinx.serialization)
 
                 // Multiplatform libraries
                 api(libs.multiplatform.settings)
@@ -57,6 +59,8 @@ kotlin {
 
                 // Ktor
                 implementation(libs.ktor.core)
+                implementation(libs.ktor.client.contentNegotiation)
+                implementation(libs.ktor.serialization.json)
             }
         }
         val commonTest by getting {

@@ -5,6 +5,7 @@ import com.russhwolf.settings.KeychainSettings
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.int
 import com.russhwolf.settings.set
+import kotlinx.datetime.Instant
 
 @OptIn(ExperimentalSettingsImplementation::class)
 actual class Accounts {
@@ -51,5 +52,21 @@ actual class Accounts {
         settings.remove(accountTExpiration(newIndex))
         settings.remove(accountTRefresh(newIndex))
         length = newIndex
+    }
+
+    /**
+     * Updates the stored auth token for the given account. This can be used, for example, for when
+     * the token is refreshed, then you want to store the new one using this method.
+     *
+     * @param account The account owner of the token.
+     * @param token The new token.
+     * @param expiration The new expiration date.
+     */
+    actual fun updateToken(
+        account: Account,
+        token: String,
+        expiration: Instant
+    ) {
+        throw UnsupportedOperationException()
     }
 }

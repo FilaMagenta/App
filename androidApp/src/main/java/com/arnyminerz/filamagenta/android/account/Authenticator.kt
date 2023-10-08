@@ -1,4 +1,4 @@
-package com.arnyminerz.filamagenta.account
+package com.arnyminerz.filamagenta.android.account
 
 import android.accounts.AbstractAccountAuthenticator
 import android.accounts.Account
@@ -7,8 +7,13 @@ import android.accounts.AccountManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import com.arnyminerz.filamagenta.account.Accounts
+import com.arnyminerz.filamagenta.account.accounts
+import com.arnyminerz.filamagenta.account.commonAccount
+import com.arnyminerz.filamagenta.android.MainActivity
+import com.arnyminerz.filamagenta.network.Authorization
+import java.time.Instant
+import kotlinx.coroutines.runBlocking
 
 class Authenticator(private val context: Context) : AbstractAccountAuthenticator(context) {
     private val am = AccountManager.get(context)
@@ -20,22 +25,16 @@ class Authenticator(private val context: Context) : AbstractAccountAuthenticator
         requiredFeatures: Array<out String>?,
         options: Bundle?
     ): Bundle {
-        /*
-        val intent = Intent(context, LoginActivity::class.java).apply {
-            putExtra(LoginActivity.EXTRA_ACCOUNT_TYPE, accountType)
-            putExtra(LoginActivity.EXTRA_AUTH_TOKEN_TYPE, authTokenType)
-            putExtra(LoginActivity.EXTRA_ADDING_NEW_ACCOUNT, true)
-            putExtra(LoginActivity.EXTRA_RESPONSE, response)
+        val intent = Intent(context, MainActivity::class.java).apply {
+            putExtra(MainActivity.EXTRA_NEW_ACCOUNT, true)
         }
         return Bundle().apply {
             putParcelable(AccountManager.KEY_INTENT, intent)
         }
-         */
-        throw UnsupportedOperationException()
     }
 
     override fun getAuthToken(
-        response: AccountAuthenticatorResponse,
+        aaResponse: AccountAuthenticatorResponse,
         account: Account,
         authTokenType: String,
         options: Bundle?
@@ -44,16 +43,14 @@ class Authenticator(private val context: Context) : AbstractAccountAuthenticator
         val refreshToken = am.getUserData(account, Accounts.UserDataRefreshToken)
         val tokenExpiration: Instant = am.getUserData(account, Accounts.UserDataExpiration)
             .toLong()
-            .let(Instant::fromEpochMilliseconds)
-        val now = Clock.System.now()
+            .let(Instant::ofEpochMilli)
+        val now = Instant.now()
 
         if (now > tokenExpiration) {
             // token has expired, refresh it
-            // todo - refresh token
-            val newToken = "..."
-            val newExpiration = Clock.System.now()
-            accounts!!.updateToken(account.commonAccount, newToken, newExpiration)
-            token = newToken
+            val response = runBlocking { Authorization.refreshToken(refreshToken) }
+            accounts!!.updateToken(account.commonAccount, response.accessToken, response.expiration)
+            token = response.accessToken
         }
 
         if (token.isNotEmpty())
@@ -64,10 +61,11 @@ class Authenticator(private val context: Context) : AbstractAccountAuthenticator
             }
 
         // No token is available, or something has happened, ask to login again.
-        // todo - launch login
-        val intent = Intent() /*Intent(context, LoginActivity::class.java) */.apply {
-            putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
+        // todo - account should be removed, or handle somehow the re-login
+        val intent = Intent(context, MainActivity::class.java).apply {
+            putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, aaResponse)
             // some extra data if needed such as account name and type
+            putExtra(MainActivity.EXTRA_NEW_ACCOUNT, true)
         }
         return Bundle().apply {
             putParcelable(AccountManager.KEY_INTENT, intent)

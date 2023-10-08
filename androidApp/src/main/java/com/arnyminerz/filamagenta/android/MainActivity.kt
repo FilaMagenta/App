@@ -10,6 +10,10 @@ import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import com.arnyminerz.filamagenta.ui.theme.AppTheme
 
 class MainActivity : AppCompatActivity() {
+    companion object {
+        const val EXTRA_NEW_ACCOUNT = "new_account"
+    }
+
     private val viewModel by viewModels<MainViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,7 +23,11 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             AppTheme {
-                MainScreen(intent.dataString, viewModel)
+                MainScreen(
+                    intent.dataString,
+                    intent.getBooleanExtra(EXTRA_NEW_ACCOUNT, false),
+                    viewModel
+                )
             }
         }
     }

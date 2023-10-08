@@ -40,7 +40,7 @@
         </activity>
 
         <service
-            android:name="com.arnyminerz.filamagenta.account.AuthenticatorService"
+            android:name=".account.AuthenticatorService"
             android:exported="true"
             android:permission="android.permission.GET_ACCOUNTS">
             <intent-filter>
