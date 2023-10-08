@@ -48,6 +48,4 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     coreLibraryDesugaring(libs.desugar.jdkLibs)
-
-    debugImplementation(libs.compose.ui.tooling)
 }
