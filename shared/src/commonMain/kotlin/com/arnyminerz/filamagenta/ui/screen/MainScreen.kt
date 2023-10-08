@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,15 +26,21 @@ import io.ktor.http.Url
  * The main composable that then renders all the app. Has some useful inputs to control what is displayed when.
  */
 @Composable
-fun MainScreen(isAddingNewAccount: Boolean = false, viewModel: MainViewModel = MainViewModel()) {
+fun MainScreen(
+    isAddingNewAccount: Boolean = false,
+    viewModel: MainViewModel = MainViewModel(),
+    onApplicationEndRequested: () -> Unit
+) {
     val isRequestingToken by viewModel.isRequestingToken.collectAsState(initial = false)
 
     var showingLoginWebpage by remember { mutableStateOf(false) }
 
     val accountsList by accounts!!.getAccountsLive().collectAsState()
 
+    var addNewAccountRequested by remember { mutableStateOf(isAddingNewAccount) }
+
     /** If true, the login screen is shown */
-    val addingNewAccount = accountsList.isEmpty() || isAddingNewAccount
+    val addingNewAccount = accountsList.isEmpty() || addNewAccountRequested
 
     if (isRequestingToken) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -93,11 +98,16 @@ fun MainScreen(isAddingNewAccount: Boolean = false, viewModel: MainViewModel = M
         }
     } else if (addingNewAccount) {
         LoginScreen(
-            onLoginRequested = { showingLoginWebpage = true }
-        ) {
-            TODO("Not yet implemented")
-        }
+            onLoginRequested = { showingLoginWebpage = true },
+            onBackRequested = {
+                if (accountsList.isEmpty()) {
+                    onApplicationEndRequested()
+                } else {
+                    addNewAccountRequested = false
+                }
+            }
+        )
     } else {
-        Text("Hello from Compose!")
+        AppScreen()
     }
 }

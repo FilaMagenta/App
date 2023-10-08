@@ -22,6 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
+import com.arnyminerz.filamagenta.ui.logic.BackHandler
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
 
@@ -31,6 +32,10 @@ fun LoginScreen(
     onLoginRequested: () -> Unit,
     onBackRequested: () -> Unit
 ) {
+    BackHandler {
+        onBackRequested()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
