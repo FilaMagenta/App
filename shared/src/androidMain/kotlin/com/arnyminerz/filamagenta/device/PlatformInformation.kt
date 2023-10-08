@@ -2,7 +2,7 @@ package com.arnyminerz.filamagenta.device
 
 import android.content.Context
 import androidx.browser.customtabs.CustomTabsClient
-import com.arnyminerz.filamagenta.network.CustomBrowserUi
+import com.arnyminerz.filamagenta.ui.browser.CustomBrowserUi
 import java.util.Collections
 
 actual object PlatformInformation {

@@ -1,15 +1,11 @@
-package com.arnyminerz.filamagenta.network
+package com.arnyminerz.filamagenta.ui.browser
 
-import com.arnyminerz.filamagenta.device.PlatformInformation
-
-actual object CustomBrowserUi {
+expect object CustomBrowserUi {
     /**
      * Launches the given URI in the platform-specific browser. Should throw [UnsupportedOperationException] if not
      * supported by current platform.
      *
      * Check with [PlatformInformation.hasSpecificBrowserUi]
      */
-    actual fun launchUri(uri: String) {
-        throw UnsupportedOperationException()
-    }
+    fun launchUri(uri: String)
 }

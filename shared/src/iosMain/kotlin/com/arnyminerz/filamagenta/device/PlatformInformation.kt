@@ -1,6 +1,6 @@
 package com.arnyminerz.filamagenta.device
 
-import com.arnyminerz.filamagenta.network.CustomBrowserUi
+import com.arnyminerz.filamagenta.ui.browser.CustomBrowserUi
 
 actual object PlatformInformation {
     /**

@@ -3,9 +3,9 @@ package com.arnyminerz.filamagenta.android
 import android.app.Application
 import com.arnyminerz.filamagenta.account.AccountsProvider
 import com.arnyminerz.filamagenta.device.PlatformInformation
-import com.arnyminerz.filamagenta.network.CustomBrowserUi
 import com.arnyminerz.filamagenta.storage.SettingsFactoryProvider
 import com.arnyminerz.filamagenta.storage.settingsFactory
+import com.arnyminerz.filamagenta.ui.browser.CustomBrowserUi
 
 class App: Application() {
     override fun onCreate() {
