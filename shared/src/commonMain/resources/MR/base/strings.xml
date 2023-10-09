@@ -4,6 +4,9 @@
 
     <!-- Generic Strings -->
     <string name="back">Back</string>
+    <string name="edit">Edit</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
 
     <!-- Login Screen -->
     <string name="login_title">Login</string>
@@ -27,4 +30,12 @@
     <string name="event_type_dinner">Dinner</string>
     <string name="event_type_assembly">Assembly</string>
     <string name="event_type_workshop">Workshop</string>
+    <string name="event_field_name">Name</string>
+    <string name="event_field_date">Date</string>
+    <string name="event_field_type">Type</string>
+
+    <!-- Event Screen -->
+    <string name="event_screen_name">Event Name</string>
+    <string name="event_screen_type">Event Type</string>
+    <string name="event_screen_date">Event Date</string>
 </resources>

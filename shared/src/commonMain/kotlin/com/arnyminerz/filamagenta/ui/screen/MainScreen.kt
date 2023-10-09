@@ -17,12 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
 import com.arnyminerz.filamagenta.account.accounts
+import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.ui.logic.BackHandler
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import com.multiplatform.webview.web.LoadingState
 import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.multiplatform.webview.web.rememberWebViewState
+import dev.icerock.moko.resources.compose.stringResource
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 import io.ktor.http.Url
@@ -123,6 +125,7 @@ fun MainScreen(
     } else {
         val isUserAdmin = remember { accounts!!.isAdmin(accountsList.first()) }
         val event by viewModel.viewingEvent.collectAsState()
+        val editingField by viewModel.editingField.collectAsState()
 
         BackHandler {
             if (event == null) {
@@ -132,7 +135,20 @@ fun MainScreen(
             }
         }
 
-        event?.let { EventScreen(it, viewModel::stopViewingEvent) }
-            ?: AppScreen(isUserAdmin, mainPagerState, viewModel::viewEvent)
+        event?.let { ev ->
+            editingField?.let { field ->
+                field.editor.Dialog(
+                    title = ev.cleanName + " - " + stringResource(field.displayName),
+                    onSubmit = { /* TODO: submit edit */ },
+                    onDismissRequest = viewModel::cancelEdit
+                )
+            }
+
+            EventScreen(
+                ev,
+                viewModel::edit.takeIf { isUserAdmin },
+                viewModel::stopViewingEvent
+            )
+        } ?: AppScreen(isUserAdmin, mainPagerState, viewModel::viewEvent)
     }
 }

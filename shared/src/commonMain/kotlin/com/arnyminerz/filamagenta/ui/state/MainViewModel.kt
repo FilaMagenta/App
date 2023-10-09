@@ -4,6 +4,7 @@ import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.account.Account
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.Event
+import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.network.Authorization
 import com.doublesymmetry.viewmodel.ViewModel
 import io.ktor.http.Parameters
@@ -25,6 +26,9 @@ class MainViewModel : ViewModel() {
 
     private val _viewingEvent = MutableStateFlow<Event?>(null)
     val viewingEvent: StateFlow<Event?> get() = _viewingEvent
+
+    private val _editingField = MutableStateFlow<EventField<*>?>(null)
+    val editingField: StateFlow<EventField<*>?> get() = _editingField
 
     fun getAuthorizeUrl() =
         // First, request the server
@@ -70,5 +74,24 @@ class MainViewModel : ViewModel() {
      *
      * Use [viewEvent] to start displaying an event.
      */
-    fun stopViewingEvent() = viewModelScope.launch { _viewingEvent.emit(null) }
+    fun stopViewingEvent() = viewModelScope.launch {
+        _viewingEvent.emit(null)
+        _editingField.emit(null)
+    }
+
+    /**
+     * Starts editing the given [field] for the currently selected event ([viewingEvent]).
+     * Does nothing if [viewingEvent] is null.
+     */
+    fun edit(field: EventField<*>) {
+        if (_viewingEvent.value == null) return
+        viewModelScope.launch { _editingField.emit(field) }
+    }
+
+    /**
+     * Clears the value of [editingField].
+     */
+    fun cancelEdit() {
+        viewModelScope.launch { _editingField.emit(null) }
+    }
 }
