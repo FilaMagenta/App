@@ -35,6 +35,8 @@ kotlin {
 
             export(libs.moko.resources)
             export(libs.moko.graphics) // toUIColor here
+
+            export(libs.multiplatform.viewmodel)
         }
     }
 
@@ -56,6 +58,7 @@ kotlin {
 
                 // Multiplatform libraries
                 api(libs.multiplatform.settings)
+                api(libs.multiplatform.viewmodel)
 
                 // Moko Resources
                 api(libs.moko.resources)

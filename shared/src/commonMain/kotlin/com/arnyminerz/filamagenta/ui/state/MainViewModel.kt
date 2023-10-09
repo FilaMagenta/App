@@ -4,6 +4,7 @@ import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.account.Account
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.network.Authorization
+import com.doublesymmetry.viewmodel.ViewModel
 import io.ktor.http.Parameters
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
@@ -38,12 +39,12 @@ class MainViewModel : ViewModel() {
      * Requests the server for a token and refresh token, then adds the account to the account manager.
      */
     fun requestToken(code: String) {
-        scope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             if (_isRequestingToken.value) {
                 println("Tried to request token while another request was in progress.")
                 return@launch
             }
-            _isRequestingToken.value = true
+            _isRequestingToken.emit(true)
 
             val token = Authorization.requestToken(code)
             val me = Authorization.requestMe(token)
