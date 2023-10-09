@@ -59,6 +59,7 @@ kotlin {
                 // Multiplatform libraries
                 api(libs.multiplatform.settings)
                 api(libs.multiplatform.viewmodel)
+                api(libs.napier)
 
                 // Moko Resources
                 api(libs.moko.resources)

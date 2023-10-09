@@ -20,6 +20,8 @@ import com.multiplatform.webview.web.LoadingState
 import com.multiplatform.webview.web.WebView
 import com.multiplatform.webview.web.rememberWebViewNavigator
 import com.multiplatform.webview.web.rememberWebViewState
+import io.github.aakira.napier.DebugAntilog
+import io.github.aakira.napier.Napier
 import io.ktor.http.Url
 
 /**
@@ -41,6 +43,11 @@ fun MainScreen(
 
     /** If true, the login screen is shown */
     val addingNewAccount = accountsList.isEmpty() || addNewAccountRequested
+
+    LaunchedEffect(Unit) {
+        // Initialize logging library
+        Napier.base(DebugAntilog())
+    }
 
     if (isRequestingToken) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
