@@ -3,6 +3,7 @@ package com.arnyminerz.filamagenta.ui.state
 import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.account.Account
 import com.arnyminerz.filamagenta.account.accounts
+import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.network.Authorization
 import com.doublesymmetry.viewmodel.ViewModel
 import io.ktor.http.Parameters
@@ -21,6 +22,9 @@ class MainViewModel : ViewModel() {
      * Reports the progress of [requestToken].
      */
     val isRequestingToken: StateFlow<Boolean> get() = _isRequestingToken
+
+    private val _viewingEvent = MutableStateFlow<Event?>(null)
+    val viewingEvent: StateFlow<Event?> get() = _viewingEvent
 
     fun getAuthorizeUrl() =
         // First, request the server
@@ -53,4 +57,18 @@ class MainViewModel : ViewModel() {
             accounts!!.addAccount(account, token.toAccessToken(), me.userRoles.contains("administrator"))
         }.invokeOnCompletion { _isRequestingToken.value = false }
     }
+
+    /**
+     * Requests the UI to display the given event.
+     *
+     * Use [stopViewingEvent] to stop displaying.
+     */
+    fun viewEvent(event: Event) = viewModelScope.launch { _viewingEvent.emit(event) }
+
+    /**
+     * Requests the UI to stop displaying the selected event, if any ([viewingEvent]).
+     *
+     * Use [viewEvent] to start displaying an event.
+     */
+    fun stopViewingEvent() = viewModelScope.launch { _viewingEvent.emit(null) }
 }

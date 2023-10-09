@@ -1,6 +1,7 @@
 package com.arnyminerz.filamagenta.ui.page
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,9 +29,10 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun EventsPage(isAdmin: Boolean) {
-    val events by Cache.events.collectAsState(initial = emptyList())
+fun EventsPage(isAdmin: Boolean, onEventRequested: (Event) -> Unit) {
+    val events by Cache.events.collectAsState(null)
 
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -61,7 +63,7 @@ fun EventsPage(isAdmin: Boolean) {
         targetState = events,
         modifier = Modifier.fillMaxSize()
     ) { list ->
-        if (list.isEmpty()) {
+        if (list == null) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
@@ -76,7 +78,10 @@ fun EventsPage(isAdmin: Boolean) {
                         .filter { event -> isAdmin || event.isComplete },
                     key = { it.id }
                 ) { event ->
-                    EventItem(event)
+                    EventItem(
+                        event,
+                        modifier = Modifier.animateItemPlacement()
+                    ) { onEventRequested(event) }
                 }
             }
         }

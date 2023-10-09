@@ -1,10 +1,12 @@
 package com.arnyminerz.filamagenta.ui.screen
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarToday
@@ -22,37 +24,40 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
+import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarItem
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarScaffold
 import com.arnyminerz.filamagenta.ui.page.EventsPage
 import dev.icerock.moko.resources.compose.stringResource
 
+val appScreenItems = listOf(
+    NavigationBarItem(
+        icon = Icons.Outlined.Wallet,
+        label = { stringResource(MR.strings.nav_wallet) }
+    ),
+    NavigationBarItem(
+        icon = Icons.Outlined.CalendarToday,
+        label = { stringResource(MR.strings.nav_events) }
+    ),
+    NavigationBarItem(
+        icon = Icons.Outlined.Settings,
+        label = { stringResource(MR.strings.nav_settings) }
+    )
+)
+
 /**
  * Once logged in, this is the first screen shown to the user.
  */
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun AppScreen(isAdmin: Boolean) {
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+fun AppScreen(
+    isAdmin: Boolean,
+    state: PagerState,
+    onEventRequested: (Event) -> Unit
+) {
     NavigationBarScaffold(
-        items = listOf(
-            NavigationBarItem(
-                icon = Icons.Outlined.Wallet,
-                label = { stringResource(MR.strings.nav_wallet) }
-            ) {
-                Text("Wallet")
-            },
-            NavigationBarItem(
-                icon = Icons.Outlined.CalendarToday,
-                label = { stringResource(MR.strings.nav_events) },
-                content = { EventsPage(isAdmin) }
-            ),
-            NavigationBarItem(
-                icon = Icons.Outlined.Settings,
-                label = { stringResource(MR.strings.nav_settings) }
-            ) {
-                Text("Settings")
-            }
-        ),
+        items = appScreenItems,
+        state = state,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -78,5 +83,20 @@ fun AppScreen(isAdmin: Boolean) {
                 }
             )
         }
-    )
+    ) { page ->
+        when (page) {
+            // Wallet
+            0 -> {
+                Text("Wallet")
+            }
+            // Events
+            1 -> {
+                EventsPage(isAdmin, onEventRequested)
+            }
+            // Settings
+            2 -> {
+                Text("Settings")
+            }
+        }
+    }
 }

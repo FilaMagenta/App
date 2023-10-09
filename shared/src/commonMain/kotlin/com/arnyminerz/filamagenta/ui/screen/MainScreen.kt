@@ -1,8 +1,10 @@
 package com.arnyminerz.filamagenta.ui.screen
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
 import com.arnyminerz.filamagenta.account.accounts
+import com.arnyminerz.filamagenta.ui.logic.BackHandler
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import com.multiplatform.webview.web.LoadingState
 import com.multiplatform.webview.web.WebView
@@ -27,6 +30,7 @@ import io.ktor.http.Url
 /**
  * The main composable that then renders all the app. Has some useful inputs to control what is displayed when.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     isAddingNewAccount: Boolean = false,
@@ -48,6 +52,8 @@ fun MainScreen(
         // Initialize logging library
         Napier.base(DebugAntilog())
     }
+
+    val mainPagerState = rememberPagerState { appScreenItems.size }
 
     if (isRequestingToken) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -116,7 +122,17 @@ fun MainScreen(
         )
     } else {
         val isUserAdmin = remember { accounts!!.isAdmin(accountsList.first()) }
+        val event by viewModel.viewingEvent.collectAsState()
 
-        AppScreen(isUserAdmin)
+        BackHandler {
+            if (event == null) {
+                onApplicationEndRequested()
+            } else {
+                viewModel.stopViewingEvent()
+            }
+        }
+
+        event?.let { EventScreen(it, viewModel::stopViewingEvent) }
+            ?: AppScreen(isUserAdmin, mainPagerState, viewModel::viewEvent)
     }
 }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -21,12 +22,19 @@ import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.isComplete
 import dev.icerock.moko.resources.compose.stringResource
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventItem(event: Event) {
+fun EventItem(
+    event: Event,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
     OutlinedCard(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .then(modifier),
         colors = if (event.isComplete) {
             CardDefaults.outlinedCardColors()
         } else {

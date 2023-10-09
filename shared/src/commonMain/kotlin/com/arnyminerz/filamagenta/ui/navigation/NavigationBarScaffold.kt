@@ -2,9 +2,11 @@ package com.arnyminerz.filamagenta.ui.navigation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -29,7 +31,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun NavigationBarScaffold(
     items: List<NavigationBarItem>,
-    topBar: @Composable () -> Unit = {}
+    state: PagerState = rememberPagerState { items.size },
+    topBar: @Composable () -> Unit = {},
+    content: @Composable BoxScope.(index: Int) -> Unit
 ) {
     val windowSizeClass = calculateWindowSizeClass()
 
@@ -37,19 +41,17 @@ fun NavigationBarScaffold(
         WindowSizeClass.Compact -> {
             val scope = rememberCoroutineScope()
 
-            val pagerState = rememberPagerState { items.size }
-
             Scaffold(
                 topBar = topBar,
                 bottomBar = {
                     NavigationBar {
                         for ((index, item) in items.withIndex()) {
                             NavigationBarItem(
-                                selected = pagerState.currentPage == index,
+                                selected = state.currentPage == index,
                                 icon = { item.Icon() },
                                 label = { Text(item.label()) },
                                 onClick = {
-                                    scope.launch { pagerState.animateScrollToPage(index) }
+                                    scope.launch { state.animateScrollToPage(index) }
                                 }
                             )
                         }
@@ -57,7 +59,7 @@ fun NavigationBarScaffold(
                 }
             ) { paddingValues ->
                 HorizontalPager(
-                    state = pagerState,
+                    state = state,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -65,7 +67,7 @@ fun NavigationBarScaffold(
                     Box(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items[page].content(this)
+                        content(page)
                     }
                 }
             }
