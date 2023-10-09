@@ -7,7 +7,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-suspend fun <T> Call<T>.get(): T = suspendCoroutine { cont ->
+suspend fun <T> Call<T>.await(): T = suspendCoroutine { cont ->
     onExecute(object : Callback<T> {
         override fun onError(exception: Throwable) {
             cont.resumeWithException(exception)
