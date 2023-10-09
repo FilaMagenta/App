@@ -1,9 +1,11 @@
+import com.arnyminerz.filamagenta.cache.data.EventType;
 import kotlinx.datetime.LocalDateTime;
 
 CREATE TABLE Event (
     id INTEGER PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
-    date INTEGER AS LocalDateTime DEFAULT NULL
+    date INTEGER AS LocalDateTime DEFAULT NULL,
+    type TEXT AS EventType DEFAULT NULL
 );
 
 getAll:

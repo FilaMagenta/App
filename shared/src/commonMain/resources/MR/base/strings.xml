@@ -14,4 +14,17 @@
     <string name="nav_wallet">Wallet</string>
     <string name="nav_events">Events</string>
     <string name="nav_settings">Settings</string>
+
+    <!-- Event item -->
+    <string name="event_date">Date: %s</string>
+    <string name="event_warnings">Warnings:</string>
+    <string name="event_warnings_date">Date not set</string>
+    <string name="event_warnings_type">Type not set</string>
+    <string name="event_date_unknown">Unknown</string>
+    <string name="event_type_unknown">Unknown</string>
+    <string name="event_type_breakfast">Breakfast</string>
+    <string name="event_type_lunch">Lunch</string>
+    <string name="event_type_dinner">Dinner</string>
+    <string name="event_type_assembly">Assembly</string>
+    <string name="event_type_workshop">Workshop</string>
 </resources>
