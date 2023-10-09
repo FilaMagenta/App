@@ -34,6 +34,9 @@
     <string name="event_field_date">Date</string>
     <string name="event_field_type">Type</string>
 
+    <string name="event_editor_date">Date</string>
+    <string name="event_editor_time">Time</string>
+
     <!-- Event Screen -->
     <string name="event_screen_name">Event Name</string>
     <string name="event_screen_type">Event Type</string>
