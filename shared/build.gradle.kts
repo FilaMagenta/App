@@ -74,6 +74,7 @@ kotlin {
 
                 // SQlDelight
                 implementation(libs.sqldelight.coroutines)
+                implementation(libs.sqldelight.primitiveAdapters)
             }
         }
         val commonTest by getting {
