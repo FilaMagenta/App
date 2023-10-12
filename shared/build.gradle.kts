@@ -116,8 +116,13 @@ kotlin {
 
 dependencies {
     val ktorfitVersion = libs.versions.ktorfit.get()
-    add("kspCommonMainMetadata", "de.jensklingenberg.ktorfit:ktorfit-ksp:$ktorfitVersion")
-    add("kspAndroid", "de.jensklingenberg.ktorfit:ktorfit-ksp:$ktorfitVersion")
+    with("de.jensklingenberg.ktorfit:ktorfit-ksp:$ktorfitVersion") {
+        add("kspCommonMainMetadata", this)
+        add("kspAndroid", this)
+        add("kspIosArm64", this)
+        add("kspIosSimulatorArm64", this)
+        add("kspIosX64", this)
+    }
 }
 
 android {
