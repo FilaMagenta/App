@@ -71,9 +71,9 @@ object SqlServer {
                 // Calling toSet gets rid of duplicates
                 val columnNames = columns.map { it.metadata.colName }.toSet()
                 // The list of lists to provide
-                val resultBuilder = arrayListOf<List<SqlTunnelEntry>>()
+                val resultBuilder = mutableListOf<List<SqlTunnelEntry>>()
                 // Each list inside the final result
-                val listBuilder = arrayListOf<SqlTunnelEntry>()
+                var listBuilder: MutableList<SqlTunnelEntry> = mutableListOf()
                 // Will group by rows of columnNames.size columns
                 for ((index, column) in columns.withIndex()) {
                     val mod = index % columnNames.size
@@ -81,7 +81,7 @@ object SqlServer {
                         if (listBuilder.isNotEmpty()) {
                             resultBuilder.add(listBuilder)
                         }
-                        listBuilder.clear()
+                        listBuilder = mutableListOf()
                     }
                     listBuilder.add(column)
                 }
