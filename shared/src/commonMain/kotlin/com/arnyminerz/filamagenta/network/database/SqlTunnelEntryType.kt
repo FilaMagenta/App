@@ -7,5 +7,5 @@ data class SqlTunnelEntryType(
     val id: Int,
     val type: String,
     val name: String,
-    val maximumLength: Int?
+    val maximumLength: Int? = null
 )

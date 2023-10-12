@@ -7,5 +7,5 @@ import io.ktor.http.HttpStatusCode
  */
 class SqlTunnelException(
     val status: HttpStatusCode,
-    message: String?
+    message: String? = null
 ): Exception("SQL Tunnel returned an error (${status.value}): $message")

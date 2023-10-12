@@ -6,10 +6,10 @@ import kotlinx.serialization.Serializable
 data class SqlTunnelEntryMetadata(
     val userType: Int,
     val flags: Int,
-    val dataLength: Int?,
+    val dataLength: Int? = null,
     val type: SqlTunnelEntryType,
-    val collation: SqlTunnelEntryCollation?,
-    val precision: Int?,
-    val scale: Int?,
+    val collation: SqlTunnelEntryCollation? = null,
+    val precision: Int? = null,
+    val scale: Int? = null,
     val colName: String
 )
