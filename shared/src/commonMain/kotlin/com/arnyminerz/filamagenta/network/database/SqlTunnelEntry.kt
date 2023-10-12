@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class SqlTunnelEntry(
-    val value: Int,
+    val value: String?,
     val metadata: SqlTunnelEntryMetadata
 )
