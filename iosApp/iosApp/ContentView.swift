@@ -70,6 +70,10 @@ struct SwipeGestureViewController: UIViewControllerRepresentable {
     }
 }
 
+public func onBackGesture() {
+    Main_iosKt.onBackGesture()
+}
+
 struct ContentView: View {
     var body: some View {
         VStack {
