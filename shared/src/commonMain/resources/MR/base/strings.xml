@@ -41,4 +41,9 @@
     <string name="event_screen_name">Event Name</string>
     <string name="event_screen_type">Event Type</string>
     <string name="event_screen_date">Event Date</string>
+
+    <!-- Wallet Screen -->
+    <string name="wallet_income">Income</string>
+    <string name="wallet_balance">Balance</string>
+    <string name="wallet_outcome">Outcome</string>
 </resources>

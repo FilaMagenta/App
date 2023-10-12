@@ -36,6 +36,16 @@ fun List<SqlTunnelEntry>.getString(colName: String): String? = findByColName(col
 fun List<SqlTunnelEntry>.getLong(colName: String): Long? = findByColName(colName)?.value?.toLongOrNull()
 
 /**
+ * Gets the value of a column named [colName] and of type [Double].
+ *
+ * @param colName The name of the column to search for.
+ *
+ * @return `null` if the column was not found, or the value stored at that column as a Double.
+ *
+ */
+fun List<SqlTunnelEntry>.getDouble(colName: String): Double? = findByColName(colName)?.value?.toDoubleOrNull()
+
+/**
  * Gets the value of a column named [colName] and of type [LocalDate].
  *
  * @param colName The name of the column to search for.

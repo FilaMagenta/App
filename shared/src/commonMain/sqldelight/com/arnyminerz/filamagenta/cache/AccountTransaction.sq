@@ -7,7 +7,7 @@ CREATE TABLE AccountTransaction (
     date INTEGER AS LocalDate NOT NULL,
     description TEXT NOT NULL,
     units INTEGER NOT NULL DEFAULT 1,
-    cost INTEGER NOT NULL,
+    cost REAL NOT NULL,
     income INTEGER AS Boolean NOT NULL
 );
 

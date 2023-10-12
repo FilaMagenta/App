@@ -64,5 +64,68 @@ val md_theme_dark_surfaceTint = Color(0xFFFFB0CC)
 val md_theme_dark_outlineVariant = Color(0xFF514347)
 val md_theme_dark_scrim = Color(0xFF000000)
 
-
 val seed = Color(0xFFCB237A)
+
+val base_Positive = Color(0xFF00AA50)
+val base_Warning = Color(0xFFF9B100)
+val base_Negative = Color(0xFFD30023)
+val base_Neutral = Color(0xFF3776FF)
+
+val light_Positive = Color(0xFF006D31)
+val light_onPositive = Color(0xFFFFFFFF)
+val light_PositiveContainer = Color(0xFF76FD98)
+val light_onPositiveContainer = Color(0xFF00210A)
+val dark_Positive = Color(0xFF57E07E)
+val dark_onPositive = Color(0xFF003916)
+val dark_PositiveContainer = Color(0xFF005323)
+val dark_onPositiveContainer = Color(0xFF76FD98)
+val light_Warning = Color(0xFF7D5700)
+val light_onWarning = Color(0xFFFFFFFF)
+val light_WarningContainer = Color(0xFFFFDEAA)
+val light_onWarningContainer = Color(0xFF271900)
+val dark_Warning = Color(0xFFFFBA2F)
+val dark_onWarning = Color(0xFF422C00)
+val dark_WarningContainer = Color(0xFF5F4100)
+val dark_onWarningContainer = Color(0xFFFFDEAA)
+val light_Negative = Color(0xFFC0001F)
+val light_onNegative = Color(0xFFFFFFFF)
+val light_NegativeContainer = Color(0xFFFFDAD7)
+val light_onNegativeContainer = Color(0xFF410004)
+val dark_Negative = Color(0xFFFFB3AE)
+val dark_onNegative = Color(0xFF68000C)
+val dark_NegativeContainer = Color(0xFF930015)
+val dark_onNegativeContainer = Color(0xFFFFDAD7)
+val light_Neutral = Color(0xFF0055D5)
+val light_onNeutral = Color(0xFFFFFFFF)
+val light_NeutralContainer = Color(0xFFDAE1FF)
+val light_onNeutralContainer = Color(0xFF001849)
+val dark_Neutral = Color(0xFFB3C5FF)
+val dark_onNeutral = Color(0xFF002B75)
+val dark_NeutralContainer = Color(0xFF003FA4)
+val dark_onNeutralContainer = Color(0xFFDAE1FF)
+
+object ExtendedColors {
+    val Positive = ExtendedColor(
+        base_Positive,
+        light_Positive, light_onPositive, light_PositiveContainer, light_onPositiveContainer,
+        dark_Positive, dark_onPositive, dark_PositiveContainer, dark_onPositiveContainer
+    )
+
+    val Warning = ExtendedColor(
+        base_Warning,
+        light_Warning, light_onWarning, light_WarningContainer, light_onWarningContainer,
+        dark_Warning, dark_onWarning, dark_WarningContainer, dark_onWarningContainer
+    )
+
+    val Negative = ExtendedColor(
+        base_Negative,
+        light_Negative, light_onNegative, light_NegativeContainer, light_onNegativeContainer,
+        dark_Negative, dark_onNegative, dark_NegativeContainer, dark_onNegativeContainer
+    )
+
+    val Neutral = ExtendedColor(
+        base_Neutral,
+        light_Neutral, light_onNeutral, light_NeutralContainer, light_onNeutralContainer,
+        dark_Neutral, dark_onNeutral, dark_NeutralContainer, dark_onNeutralContainer
+    )
+}
