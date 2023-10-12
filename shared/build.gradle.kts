@@ -147,6 +147,14 @@ buildkonfig {
 
         buildConfigField(STRING, "WooClientId", properties.getProperty("woo.clientId"))
         buildConfigField(STRING, "WooClientSecret", properties.getProperty("woo.clientSecret"))
+
+        buildConfigField(STRING, "SqlTunnelHost", properties.getProperty("sql.tunner.host"))
+
+        buildConfigField(STRING, "SqlHost", properties.getProperty("sql.host"))
+        buildConfigField(STRING, "SqlPort", properties.getProperty("sql.port"))
+        buildConfigField(STRING, "SqlUsername", properties.getProperty("sql.username"))
+        buildConfigField(STRING, "SqlPassword", properties.getProperty("sql.password"))
+        buildConfigField(STRING, "SqlDatabase", properties.getProperty("sql.database"))
     }
 }
 
