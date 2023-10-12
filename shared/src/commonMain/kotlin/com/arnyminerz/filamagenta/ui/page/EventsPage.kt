@@ -17,8 +17,7 @@ import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.isComplete
-import com.arnyminerz.filamagenta.network.ktorfit.await
-import com.arnyminerz.filamagenta.network.woo.wooCommerce
+import com.arnyminerz.filamagenta.network.woo.WooCommerce
 import com.arnyminerz.filamagenta.ui.list.EventItem
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
@@ -37,7 +36,7 @@ fun EventsPage(isAdmin: Boolean, onEventRequested: (Event) -> Unit) {
     LaunchedEffect(Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             Napier.d("Getting products from server...")
-            wooCommerce.ProductRepository().products().await().also { products ->
+            WooCommerce.Products.getProducts().also { products ->
                 Napier.i("Got ${products.size} products from server. Updating cache...")
                 for (product in products) {
                     val date = product.meta_data

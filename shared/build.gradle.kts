@@ -7,8 +7,6 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.ktorfit)
     alias(libs.plugins.mokoResources)
     alias(libs.plugins.sqldelight)
 }
@@ -70,7 +68,6 @@ kotlin {
                 implementation(libs.ktor.client.contentNegotiation)
                 implementation(libs.ktor.client.auth)
                 implementation(libs.ktor.serialization.json)
-                implementation(libs.ktorfit.lib)
 
                 // SQlDelight
                 implementation(libs.sqldelight.coroutines)
@@ -111,17 +108,6 @@ kotlin {
                 implementation(libs.sqldelight.native)
             }
         }
-    }
-}
-
-dependencies {
-    val ktorfitVersion = libs.versions.ktorfit.get()
-    with("de.jensklingenberg.ktorfit:ktorfit-ksp:$ktorfitVersion") {
-        add("kspCommonMainMetadata", this)
-        add("kspAndroid", this)
-        add("kspIosArm64", this)
-        add("kspIosSimulatorArm64", this)
-        add("kspIosX64", this)
     }
 }
 

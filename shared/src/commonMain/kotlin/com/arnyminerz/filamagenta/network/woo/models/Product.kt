@@ -5,79 +5,80 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-class Product {
-
-    var id: Long = 0
-    lateinit var name: String
-    var slug: String? = null
-    var permalink: String? = null
-    var date_created: LocalDateTime? = null
-    var date_created_gmt: LocalDateTime? = null
-    var date_modified: LocalDateTime? = null
-    var date_modified_gmt: LocalDateTime? = null
-    var type: String? = null
-    lateinit var status: String
-    var isFeatured: Boolean = false
-    lateinit var catalog_visibility: String
-    lateinit var description: String
-    lateinit var short_description: String
-    lateinit var sku: String
-    lateinit var price: String
-    var regular_price: String? = null
-    var sale_price: String? = null
-    var date_on_sale_from: LocalDateTime? = null
-    var date_on_sale_from_gmt: LocalDateTime? = null
-    var date_on_sale_to: LocalDateTime? = null
-    var date_on_sale_to_gmt: LocalDateTime? = null
-    var price_html: String? = null
-    var isOn_sale: Boolean = false
-    var isPurchasable: Boolean = false
-    var total_sales: Int = 0
-    var isVirtual: Boolean = false
-    var isDownloadable: Boolean = false
-    lateinit var downloads: ArrayList<com.arnyminerz.filamagenta.network.woo.models.Download>
-    var download_limit: Int = 0
-    var download_expiry: Int = 0
-    lateinit var external_url: String
-    lateinit var button_text: String
-    lateinit var tax_status: String
-    lateinit var tax_class: String
-    var isManage_stock: Boolean = false
-    var stock_quantity: Int = 0
-    var isIn_stock: Boolean = false
-    lateinit var backorders: String
-    var isBackorders_allowed: Boolean = false
-    var isBackordered: Boolean = false
-    var isSold_individually: Boolean = false
-    lateinit var weight: String
-    lateinit var dimensions: com.arnyminerz.filamagenta.network.woo.models.Dimensions
-    var isShipping_required: Boolean = false
-    var isShipping_taxable: Boolean = false
-    lateinit var shipping_class: String
-    var shipping_class_id: Int = 0
-    var isReviews_allowed: Boolean = false
-    lateinit var average_rating: String
-    var rating_count: Int = 0
-    lateinit var related_ids: ArrayList<Int>
-    lateinit var upsell_ids: ArrayList<Int>
-    lateinit var cross_sell_ids: ArrayList<Int>
-    var parent_id: Int = 0
-    lateinit var purchase_note: String
-    lateinit var categories: ArrayList<com.arnyminerz.filamagenta.network.woo.models.Category>
-    lateinit var tags: ArrayList<com.arnyminerz.filamagenta.network.woo.models.Tag>
+@Suppress("LongParameterList")
+class Product(
+    val id: Long = 0,
+    val name: String,
+    val slug: String? = null,
+    val permalink: String? = null,
+    @SerialName("date_created") val dateCreated: LocalDateTime? = null,
+    @SerialName("date_created_gmt") val dateCreatedGmt: LocalDateTime? = null,
+    @SerialName("date_modified") val dateModified: LocalDateTime? = null,
+    @SerialName("date_modified_gmt") val dateModifiedGmt: LocalDateTime? = null,
+    val type: String? = null,
+    val status: String,
+    val isFeatured: Boolean = false,
+    @SerialName("catalog_visibility") val catalogVisibility: String,
+    val description: String,
+    @SerialName("short_description") val shortDescription: String,
+    val sku: String,
+    val price: String,
+    @SerialName("regular_price") val regularPrice: String? = null,
+    @SerialName("sale_price") val salePrice: String? = null,
+    @SerialName("date_on_sale_from") val dateOnSaleFrom: LocalDateTime? = null,
+    @SerialName("date_on_sale_from_gmt") val dateOnSaleFromGmt: LocalDateTime? = null,
+    @SerialName("date_on_sale_to") val dateOnSaleTo: LocalDateTime? = null,
+    @SerialName("date_on_sale_to_gmt") val dateOnSaleToGmt: LocalDateTime? = null,
+    @SerialName("price_html")  val priceHtml: String? = null,
+    @SerialName("isOn_sale")  val isOnSale: Boolean = false,
+    val isPurchasable: Boolean = false,
+    @SerialName("total_sales") val totalSales: Int = 0,
+    val isVirtual: Boolean = false,
+    val isDownloadable: Boolean = false,
+    val downloads: ArrayList<Download>,
+    val download_limit: Int = 0,
+    val download_expiry: Int = 0,
+    val external_url: String,
+    val button_text: String,
+    val tax_status: String,
+    val tax_class: String,
+    val isManage_stock: Boolean = false,
+    val stock_quantity: Int? = null,
+    val isIn_stock: Boolean = false,
+    val backorders: String,
+    val isBackorders_allowed: Boolean = false,
+    val isBackordered: Boolean = false,
+    val isSold_individually: Boolean = false,
+    val weight: String,
+    val dimensions: Dimensions,
+    val isShipping_required: Boolean = false,
+    val isShipping_taxable: Boolean = false,
+    val shipping_class: String,
+    val shipping_class_id: Int = 0,
+    val isReviews_allowed: Boolean = false,
+    val average_rating: String,
+    val rating_count: Int = 0,
+    val related_ids: ArrayList<Int>,
+    val upsell_ids: ArrayList<Int>,
+    val cross_sell_ids: ArrayList<Int>,
+    val parent_id: Int = 0,
+    val purchase_note: String,
+    val categories: ArrayList<Category>,
+    val tags: ArrayList<Tag>,
 
     @SerialName("attributes")
-    lateinit var productAttributes: ArrayList<com.arnyminerz.filamagenta.network.woo.models.ProductAttribute>
+    val productAttributes: ArrayList<ProductAttribute>,
 
-    lateinit var default_attributes: ArrayList<com.arnyminerz.filamagenta.network.woo.models.DefaultAttribute>
-    lateinit var variations: ArrayList<Int>
-    lateinit var grouped_products: ArrayList<Int>
-    var menu_order: Int = 0
-    lateinit var meta_data: ArrayList<com.arnyminerz.filamagenta.network.woo.models.Metadata>
-    lateinit var images: ArrayList<com.arnyminerz.filamagenta.network.woo.models.Image>
+    val default_attributes: ArrayList<DefaultAttribute>,
+    val variations: ArrayList<Int>,
+    val grouped_products: ArrayList<Int>,
+    val menu_order: Int = 0,
+    val meta_data: ArrayList<Metadata>,
+    val images: ArrayList<Image>
+) {
 
-    fun getFeatureImage(): String{
-        if(this.images.isEmpty()){
+    fun getFeatureImage(): String {
+        if (this.images.isEmpty()) {
             return ""
         }
 
