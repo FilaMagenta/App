@@ -105,7 +105,7 @@ fun MainScreen(
 
             EventScreen(
                 ev,
-                viewModel::edit.takeIf { accounts!!.isAdmin(account) },
+                viewModel::edit.takeIf { accounts.isAdmin(account) },
                 viewModel::stopViewingEvent
             )
         } ?: AppScreen(account, mainPagerState, viewModel::viewEvent)
