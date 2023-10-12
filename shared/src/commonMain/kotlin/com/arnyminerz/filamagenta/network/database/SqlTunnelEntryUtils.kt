@@ -12,6 +12,9 @@ import kotlinx.datetime.LocalDateTime
  */
 fun List<SqlTunnelEntry>.findByColName(colName: String): SqlTunnelEntry? = find { it.metadata.colName == colName }
 
+fun List<SqlTunnelEntry>.filterByColName(colName: String): List<SqlTunnelEntry> =
+    filter { it.metadata.colName == colName }
+
 /**
  * Gets the value of a column named [colName] and of type [String].
  *
