@@ -1,6 +1,7 @@
 package com.arnyminerz.filamagenta.cache
 
 import app.cash.sqldelight.EnumColumnAdapter
+import com.arnyminerz.filamagenta.cache.adapter.LocalDateAdapter
 import com.arnyminerz.filamagenta.cache.adapter.LocalDateTimeAdapter
 
 lateinit var database: Database
@@ -13,6 +14,9 @@ fun createDatabase(driverFactory: DriverFactory): Database {
         EventAdapter = Event.Adapter(
             dateAdapter = LocalDateTimeAdapter,
             typeAdapter = EnumColumnAdapter()
+        ),
+        AccountTransactionAdapter = AccountTransaction.Adapter(
+            dateAdapter = LocalDateAdapter
         )
     ).also { database = it }
 }

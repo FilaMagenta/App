@@ -1,0 +1,24 @@
+import kotlinx.datetime.LocalDate;
+import kotlin.Boolean;
+
+-- Transactions made by the user to the Filà, or the other way around, for example, for purchases
+CREATE TABLE AccountTransaction (
+    id INTEGER PRIMARY KEY NOT NULL,
+    date INTEGER AS LocalDate NOT NULL,
+    description TEXT NOT NULL,
+    units INTEGER NOT NULL DEFAULT 1,
+    cost INTEGER NOT NULL,
+    income INTEGER AS Boolean NOT NULL
+);
+
+getAll:
+SELECT * FROM AccountTransaction;
+
+getById:
+SELECT * FROM AccountTransaction WHERE id=?;
+
+insert:
+INSERT INTO AccountTransaction(id, date, description, units, cost, income) VALUES (?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE AccountTransaction SET date=?, description=?, units=?, cost=?, income=? WHERE id=?;

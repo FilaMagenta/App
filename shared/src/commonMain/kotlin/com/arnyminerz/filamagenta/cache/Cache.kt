@@ -13,6 +13,12 @@ object Cache {
             .asFlow()
             .mapToList(Dispatchers.IO)
 
+    val transactions: Flow<List<AccountTransaction>> =
+        database.accountTransactionQueries
+            .getAll()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+
     fun insertOrUpdate(event: Event) {
         val element = database.eventQueries
             .getById(event.id)
@@ -23,6 +29,24 @@ object Cache {
         } else {
             // update
             database.eventQueries.update(event.name, event.id)
+        }
+    }
+
+    /**
+     * Inserts the given [transaction] if it's not cached, or updates the cache entry otherwise.
+     */
+    fun insertOrUpdate(transaction: AccountTransaction) {
+        val element = database.accountTransactionQueries
+            .getById(transaction.id)
+            .executeAsOneOrNull()
+        with(transaction) {
+            if (element == null) {
+                // insert
+                database.accountTransactionQueries.insert(id, date, description, units, cost, income)
+            } else {
+                // update
+                database.accountTransactionQueries.update(date, description, units, cost, income, id)
+            }
         }
     }
 }
