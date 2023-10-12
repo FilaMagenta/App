@@ -1,10 +1,18 @@
 package com.arnyminerz.filamagenta.cache
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import app.cash.sqldelight.Query
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.runBlocking
 
 object Cache {
     val events: Flow<List<Event>> =
@@ -13,11 +21,28 @@ object Cache {
             .asFlow()
             .mapToList(Dispatchers.IO)
 
-    val transactions: Flow<List<AccountTransaction>> =
-        database.accountTransactionQueries
-            .getAll()
-            .asFlow()
-            .mapToList(Dispatchers.IO)
+    val transactions: Query<AccountTransaction> = database.accountTransactionQueries.getAll()
+
+    @Composable
+    fun <RowType: Any> Query<RowType>.collectListAsState(): State<List<RowType>> {
+        val flow = remember { MutableStateFlow(executeAsList()) }
+
+        DisposableEffect(this) {
+            val listener = Query.Listener {
+                runBlocking {
+                    flow.emit(executeAsList())
+                }
+            }
+
+            addListener(listener)
+
+            onDispose {
+                removeListener(listener)
+            }
+        }
+
+        return flow.collectAsState()
+    }
 
     fun insertOrUpdate(event: Event) {
         val element = database.eventQueries
@@ -48,5 +73,15 @@ object Cache {
                 database.accountTransactionQueries.update(date, description, units, cost, income, id)
             }
         }
+    }
+
+    fun synchronizeTransactions(transactions: List<AccountTransaction>) {
+        val ids = arrayListOf<Long>()
+        for (transaction in transactions) {
+            insertOrUpdate(transaction)
+            ids.add(transaction.id)
+        }
+        // Now remove all the elements from the database which are not inside ids
+        database.accountTransactionQueries.removeIfNotIncluded(ids)
     }
 }
