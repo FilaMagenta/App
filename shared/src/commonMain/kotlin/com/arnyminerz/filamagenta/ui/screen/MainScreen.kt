@@ -1,6 +1,5 @@
 package com.arnyminerz.filamagenta.ui.screen
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,19 +14,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.zIndex
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.ui.logic.BackHandler
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
-import com.multiplatform.webview.web.LoadingState
-import com.multiplatform.webview.web.WebView
-import com.multiplatform.webview.web.rememberWebViewNavigator
-import com.multiplatform.webview.web.rememberWebViewState
 import dev.icerock.moko.resources.compose.stringResource
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
-import io.ktor.http.Url
 
 /**
  * The main composable that then renders all the app. Has some useful inputs to control what is displayed when.
@@ -62,55 +55,21 @@ fun MainScreen(
             CircularProgressIndicator()
         }
     } else if (showingLoginWebpage) {
-        val state = rememberWebViewState(
-            url = viewModel.getAuthorizeUrl()
-        )
-        val navigator = rememberWebViewNavigator()
-
-        // Set custom agent
-        LaunchedEffect(state) {
-            state.webSettings.customUserAgentString = "Fila-Magenta-App"
-        }
-        if (state.lastLoadedUrl?.startsWith("app://filamagenta") == true) {
-            // Redirection complete, extract code
-            val query = Url(state.lastLoadedUrl!!)
-                .encodedQuery
-                .split("&")
-                .associate { it.split("=").let { (k, v) -> k to v } }
-            val code = query["code"]
-            // todo - notify the user about this error, even though it should never occur
-            requireNotNull(code) { "Server redirected without a valid code" }
-
-            showingLoginWebpage = false
-
-            viewModel.requestToken(code)
-        }
-
-        Box(
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            AnimatedContent(
-                targetState = state.loadingState,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    // Make sure it's on top
-                    .zIndex(999f)
-            ) { loadingState ->
-                if (loadingState is LoadingState.Initializing) {
-                    CircularProgressIndicator()
-                } else if (loadingState is LoadingState.Loading) {
-                    CircularProgressIndicator(
-                        progress = loadingState.progress
-                    )
+        BrowserLoginScreen(
+            authorizeUrl = viewModel.getAuthorizeUrl(),
+            onDismissRequested = {
+                if (accountsList.isEmpty()) {
+                    onApplicationEndRequested()
+                } else {
+                    showingLoginWebpage = false
                 }
-            }
+            },
+            onCodeObtained = { code ->
+                showingLoginWebpage = false
 
-            WebView(
-                state = state,
-                modifier = Modifier.fillMaxSize(),
-                navigator = navigator
-            )
-        }
+                viewModel.requestToken(code)
+            }
+        )
     } else if (addingNewAccount) {
         LoginScreen(
             onLoginRequested = { showingLoginWebpage = true },
