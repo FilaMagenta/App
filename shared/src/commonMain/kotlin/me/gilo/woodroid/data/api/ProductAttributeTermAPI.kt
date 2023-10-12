@@ -11,34 +11,33 @@ import de.jensklingenberg.ktorfit.http.PUT
 import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
 import de.jensklingenberg.ktorfit.http.QueryMap
-import me.gilo.woodroid.models.AttributeTerm
 
 interface ProductAttributeTermAPI {
 
     @Headers("Content-Type: application/json")
     @POST("products/productAttributes/{id}/terms")
-    fun create(@Path("id") attribute_id: Int, @Body body: AttributeTerm): Call<AttributeTerm>
+    fun create(@Path("id") attribute_id: Int, @Body body: com.arnyminerz.filamagenta.network.woo.models.AttributeTerm): Call<com.arnyminerz.filamagenta.network.woo.models.AttributeTerm>
 
     @GET("products/productAttributes/{id}/terms/{term_id}")
-    fun view(@Path("id") attribute_id: Int, @Path("term_id") term_id: Int): Call<AttributeTerm>
+    fun view(@Path("id") attribute_id: Int, @Path("term_id") term_id: Int): Call<com.arnyminerz.filamagenta.network.woo.models.AttributeTerm>
 
     @GET("products/productAttributes/{id}/terms")
-    fun list(@Path("id") attribute_id: Int): Call<List<AttributeTerm>>
+    fun list(@Path("id") attribute_id: Int): Call<List<com.arnyminerz.filamagenta.network.woo.models.AttributeTerm>>
 
     @Headers("Content-Type: application/json")
     @PUT("products/productAttributes/{id}/terms/{term_id}")
-    fun update(@Path("id") attribute_id: Int, @Path("term_id") term_id: Int, @Body body: AttributeTerm): Call<AttributeTerm>
+    fun update(@Path("id") attribute_id: Int, @Path("term_id") term_id: Int, @Body body: com.arnyminerz.filamagenta.network.woo.models.AttributeTerm): Call<com.arnyminerz.filamagenta.network.woo.models.AttributeTerm>
 
     @DELETE("products/productAttributes/{id}/terms/{term_id}")
-    fun delete(@Path("id") attribute_id: Int, @Path("term_id") term_id: Int): Call<AttributeTerm>
+    fun delete(@Path("id") attribute_id: Int, @Path("term_id") term_id: Int): Call<com.arnyminerz.filamagenta.network.woo.models.AttributeTerm>
 
     @DELETE("products/productAttributes/{id}/terms/{term_id}")
-    fun delete(@Path("id") attribute_id: Int, @Path("term_id") term_id: Int, @Query("force") force: Boolean): Call<AttributeTerm>
+    fun delete(@Path("id") attribute_id: Int, @Path("term_id") term_id: Int, @Query("force") force: Boolean): Call<com.arnyminerz.filamagenta.network.woo.models.AttributeTerm>
 
     @POST("products/productAttributes/batch")
-    fun batch(@Body body: AttributeTerm): Call<String>
+    fun batch(@Body body: com.arnyminerz.filamagenta.network.woo.models.AttributeTerm): Call<String>
 
     @GET("products/productAttributes/{id}/terms")
-    fun filter(@Path("id") attribute_id: Int, @QueryMap filter: Map<String, String>): Call<List<AttributeTerm>>
+    fun filter(@Path("id") attribute_id: Int, @QueryMap filter: Map<String, String>): Call<List<com.arnyminerz.filamagenta.network.woo.models.AttributeTerm>>
 
 }

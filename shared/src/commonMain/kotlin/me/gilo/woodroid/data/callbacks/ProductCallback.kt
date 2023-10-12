@@ -1,10 +1,7 @@
 package me.gilo.woodroid.data.callbacks
 
 
-import me.gilo.woodroid.models.Product
-
-
 class ProductCallback {
-    var products = ArrayList<Product>()
-    lateinit var product: Product
+    var products = ArrayList<com.arnyminerz.filamagenta.network.woo.models.Product>()
+    lateinit var product: com.arnyminerz.filamagenta.network.woo.models.Product
 }

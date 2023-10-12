@@ -2,7 +2,6 @@ package me.gilo.woodroid.repo
 
 import de.jensklingenberg.ktorfit.Call
 import me.gilo.woodroid.data.api.ProductAPI
-import me.gilo.woodroid.models.Product
 import me.gilo.woodroid.models.filters.ProductFilter
 
 class ProductRepository(baseUrl: String, consumerKey: String, consumerSecret: String) :
@@ -10,35 +9,35 @@ class ProductRepository(baseUrl: String, consumerKey: String, consumerSecret: St
 
     private val apiService: ProductAPI = ktorfit.create()
 
-    fun create(product: Product): Call<Product> {
+    fun create(product: com.arnyminerz.filamagenta.network.woo.models.Product): Call<com.arnyminerz.filamagenta.network.woo.models.Product> {
         return apiService.create(product)
     }
 
 
-    fun product(id: Int): Call<Product> {
+    fun product(id: Int): Call<com.arnyminerz.filamagenta.network.woo.models.Product> {
         return apiService.view(id)
     }
 
-    fun products(): Call<List<Product>> {
+    fun products(): Call<List<com.arnyminerz.filamagenta.network.woo.models.Product>> {
         return apiService.list()
     }
 
-    fun filter(filters: Map<String, String>): Call<List<Product>> {
+    fun filter(filters: Map<String, String>): Call<List<com.arnyminerz.filamagenta.network.woo.models.Product>> {
         return apiService.filter(filters)
     }
 
-    fun products(productFilter: ProductFilter): Call<List<Product>> {
+    fun products(productFilter: ProductFilter): Call<List<com.arnyminerz.filamagenta.network.woo.models.Product>> {
         return filter(productFilter.filters)
     }
 
-    fun search(term: String): Call<List<Product>> {
+    fun search(term: String): Call<List<com.arnyminerz.filamagenta.network.woo.models.Product>> {
         val productFilter = ProductFilter()
         productFilter.search = term
 
         return filter(productFilter.filters)
     }
 
-    fun products(page: Int, per_page: Int): Call<List<Product>> {
+    fun products(page: Int, per_page: Int): Call<List<com.arnyminerz.filamagenta.network.woo.models.Product>> {
         val productFilter = ProductFilter()
         productFilter.page = page
         productFilter.per_page = per_page
@@ -46,26 +45,26 @@ class ProductRepository(baseUrl: String, consumerKey: String, consumerSecret: St
         return filter(productFilter.filters)
     }
 
-    fun products(page: Int): Call<List<Product>> {
+    fun products(page: Int): Call<List<com.arnyminerz.filamagenta.network.woo.models.Product>> {
         val productFilter = ProductFilter()
         productFilter.page = page
 
         return filter(productFilter.filters)
     }
 
-    fun update(id: Int, product: Product): Call<Product> {
+    fun update(id: Int, product: com.arnyminerz.filamagenta.network.woo.models.Product): Call<com.arnyminerz.filamagenta.network.woo.models.Product> {
         return apiService.update(id, product)
     }
 
-    fun delete(id: Int): Call<Product> {
+    fun delete(id: Int): Call<com.arnyminerz.filamagenta.network.woo.models.Product> {
         return apiService.delete(id)
     }
 
-    fun delete(id: Int, force: Boolean): Call<Product> {
+    fun delete(id: Int, force: Boolean): Call<com.arnyminerz.filamagenta.network.woo.models.Product> {
         return apiService.delete(id, force)
     }
 
-    fun products(filters: HashMap<String, String>): Call<List<Product>> {
+    fun products(filters: HashMap<String, String>): Call<List<com.arnyminerz.filamagenta.network.woo.models.Product>> {
         return apiService.filter(filters)
     }
 

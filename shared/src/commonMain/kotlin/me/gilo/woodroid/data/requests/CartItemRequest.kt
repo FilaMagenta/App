@@ -2,7 +2,6 @@ package me.gilo.woodroid.data.requests
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import me.gilo.woodroid.models.CartItem
 import me.gilo.woodroid.models.Variation
 
 @Serializable
@@ -20,7 +19,7 @@ data class CartItemRequest(
     var variation: Variation? = null,
 
     @SerialName("cart_item_data")
-    var cartItemData: CartItem? = null,
+    var cartItemData: com.arnyminerz.filamagenta.network.woo.models.CartItem? = null,
 
     @SerialName("refresh_totals")
     var refreshTotals: Boolean? = null,

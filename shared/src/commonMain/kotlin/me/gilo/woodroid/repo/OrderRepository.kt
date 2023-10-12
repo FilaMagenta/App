@@ -2,9 +2,6 @@ package me.gilo.woodroid.repo
 
 import de.jensklingenberg.ktorfit.Call
 import me.gilo.woodroid.data.api.OrderAPI
-import me.gilo.woodroid.models.LineItem
-import me.gilo.woodroid.models.Order
-import me.gilo.woodroid.models.OrderNote
 import me.gilo.woodroid.models.filters.OrderFilter
 import me.gilo.woodroid.repo.order.OrderNoteRepository
 import me.gilo.woodroid.repo.order.RefundRepository
@@ -23,13 +20,13 @@ class OrderRepository(baseUrl: String, consumerKey: String, consumerSecret: Stri
         refundRepository = RefundRepository(baseUrl, consumerKey, consumerSecret)
     }
 
-    fun create(order: Order): Call<Order> {
+    fun create(order: com.arnyminerz.filamagenta.network.woo.models.Order): Call<com.arnyminerz.filamagenta.network.woo.models.Order> {
         return apiService.create(order)
     }
 
-    fun addToCart(productId: Int, cartOrder: Order?): Call<Order> {
+    fun addToCart(productId: Int, cartOrder: com.arnyminerz.filamagenta.network.woo.models.Order?): Call<com.arnyminerz.filamagenta.network.woo.models.Order> {
         var cartOrder = cartOrder
-        val lineItem = LineItem()
+        val lineItem = com.arnyminerz.filamagenta.network.woo.models.LineItem()
         lineItem.productId = productId
         lineItem.quantity = 1
 
@@ -37,7 +34,7 @@ class OrderRepository(baseUrl: String, consumerKey: String, consumerSecret: Stri
             cartOrder.addLineItem(lineItem)
             return apiService.update(cartOrder.id, cartOrder)
         } else {
-            cartOrder = Order()
+            cartOrder = com.arnyminerz.filamagenta.network.woo.models.Order()
             cartOrder.orderNumber = "Cart"
             cartOrder.status = "on-hold"
             cartOrder.addLineItem(lineItem)
@@ -46,55 +43,55 @@ class OrderRepository(baseUrl: String, consumerKey: String, consumerSecret: Stri
 
     }
 
-    fun cart(): Call<List<Order>> {
+    fun cart(): Call<List<com.arnyminerz.filamagenta.network.woo.models.Order>> {
         val orderFilter = OrderFilter()
         orderFilter.status = "on-hold"
 
         return apiService.filter(orderFilter.filters)
     }
 
-    fun order(id: Int): Call<Order> {
+    fun order(id: Int): Call<com.arnyminerz.filamagenta.network.woo.models.Order> {
         return apiService.view(id)
     }
 
-    fun orders(): Call<List<Order>> {
+    fun orders(): Call<List<com.arnyminerz.filamagenta.network.woo.models.Order>> {
         return apiService.list()
     }
 
-    fun orders(orderFilter: OrderFilter): Call<List<Order>> {
+    fun orders(orderFilter: OrderFilter): Call<List<com.arnyminerz.filamagenta.network.woo.models.Order>> {
         return apiService.filter(orderFilter.filters)
     }
 
-    fun update(id: Int, order: Order): Call<Order> {
+    fun update(id: Int, order: com.arnyminerz.filamagenta.network.woo.models.Order): Call<com.arnyminerz.filamagenta.network.woo.models.Order> {
         return apiService.update(id, order)
     }
 
-    fun delete(id: Int): Call<Order> {
+    fun delete(id: Int): Call<com.arnyminerz.filamagenta.network.woo.models.Order> {
         return apiService.delete(id)
     }
 
-    fun delete(id: Int, force: Boolean): Call<Order> {
+    fun delete(id: Int, force: Boolean): Call<com.arnyminerz.filamagenta.network.woo.models.Order> {
         return apiService.delete(id, force)
     }
 
 
-    fun createNote(order: Order, note: OrderNote): Call<OrderNote> {
+    fun createNote(order: com.arnyminerz.filamagenta.network.woo.models.Order, note: com.arnyminerz.filamagenta.network.woo.models.OrderNote): Call<com.arnyminerz.filamagenta.network.woo.models.OrderNote> {
         return orderNoteRepository.create(order, note)
     }
 
-    fun note(order: Order, id: Int): Call<OrderNote> {
+    fun note(order: com.arnyminerz.filamagenta.network.woo.models.Order, id: Int): Call<com.arnyminerz.filamagenta.network.woo.models.OrderNote> {
         return orderNoteRepository.note(order, id)
     }
 
-    fun notes(order: Order): Call<List<OrderNote>> {
+    fun notes(order: com.arnyminerz.filamagenta.network.woo.models.Order): Call<List<com.arnyminerz.filamagenta.network.woo.models.OrderNote>> {
         return orderNoteRepository.notes(order)
     }
 
-    fun deleteNote(order: Order, id: Int): Call<OrderNote> {
+    fun deleteNote(order: com.arnyminerz.filamagenta.network.woo.models.Order, id: Int): Call<com.arnyminerz.filamagenta.network.woo.models.OrderNote> {
         return orderNoteRepository.delete(order, id)
     }
 
-    fun deleteNote(order: Order, id: Int, force: Boolean): Call<OrderNote> {
+    fun deleteNote(order: com.arnyminerz.filamagenta.network.woo.models.Order, id: Int, force: Boolean): Call<com.arnyminerz.filamagenta.network.woo.models.OrderNote> {
         return orderNoteRepository.delete(order, id, force)
     }
 

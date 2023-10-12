@@ -1,8 +1,6 @@
 package me.gilo.woodroid.data.callbacks
 
 
-import me.gilo.woodroid.models.Product
-
 class ProductData {
-    var product: Product? = null
+    var product: com.arnyminerz.filamagenta.network.woo.models.Product? = null
 }

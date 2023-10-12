@@ -1,7 +1,5 @@
 package me.gilo.woodroid.data.callbacks
 
-import me.gilo.woodroid.models.Order
-
 class Data {
-    lateinit var order: Order
+    lateinit var order: com.arnyminerz.filamagenta.network.woo.models.Order
 }

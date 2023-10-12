@@ -11,34 +11,33 @@ import de.jensklingenberg.ktorfit.http.PUT
 import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
 import de.jensklingenberg.ktorfit.http.QueryMap
-import me.gilo.woodroid.models.Order
 
 interface OrderAPI {
 
     @Headers("Content-Type: application/json")
     @POST("orders")
-    fun create(@Body body: Order): Call<Order>
+    fun create(@Body body: com.arnyminerz.filamagenta.network.woo.models.Order): Call<com.arnyminerz.filamagenta.network.woo.models.Order>
 
     @GET("orders/{id}")
-    fun view(@Path("id") id: Int): Call<Order>
+    fun view(@Path("id") id: Int): Call<com.arnyminerz.filamagenta.network.woo.models.Order>
 
     @GET("orders")
-    fun list(): Call<List<Order>>
+    fun list(): Call<List<com.arnyminerz.filamagenta.network.woo.models.Order>>
 
     @Headers("Content-Type: application/json")
     @PUT("orders/{id}")
-    fun update(@Path("id") id: Int, @Body body: Order): Call<Order>
+    fun update(@Path("id") id: Int, @Body body: com.arnyminerz.filamagenta.network.woo.models.Order): Call<com.arnyminerz.filamagenta.network.woo.models.Order>
 
     @DELETE("orders/{id}")
-    fun delete(@Path("id") id: Int): Call<Order>
+    fun delete(@Path("id") id: Int): Call<com.arnyminerz.filamagenta.network.woo.models.Order>
 
     @DELETE("orders/{id}")
-    fun delete(@Path("id") id: Int, @Query("force") force: Boolean): Call<Order>
+    fun delete(@Path("id") id: Int, @Query("force") force: Boolean): Call<com.arnyminerz.filamagenta.network.woo.models.Order>
 
     @POST("orders/batch")
-    fun batch(@Body body: Order): Call<String>
+    fun batch(@Body body: com.arnyminerz.filamagenta.network.woo.models.Order): Call<String>
 
     @GET("orders")
-    fun filter(@QueryMap filter: Map<String, String>): Call<List<Order>>
+    fun filter(@QueryMap filter: Map<String, String>): Call<List<com.arnyminerz.filamagenta.network.woo.models.Order>>
 
 }

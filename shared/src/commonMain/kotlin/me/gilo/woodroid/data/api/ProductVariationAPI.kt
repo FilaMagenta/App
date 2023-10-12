@@ -11,7 +11,6 @@ import de.jensklingenberg.ktorfit.http.PUT
 import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
 import de.jensklingenberg.ktorfit.http.QueryMap
-import me.gilo.woodroid.models.Product
 import me.gilo.woodroid.models.Variation
 
 interface ProductVariationAPI {
@@ -38,7 +37,7 @@ interface ProductVariationAPI {
 
     @Headers("Content-Type: application/json")
     @PUT("products/{id}/variations/{variation_id}")
-    fun batch(@Path("id") product_id: Int, @Path("variation_id") variation_id: Int, @Body body: Product): Call<Variation>
+    fun batch(@Path("id") product_id: Int, @Path("variation_id") variation_id: Int, @Body body: com.arnyminerz.filamagenta.network.woo.models.Product): Call<Variation>
 
     @GET("products/{id}/variations")
     fun filter(@Path("id") product_id: Int, @QueryMap filter: Map<String, String>): Call<List<Variation>>

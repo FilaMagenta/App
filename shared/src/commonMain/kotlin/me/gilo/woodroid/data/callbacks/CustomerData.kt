@@ -1,8 +1,6 @@
 package me.gilo.woodroid.data.callbacks
 
 
-import me.gilo.woodroid.models.Customer
-
 class CustomerData {
-    lateinit var customer: Customer
+    lateinit var customer: com.arnyminerz.filamagenta.network.woo.models.Customer
 }
