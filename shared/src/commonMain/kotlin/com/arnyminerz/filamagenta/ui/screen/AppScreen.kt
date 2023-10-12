@@ -24,10 +24,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
+import com.arnyminerz.filamagenta.account.Account
+import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarItem
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarScaffold
 import com.arnyminerz.filamagenta.ui.page.EventsPage
+import com.arnyminerz.filamagenta.ui.page.WalletPage
 import dev.icerock.moko.resources.compose.stringResource
 
 val appScreenItems = listOf(
@@ -51,7 +54,7 @@ val appScreenItems = listOf(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 fun AppScreen(
-    isAdmin: Boolean,
+    account: Account,
     state: PagerState,
     onEventRequested: (Event) -> Unit
 ) {
@@ -67,7 +70,7 @@ fun AppScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(stringResource(MR.strings.app_name))
-                        if (isAdmin) {
+                        if (accounts.isAdmin(account)) {
                             Text(
                                 text = "admin",
                                 style = MaterialTheme.typography.labelMedium,
@@ -87,11 +90,11 @@ fun AppScreen(
         when (page) {
             // Wallet
             0 -> {
-                Text("Wallet")
+                WalletPage(account)
             }
             // Events
             1 -> {
-                EventsPage(isAdmin, onEventRequested)
+                EventsPage(accounts.isAdmin(account), onEventRequested)
             }
             // Settings
             2 -> {

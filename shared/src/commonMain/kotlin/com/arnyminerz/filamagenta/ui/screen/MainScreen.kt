@@ -36,7 +36,7 @@ fun MainScreen(
 
     var showingLoginWebpage by remember { mutableStateOf(false) }
 
-    val accountsList by accounts!!.getAccountsLive().collectAsState()
+    val accountsList by accounts.getAccountsLive().collectAsState()
 
     var addNewAccountRequested by remember { mutableStateOf(isAddingNewAccount) }
 
@@ -82,7 +82,7 @@ fun MainScreen(
             }
         )
     } else {
-        val isUserAdmin = remember { accounts!!.isAdmin(accountsList.first()) }
+        val account = accountsList.first()
         val event by viewModel.viewingEvent.collectAsState()
         val editingField by viewModel.editingField.collectAsState()
 
@@ -105,9 +105,9 @@ fun MainScreen(
 
             EventScreen(
                 ev,
-                viewModel::edit.takeIf { isUserAdmin },
+                viewModel::edit.takeIf { accounts!!.isAdmin(account) },
                 viewModel::stopViewingEvent
             )
-        } ?: AppScreen(isUserAdmin, mainPagerState, viewModel::viewEvent)
+        } ?: AppScreen(account, mainPagerState, viewModel::viewEvent)
     }
 }
