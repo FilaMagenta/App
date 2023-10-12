@@ -55,4 +55,23 @@ expect class Accounts {
      * @return `true` if [account] is an administrator, `false` otherwise.
      */
     fun isAdmin(account: Account): Boolean
+
+    /**
+     * Fetches the local accounts storage for the ID of the user in the SQLServer database.
+     * Update the value with [setIdSocio].
+     *
+     * @param account The account to check for.
+     *
+     * @return The ID of the user in the SQLServer database, or null if none is stored.
+     */
+    fun getIdSocio(account: Account): Int?
+
+    /**
+     * Stores the ID of the user for the SQLServer database in the accounts' storage for the given user.
+     * Fetch the value with [getIdSocio].
+     *
+     * @param account The account to store the ID into.
+     * @param idSocio The ID to store.
+     */
+    fun setIdSocio(account: Account, idSocio: Int)
 }

@@ -17,10 +17,13 @@ actual class Accounts(private val am: AccountManager) {
         const val UserDataExpiration = "token_expiration"
         const val UserDataRefreshToken = "refresh_token"
         const val UserDataAdmin = "is_admin"
+        const val UserDataIdSocio = "id_socio"
     }
 
     actual fun getAccounts(): List<Account> {
-        return am.getAccountsByType(AccountType).map { Account(it.name) }
+        return am.getAccountsByType(AccountType)
+            .filter { it.type == AccountType }
+            .map { Account(it.name) }
     }
 
     actual fun addAccount(account: Account, token: AccessToken, isAdmin: Boolean) {
@@ -83,5 +86,28 @@ actual class Accounts(private val am: AccountManager) {
      */
     actual fun isAdmin(account: Account): Boolean {
         return am.getUserData(account.androidAccount, UserDataAdmin).toBoolean()
+    }
+
+    /**
+     * Fetches the local accounts storage for the ID of the user in the SQLServer database.
+     * Update the value with [setIdSocio].
+     *
+     * @param account The account to check for.
+     *
+     * @return The ID of the user in the SQLServer database, or null if none is stored.
+     */
+    actual fun getIdSocio(account: Account): Int? {
+        return am.getUserData(account.androidAccount, UserDataIdSocio)?.toIntOrNull()
+    }
+
+    /**
+     * Stores the ID of the user for the SQLServer database in the accounts' storage for the given user.
+     * Fetch the value with [getIdSocio].
+     *
+     * @param account The account to store the ID into.
+     * @param idSocio The ID to store.
+     */
+    actual fun setIdSocio(account: Account, idSocio: Int) {
+        am.setUserData(account.androidAccount, UserDataIdSocio, idSocio.toString())
     }
 }

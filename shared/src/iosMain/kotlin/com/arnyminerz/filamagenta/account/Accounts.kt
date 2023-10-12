@@ -18,6 +18,7 @@ actual class Accounts {
         private val accountTExpiration = StringIndex("account_%d_token_expiration")
         private val accountTRefresh = StringIndex("account_%d_token_refresh")
         private val accountIsAdmin = StringIndex("account_%d_admin")
+        private val accountIdSocio = StringIndex("account_%d_id_socio")
     }
 
     private val settings: Settings = KeychainSettings("accounts")
@@ -93,6 +94,32 @@ actual class Accounts {
      * @return `true` if [account] is an administrator, `false` otherwise.
      */
     actual fun isAdmin(account: Account): Boolean {
-        return settings.getBoolean(accountIsAdmin(length), false)
+        val accountId = getAccounts().indexOf(account)
+        return settings.getBoolean(accountIsAdmin(accountId), false)
+    }
+
+    /**
+     * Fetches the local accounts storage for the ID of the user in the SQLServer database.
+     * Update the value with [setIdSocio].
+     *
+     * @param account The account to check for.
+     *
+     * @return The ID of the user in the SQLServer database, or null if none is stored.
+     */
+    actual fun getIdSocio(account: Account): Int? {
+        val accountId = getAccounts().indexOf(account)
+        return settings.getIntOrNull(accountIdSocio(accountId))
+    }
+
+    /**
+     * Stores the ID of the user for the SQLServer database in the accounts' storage for the given user.
+     * Fetch the value with [getIdSocio].
+     *
+     * @param account The account to store the ID into.
+     * @param idSocio The ID to store.
+     */
+    actual fun setIdSocio(account: Account, idSocio: Int) {
+        val accountId = getAccounts().indexOf(account)
+        settings[accountIdSocio(accountId)] = idSocio
     }
 }
