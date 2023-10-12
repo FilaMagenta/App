@@ -2,6 +2,7 @@ package com.arnyminerz.filamagenta.account
 
 import android.accounts.AccountManager
 import android.accounts.OnAccountsUpdateListener
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -20,9 +21,11 @@ actual class Accounts(private val am: AccountManager) {
         const val UserDataIdSocio = "id_socio"
     }
 
+    private val accountTypeFilter: (android.accounts.Account) -> Boolean = { it.type == AccountType }
+
     actual fun getAccounts(): List<Account> {
         return am.getAccountsByType(AccountType)
-            .filter { it.type == AccountType }
+            .filter(accountTypeFilter)
             .map { Account(it.name) }
     }
 
@@ -55,8 +58,10 @@ actual class Accounts(private val am: AccountManager) {
 
     private val accountsLive = MutableStateFlow<List<Account>>(value = emptyList())
 
-    private val accountsUpdatedListener = OnAccountsUpdateListener {
-        accountsLive.value = it.map(android.accounts.Account::commonAccount)
+    private val accountsUpdatedListener = OnAccountsUpdateListener { accounts ->
+        accountsLive.value = accounts
+            .filter(accountTypeFilter)
+            .map(android.accounts.Account::commonAccount)
     }
 
     /**
@@ -65,11 +70,20 @@ actual class Accounts(private val am: AccountManager) {
     actual fun getAccountsLive(): StateFlow<List<Account>> = accountsLive
 
     fun startWatchingAccounts(looper: Looper) {
-        am.addOnAccountsUpdatedListener(
-            accountsUpdatedListener,
-            Handler(looper),
-            true
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            am.addOnAccountsUpdatedListener(
+                accountsUpdatedListener,
+                Handler(looper),
+                true,
+                arrayOf(AccountType)
+            )
+        } else {
+            am.addOnAccountsUpdatedListener(
+                accountsUpdatedListener,
+                Handler(looper),
+                true
+            )
+        }
     }
 
     fun stopWatchingAccounts() {
