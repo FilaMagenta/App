@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -217,21 +218,18 @@ fun TransactionCard(transaction: AccountTransaction, modifier: Modifier = Modifi
                 .padding(horizontal = 8.dp)
                 .padding(bottom = 8.dp)
         ) {
-            if (transaction.units > 1) {
-                Text(
-                    text = "${transaction.units} x",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-            Text(
-                text = transaction.cost.euros,
-                style = MaterialTheme.typography.titleMedium
-            )
-            if (transaction.units > 1) {
-                Text(
-                    text = " = ${(transaction.units * transaction.cost).euros}",
-                    style = MaterialTheme.typography.titleMedium
-                )
+            val textColor = if (transaction.income) ExtendedColors.Positive.color() else ExtendedColors.Negative.color()
+
+            ProvideTextStyle(
+                MaterialTheme.typography.titleMedium.copy(color = textColor)
+            ) {
+                if (transaction.units > 1) {
+                    Text("${transaction.units} x")
+                }
+                Text(transaction.cost.euros)
+                if (transaction.units > 1) {
+                    Text(" = ${(transaction.units * transaction.cost).euros}")
+                }
             }
         }
     }
