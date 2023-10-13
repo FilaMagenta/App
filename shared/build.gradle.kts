@@ -1,3 +1,4 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import java.util.Properties
 
@@ -58,6 +59,7 @@ kotlin {
                 api(libs.multiplatform.settings)
                 api(libs.multiplatform.viewmodel)
                 api(libs.napier)
+                api(libs.sentry.multiplatform)
 
                 // Moko Resources
                 api(libs.moko.resources)
@@ -127,11 +129,12 @@ multiplatformResources {
 buildkonfig {
     packageName = "com.arnyminerz.filamagenta"
 
-    defaultConfigs {
-        val properties = Properties().apply {
-            load(rootProject.file("local.properties").inputStream())
-        }
+    val properties = Properties().apply {
+        load(rootProject.file("local.properties").inputStream())
+    }
+    val sharedVersionName = project.extra["shared.versionName"] as String
 
+    defaultConfigs {
         buildConfigField(STRING, "ServerHostname", properties.getProperty("server.hostname"))
 
         buildConfigField(STRING, "OAuthClientId", properties.getProperty("oauth.clientId"))
@@ -147,6 +150,40 @@ buildkonfig {
         buildConfigField(STRING, "SqlUsername", properties.getProperty("sql.username"))
         buildConfigField(STRING, "SqlPassword", properties.getProperty("sql.password"))
         buildConfigField(STRING, "SqlDatabase", properties.getProperty("sql.database"))
+
+        // buildConfigField(BOOLEAN, "IsProduction", "false")
+    }
+
+    targetConfigs {
+        create("android") {
+            val versionName = project.extra["android.versionName"] as String
+            val versionCode = project.extra["android.versionCode"] as String
+
+            buildConfigField(STRING, "SentryDsn", properties.getProperty("sentry.dsn.android"))
+            buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName~$versionCode")
+        }
+        create("ios") {
+            val versionName = project.extra["ios.versionName"] as String
+
+            buildConfigField(STRING, "SentryDsn", properties.getProperty("sentry.dsn.ios"))
+            buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName")
+        }
+    }
+    targetConfigs("dev") {
+        create("android") {
+            buildConfigField(BOOLEAN, "IsProduction", "false")
+        }
+        create("ios") {
+            buildConfigField(BOOLEAN, "IsProduction", "false")
+        }
+    }
+    targetConfigs("production") {
+        create("android") {
+            buildConfigField(BOOLEAN, "IsProduction", "true")
+        }
+        create("ios") {
+            buildConfigField(BOOLEAN, "IsProduction", "true")
+        }
     }
 }
 
