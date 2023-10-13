@@ -1,6 +1,10 @@
 # Filà Magenta App
 The official app for Android and iOS.
 
+<div style="text-align: center; width: 100%">
+<img src="badge/google-play-badge.png" alt="Google Play Badge" style="width: 100px" />
+</div>
+
 ## Performance considerations
 Since WooCommerce is not the fastest thing in the world, there are some optimizations to be considered.
 1. Not all the events are fetched when synchronizing.
