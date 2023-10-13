@@ -1,6 +1,5 @@
 package com.arnyminerz.filamagenta.ui.screen
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,8 +49,6 @@ import com.arnyminerz.filamagenta.ui.shape.BrokenPaperShape
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.fontFamilyResource
 import dev.icerock.moko.resources.compose.stringResource
-import io.github.aakira.napier.Napier
-import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -203,17 +200,6 @@ fun EventScreen(
                                     .size(256.dp)
                                     .align(Alignment.CenterHorizontally)
                                     .padding(top = 24.dp)
-                                    .clickable {
-                                        image = null
-                                        CoroutineScope(Dispatchers.IO).launch {
-                                            image = Cache.imageCache(order.orderNumber, true) {
-                                                QRCodeGenerator.generate(order.orderNumber)
-                                            }.also {
-                                                val bytes = Base64.encode(it)
-                                                Napier.d { "Image: $bytes" }
-                                            }
-                                        }
-                                    }
                             )
                             Text(
                                 text = "#${order.orderNumber}",
