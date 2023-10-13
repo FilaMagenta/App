@@ -16,7 +16,7 @@ android {
         val androidVersionCode = project.extra["android.versionCode"] as String
 
         versionCode = androidVersionCode.toInt()
-        versionName = "$sharedVersionName-$versionName~$versionCode"
+        versionName = "$sharedVersionName-$androidVersionName~$versionCode"
     }
     buildFeatures {
         compose = true
