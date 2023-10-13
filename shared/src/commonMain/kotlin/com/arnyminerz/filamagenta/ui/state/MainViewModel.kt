@@ -3,18 +3,29 @@ package com.arnyminerz.filamagenta.ui.state
 import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.account.Account
 import com.arnyminerz.filamagenta.account.accounts
+import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventField
+import com.arnyminerz.filamagenta.cache.data.EventType
+import com.arnyminerz.filamagenta.cache.data.extractMetadata
+import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.network.Authorization
+import com.arnyminerz.filamagenta.network.woo.WooCommerce
+import com.arnyminerz.filamagenta.network.woo.update.MetadataUpdate
+import com.arnyminerz.filamagenta.network.woo.utils.ProductMeta
+import com.arnyminerz.filamagenta.network.woo.utils.set
+import com.arnyminerz.filamagenta.utils.toEpochMillisecondsString
 import com.doublesymmetry.viewmodel.ViewModel
 import io.ktor.http.Parameters
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
 
 class MainViewModel : ViewModel() {
     private val _isRequestingToken = MutableStateFlow(false)
@@ -58,7 +69,7 @@ class MainViewModel : ViewModel() {
             val me = Authorization.requestMe(token)
 
             val account = Account(me.userLogin)
-            accounts!!.addAccount(account, token.toAccessToken(), me.userRoles.contains("administrator"))
+            accounts.addAccount(account, token.toAccessToken(), me.userRoles.contains("administrator"))
         }.invokeOnCompletion { _isRequestingToken.value = false }
     }
 
@@ -93,5 +104,30 @@ class MainViewModel : ViewModel() {
      */
     fun cancelEdit() {
         viewModelScope.launch { _editingField.emit(null) }
+    }
+
+    /**
+     * Requests the server to store the update made at [field].
+     */
+    fun <T> performUpdate(event: Event, field: EventField<T>): Job {
+        return viewModelScope.launch(Dispatchers.IO) {
+            val rawValue = field.value
+            val (key, value) = when(field) {
+                is EventField.Name -> throw UnsupportedOperationException("Cannot change names right now")
+                is EventField.Date -> ProductMeta.EVENT_DATE to (rawValue as LocalDateTime).toEpochMillisecondsString()
+                is EventField.Type -> ProductMeta.CATEGORY to (rawValue as EventType).name
+            }
+
+            val product = WooCommerce.Products.update(
+                event.id,
+                MetadataUpdate(
+                    event.extractMetadata().set(key, value)
+                )
+            )
+            val newEvent = product.toEvent()
+
+            Cache.insertOrUpdate(newEvent)
+            viewEvent(newEvent)
+        }
     }
 }

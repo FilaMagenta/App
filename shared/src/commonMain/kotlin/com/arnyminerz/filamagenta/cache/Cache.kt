@@ -50,10 +50,10 @@ object Cache {
             .executeAsOneOrNull()
         if (element == null) {
             // insert
-            database.eventQueries.insert(event.id, event.name)
+            database.eventQueries.insert(event.id, event.name, event._cache_meta_data)
         } else {
             // update
-            database.eventQueries.update(event.name, event.id)
+            database.eventQueries.update(event.name, event.date, event.type, event._cache_meta_data, event.id)
         }
     }
 

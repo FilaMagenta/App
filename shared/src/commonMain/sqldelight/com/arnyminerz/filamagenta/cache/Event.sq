@@ -5,7 +5,8 @@ CREATE TABLE Event (
     id INTEGER PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
     date INTEGER AS LocalDateTime DEFAULT NULL,
-    type TEXT AS EventType DEFAULT NULL
+    type TEXT AS EventType DEFAULT NULL,
+    _cache_meta_data TEXT NOT NULL
 );
 
 getAll:
@@ -15,7 +16,7 @@ getById:
 SELECT * FROM Event WHERE id = ?;
 
 insert:
-INSERT INTO Event(id, name) VALUES (?, ?);
+INSERT INTO Event(id, name, _cache_meta_data) VALUES (?, ?, ?);
 
 update:
-UPDATE Event SET name=? WHERE id=?;
+UPDATE Event SET name=?, date=?, type=?, _cache_meta_data=? WHERE id=?;

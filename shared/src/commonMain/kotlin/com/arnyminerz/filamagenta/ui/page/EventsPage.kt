@@ -23,11 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Event
-import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.isComplete
+import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.network.woo.WooCommerce
-import com.arnyminerz.filamagenta.network.woo.utils.getDateTime
-import com.arnyminerz.filamagenta.network.woo.utils.getEnum
 import com.arnyminerz.filamagenta.ui.list.EventItem
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
@@ -49,11 +47,8 @@ fun EventsPage(isAdmin: Boolean, onEventRequested: (Event) -> Unit) {
             WooCommerce.Products.getProducts().also { products ->
                 Napier.i("Got ${products.size} products from server. Updating cache...")
                 for (product in products) {
-                    val date = product.meta_data.getDateTime("event_date")
-                    val type = product.meta_data.getEnum("category", EventType::valueOf)
-
                     Cache.insertOrUpdate(
-                        Event(product.id, product.name, date, type)
+                        product.toEvent()
                     )
                 }
             }

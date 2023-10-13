@@ -98,7 +98,7 @@ fun MainScreen(
             editingField?.let { field ->
                 field.editor.Dialog(
                     title = ev.cleanName + " - " + stringResource(field.displayName),
-                    onSubmit = { /* TODO: submit edit */ },
+                    onSubmit = { viewModel.performUpdate(ev, field) },
                     onDismissRequest = viewModel::cancelEdit
                 )
             }

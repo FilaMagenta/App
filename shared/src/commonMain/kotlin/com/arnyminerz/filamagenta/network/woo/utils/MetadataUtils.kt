@@ -31,7 +31,29 @@ fun List<Metadata>.getDateTime(key: String): LocalDateTime? = this
  *
  * @return the matching enum value, or null if the key is not found or the name does not match any of the enum constants
  */
-fun <E: Enum<E>> List<Metadata>.getEnum(key: String, valueOf: (name: String) -> E?): E? = this
+fun <E : Enum<E>> List<Metadata>.getEnum(key: String, valueOf: (name: String) -> E?): E? = this
     .find { it.key == key }
     ?.value
     ?.let(valueOf)
+
+/**
+ * Replaces the value keyed [key] with [value].
+ *
+ * @return The updated list of [Metadata].
+ */
+fun List<Metadata>.set(key: String, value: String): List<Metadata> {
+    // todo - optimize this trash
+    val mapped = map { meta ->
+        if (meta.key == key) {
+            meta.copy(value = value)
+        } else {
+            meta
+        }
+    }.toMutableList()
+
+    if (mapped.find { it.key == key } == null) {
+        mapped.add(Metadata(key, value))
+    }
+
+    return mapped
+}

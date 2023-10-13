@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
 import dev.icerock.moko.resources.StringResource
 import dev.icerock.moko.resources.compose.stringResource
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -38,6 +39,8 @@ sealed class EventField<T>(
     val displayName: StringResource,
     val editor: EventFieldEditor<T>
 ) {
+    val value: T? get() = editor.value.value
+
     data object Name : EventField<String>(
         MR.strings.event_field_name,
         EventFieldEditor.String { stringResource(MR.strings.event_field_name) }
@@ -64,18 +67,31 @@ sealed class EventFieldEditor<Type> {
     @Composable
     fun Dialog(
         title: kotlin.String,
-        onSubmit: () -> Unit,
+        onSubmit: () -> Job,
         onDismissRequest: () -> Unit
     ) {
+        var isLoading by remember { mutableStateOf(false) }
+
         AlertDialog(
             onDismissRequest = {
-                mutableValue.value = null
-                onDismissRequest()
+                if (!isLoading) {
+                    mutableValue.value = null
+                    onDismissRequest()
+                }
             },
             title = { Text(title) },
             confirmButton = {
                 TextButton(
-                    onClick = onSubmit
+                    onClick = {
+                        isLoading = true
+                        onSubmit().invokeOnCompletion {
+                            isLoading = false
+
+                            mutableValue.value = null
+                            onDismissRequest()
+                        }
+                    },
+                    enabled = !isLoading
                 ) {
                     Text(stringResource(MR.strings.save))
                 }
@@ -85,7 +101,8 @@ sealed class EventFieldEditor<Type> {
                     onClick = {
                         mutableValue.value = null
                         onDismissRequest()
-                    }
+                    },
+                    enabled = !isLoading
                 ) {
                     Text(stringResource(MR.strings.cancel))
                 }
@@ -116,7 +133,7 @@ sealed class EventFieldEditor<Type> {
     }
 
     @OptIn(ExperimentalFoundationApi::class)
-    class Date(): EventFieldEditor<LocalDateTime>() {
+    class Date: EventFieldEditor<LocalDateTime>() {
         @Composable
         fun ToggleButton(toggled: Boolean, text: kotlin.String, modifier: Modifier = Modifier, onClick: () -> Unit) {
             if (toggled) {

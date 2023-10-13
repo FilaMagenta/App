@@ -65,8 +65,9 @@ kotlin {
 
                 // Ktor
                 implementation(libs.ktor.core)
-                implementation(libs.ktor.client.contentNegotiation)
                 implementation(libs.ktor.client.auth)
+                implementation(libs.ktor.client.contentNegotiation)
+                implementation(libs.ktor.client.logging)
                 implementation(libs.ktor.serialization.json)
 
                 // SQlDelight
