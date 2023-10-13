@@ -3,6 +3,7 @@ package com.arnyminerz.filamagenta.cache.data
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.BreakfastDining
+import androidx.compose.material.icons.outlined.ConfirmationNumber
 import androidx.compose.material.icons.outlined.DinnerDining
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Handyman
@@ -20,5 +21,6 @@ enum class EventType(
     Lunch(Icons.Outlined.LunchDining, MR.strings.event_type_lunch),
     Dinner(Icons.Outlined.DinnerDining, MR.strings.event_type_dinner),
     Assembly(Icons.Outlined.Groups, MR.strings.event_type_assembly),
-    Workshop(Icons.Outlined.Handyman, MR.strings.event_type_workshop)
+    Workshop(Icons.Outlined.Handyman, MR.strings.event_type_workshop),
+    Lottery(Icons.Outlined.ConfirmationNumber, MR.strings.event_type_lottery)
 }
