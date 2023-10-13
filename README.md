@@ -1,6 +1,10 @@
 # Filà Magenta App
 The official app for Android and iOS.
 
+[![CodeFactor](https://www.codefactor.io/repository/github/filamagenta/app/badge)](https://www.codefactor.io/repository/github/filamagenta/app)
+[![Crowdin](https://badges.crowdin.net/fila-magenta-app/localized.svg)](https://crowdin.com/project/fila-magenta-app)
+[![Publish Internal Release](https://github.com/FilaMagenta/App/actions/workflows/internal-release.yml/badge.svg)](https://github.com/FilaMagenta/App/actions/workflows/internal-release.yml)
+
 <div style="text-align: center; width: 100%">
 <img src="https://raw.githubusercontent.com/Volorf/Badges/master/Google%20Play/Google%20Play%20Badge.png" alt="Google Play Badge" style="width: 150px" />
 <img src="https://raw.githubusercontent.com/Volorf/Badges/master/App%20Store/App%20Store%20Badge.png" alt="App Store Badge" style="width: 150px" />
@@ -23,3 +27,7 @@ To build production release, set the `buildkonfig.flavor` property to `productio
 ```shell
 gradlew build -Pbuildkonfig.flavor=release
 ```
+
+# Translation
+The project is available on [Crowdin](https://crowdin.com/project/fila-magenta-app) for whoever that wants to translate
+the app into their own language.
