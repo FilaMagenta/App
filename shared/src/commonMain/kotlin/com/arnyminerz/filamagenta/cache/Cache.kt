@@ -121,10 +121,10 @@ object Cache {
         with(order) {
             if (element == null) {
                 // insert
-                database.productOrderQueries.insert(id, eventId, orderNumber, date)
+                database.productOrderQueries.insert(id, eventId, orderNumber, date, customerName)
             } else {
                 // update
-                database.productOrderQueries.update(eventId, orderNumber, date, id)
+                database.productOrderQueries.update(eventId, orderNumber, date, customerName, id)
             }
         }
     }

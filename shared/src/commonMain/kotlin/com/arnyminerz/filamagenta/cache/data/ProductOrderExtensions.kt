@@ -7,5 +7,5 @@ import com.arnyminerz.filamagenta.network.woo.models.Order
  * Converts all the items ordered in the current [Order] into [ProductOrder].
  */
 fun Order.toProductOrder(): List<ProductOrder> = lineItems.map {
-    ProductOrder(id.toLong(), it.productId.toLong(), orderNumber, dateCreated)
+    ProductOrder(id.toLong(), it.productId.toLong(), orderNumber, dateCreated, "${billingAddress.firstName} ${billingAddress.lastName}")
 }
