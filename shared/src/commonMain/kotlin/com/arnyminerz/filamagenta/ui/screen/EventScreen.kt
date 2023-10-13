@@ -84,7 +84,7 @@ fun EventScreen(
 
                 EventInformationRow(
                     headline = stringResource(MR.strings.event_screen_date),
-                    text = event.date?.toString() ?: stringResource(MR.strings.event_date_unknown),
+                    text = event.date?.toString()?.replace('T', ' ') ?: stringResource(MR.strings.event_date_unknown),
                     onEdit = onEditRequested?.let { { it(EventField.Date) } }
                 )
 
