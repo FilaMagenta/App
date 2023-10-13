@@ -1,5 +1,6 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import java.io.FileFilter
 import java.time.LocalDateTime
 import java.util.Properties
 
@@ -24,7 +25,7 @@ kotlin {
             }
         }
     }
-    
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -48,7 +49,6 @@ kotlin {
                 // Compose Dependencies
                 implementation(compose.runtime)
                 implementation(compose.foundation)
-                implementation(compose.material)
                 implementation(compose.material3)
                 implementation(compose.materialIconsExtended)
                 implementation(compose.ui)
@@ -156,7 +156,18 @@ buildkonfig {
         buildConfigField(STRING, "SqlPassword", properties.getProperty("sql.password"))
         buildConfigField(STRING, "SqlDatabase", properties.getProperty("sql.database"))
 
-        // buildConfigField(BOOLEAN, "IsProduction", "false")
+        val mokoSpecialDirectories = setOf("fonts", "images", "base")
+        val languages = mutableListOf<String>("en")
+        project.rootProject.file("shared/src/commonMain/resources/MR")
+            // Include only directories
+            .listFiles(FileFilter { it.isDirectory })!!
+            // Filter Moko Directories
+            .filterNot { mokoSpecialDirectories.contains(it.name) }
+            // Include only the names
+            .map { it.name }
+            // Add all languages to list
+            .forEach { languages.add(it) }
+        buildConfigField(STRING, "Languages", languages.joinToString(","))
     }
 
     targetConfigs {

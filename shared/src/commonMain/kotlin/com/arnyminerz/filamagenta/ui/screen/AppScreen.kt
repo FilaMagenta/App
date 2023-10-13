@@ -33,6 +33,7 @@ import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarItem
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarScaffold
 import com.arnyminerz.filamagenta.ui.page.EventsPage
+import com.arnyminerz.filamagenta.ui.page.SettingsPage
 import com.arnyminerz.filamagenta.ui.page.WalletPage
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.stringResource
@@ -119,7 +120,7 @@ fun AppScreen(
             }
             // Settings
             2 -> {
-                Text("Settings")
+                SettingsPage()
             }
         }
     }

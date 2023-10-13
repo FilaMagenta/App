@@ -53,4 +53,9 @@
     <string name="wallet_income">Income</string>
     <string name="wallet_balance">Balance</string>
     <string name="wallet_outcome">Outcome</string>
+
+    <!-- Settings -->
+    <string name="settings_section_user_interface">User Interface</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_system">System Default</string>
 </resources>

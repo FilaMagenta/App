@@ -17,9 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.data.cleanName
+import com.arnyminerz.filamagenta.storage.SettingsKeys
+import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.logic.BackHandler
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.stringResource
+import dev.icerock.moko.resources.desc.StringDesc
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 
@@ -49,6 +52,11 @@ fun MainScreen(
     LaunchedEffect(Unit) {
         // Initialize logging library
         Napier.base(DebugAntilog())
+
+        // Set the locale to display
+        StringDesc.localeType = settings.getStringOrNull(SettingsKeys.LANGUAGE)
+            ?.let { StringDesc.LocaleType.Custom(it) }
+            ?: StringDesc.LocaleType.System
     }
 
     val mainPagerState = rememberPagerState { appScreenItems.size }
