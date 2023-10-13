@@ -78,6 +78,15 @@ android {
             keyPassword = signingKeyPassword
         }
     }
+
+    // Force inclusion of all translation files.
+    // See: https://github.com/icerockdev/moko-resources#example-6---select-localization-in-runtime
+    @Suppress("UnstableApiUsage")
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
 }
 
 dependencies {
