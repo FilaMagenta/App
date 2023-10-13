@@ -11,3 +11,6 @@ INSERT INTO ImageCache(key, data) VALUES (?, ?);
 
 update:
 UPDATE ImageCache SET key=?, data=?;
+
+remove:
+DELETE FROM ImageCache WHERE EXISTS (SELECT * FROM ImageCache WHERE key=?);
