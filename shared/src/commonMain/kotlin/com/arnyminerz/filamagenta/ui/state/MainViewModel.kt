@@ -39,10 +39,7 @@ class MainViewModel : ViewModel() {
     }
 
     private val _isRequestingToken = MutableStateFlow(false)
-
-    /**
-     * Reports the progress of [requestToken].
-     */
+    /** Reports the progress of [requestToken]. */
     val isRequestingToken: StateFlow<Boolean> get() = _isRequestingToken
 
     private val _isLoadingEvents = MutableStateFlow(false)
@@ -53,6 +50,24 @@ class MainViewModel : ViewModel() {
 
     private val _editingField = MutableStateFlow<EventField<*>?>(null)
     val editingField: StateFlow<EventField<*>?> get() = _editingField
+
+    /**
+     * Whether there's something being loaded in the background.
+     */
+    val isLoading = isLoadingEvents
+
+    /**
+     * For each index of the pages in the main navigation, which function can be used for refreshing. If null, refresh
+     * by [MainViewModel] is not supported.
+     */
+    val refreshFunctions = listOf<(() -> Job)?>(
+        // Wallet
+        null,
+        // Events
+        ::refreshEvents,
+        // Settings
+        null
+    )
 
     fun getAuthorizeUrl() =
         // First, request the server

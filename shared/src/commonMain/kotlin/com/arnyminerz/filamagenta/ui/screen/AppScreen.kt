@@ -1,5 +1,6 @@
 package com.arnyminerz.filamagenta.ui.screen
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,13 +13,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Wallet
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.BadgeDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -81,6 +87,22 @@ fun AppScreen(
                                     .background(BadgeDefaults.containerColor)
                                     .padding(horizontal = 6.dp, vertical = 4.dp)
                             )
+                        }
+                    }
+                },
+                actions = {
+                    val isRefreshing by viewModel.isLoading.collectAsState(false)
+
+                    AnimatedContent(
+                        targetState = viewModel.refreshFunctions.getOrNull(state.currentPage)
+                    ) { refresh ->
+                        if (refresh != null) {
+                            IconButton(
+                                enabled = !isRefreshing,
+                                onClick = { refresh() }
+                            ) {
+                                Icon(Icons.Rounded.Refresh, stringResource(MR.strings.refresh))
+                            }
                         }
                     }
                 }
