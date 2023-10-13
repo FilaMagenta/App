@@ -21,6 +21,7 @@
     <string name="nav_settings">Settings</string>
 
     <!-- Event item -->
+    <string name="event_info">Event Information</string>
     <string name="event_date">Date: %s</string>
     <string name="event_options_available">Options available</string>
     <string name="event_warnings">Warnings:</string>

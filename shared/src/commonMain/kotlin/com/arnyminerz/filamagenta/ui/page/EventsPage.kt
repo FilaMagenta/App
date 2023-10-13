@@ -32,10 +32,15 @@ fun EventsPage(
     val events by Cache.events.collectAsState(null)
     val isRefreshing by viewModel.isLoadingEvents.collectAsState(false)
 
-    DisposableEffect(Unit) {
-        val coroutine = viewModel.refreshEvents()
+    DisposableEffect(events) {
+        // todo - there should be a reload button on the navbar
+        val coroutine = if (events?.isEmpty() == true) {
+            viewModel.refreshEvents()
+        } else {
+            null
+        }
 
-        onDispose { coroutine.cancel() }
+        onDispose { coroutine?.cancel() }
     }
 
     AnimatedContent(

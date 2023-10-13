@@ -1,19 +1,26 @@
 package com.arnyminerz.filamagenta.ui.screen
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
@@ -49,31 +56,64 @@ fun EventScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 8.dp)
+                .padding(horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(8.dp))
+            OutlinedCard(
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(MR.strings.event_info),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
+                )
 
-            EventInformationRow(
-                headline = stringResource(MR.strings.event_screen_name),
-                text = event.cleanName,
-                onEdit = onEditRequested?.let { { it(EventField.Name) } }
-            )
+                EventInformationRow(
+                    headline = stringResource(MR.strings.event_screen_name),
+                    text = event.cleanName,
+                    onEdit = onEditRequested?.let { { it(EventField.Name) } }
+                )
 
-            Spacer(Modifier.height(8.dp))
+                EventInformationRow(
+                    headline = stringResource(MR.strings.event_screen_type),
+                    text = stringResource((event.type ?: EventType.Unknown).label),
+                    onEdit = onEditRequested?.let { { it(EventField.Type) } }
+                )
 
-            EventInformationRow(
-                headline = stringResource(MR.strings.event_screen_type),
-                text = stringResource((event.type ?: EventType.Unknown).label),
-                onEdit = onEditRequested?.let { { it(EventField.Type) } }
-            )
+                EventInformationRow(
+                    headline = stringResource(MR.strings.event_screen_date),
+                    text = event.date?.toString() ?: stringResource(MR.strings.event_date_unknown),
+                    onEdit = onEditRequested?.let { { it(EventField.Date) } }
+                )
 
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
+            }
 
-            EventInformationRow(
-                headline = stringResource(MR.strings.event_screen_date),
-                text = event.date?.toString() ?: stringResource(MR.strings.event_date_unknown),
-                onEdit = onEditRequested?.let { { it(EventField.Date) } }
-            )
+            if (!event.variations.isNullOrEmpty()) {
+                for (variation in event.variations) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    ) {
+                        Text(
+                            text = variation.name,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                        Row {
+                            for (option in variation.options) {
+                                FilterChip(
+                                    selected = false,
+                                    label = { Text(option) },
+                                    onClick = {}
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
