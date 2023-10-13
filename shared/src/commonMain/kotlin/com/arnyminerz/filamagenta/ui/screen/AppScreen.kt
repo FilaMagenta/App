@@ -72,7 +72,7 @@ fun AppScreen(
                         Text(stringResource(MR.strings.app_name))
                         if (accounts.isAdmin(account)) {
                             Text(
-                                text = "admin",
+                                text = stringResource(MR.strings.badge_admin),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.contentColorFor(BadgeDefaults.containerColor),
                                 modifier = Modifier
