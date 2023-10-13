@@ -3,6 +3,8 @@ package com.arnyminerz.filamagenta.ui.navigation
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -10,6 +12,8 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,10 +41,10 @@ fun NavigationBarScaffold(
 ) {
     val windowSizeClass = calculateWindowSizeClass()
 
+    val scope = rememberCoroutineScope()
+
     when (windowSizeClass) {
         WindowSizeClass.Compact -> {
-            val scope = rememberCoroutineScope()
-
             Scaffold(
                 topBar = topBar,
                 bottomBar = {
@@ -73,12 +77,42 @@ fun NavigationBarScaffold(
             }
         }
 
-        WindowSizeClass.Medium -> {
-            TODO("Design not yet implemented")
-        }
-
-        WindowSizeClass.Expanded -> {
-            TODO("Design not yet implemented")
+        WindowSizeClass.Medium, WindowSizeClass.Expanded -> {
+            Scaffold(
+                topBar = topBar
+            ) { paddingValues ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    NavigationRail {
+                        for ((index, item) in items.withIndex()) {
+                            NavigationRailItem(
+                                selected = state.currentPage == index,
+                                icon = { item.Icon() },
+                                label = { Text(item.label()) },
+                                alwaysShowLabel = windowSizeClass == WindowSizeClass.Expanded,
+                                onClick = {
+                                    scope.launch { state.animateScrollToPage(index) }
+                                }
+                            )
+                        }
+                    }
+                    HorizontalPager(
+                        state = state,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                    ) { page ->
+                        Box(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            content(page)
+                        }
+                    }
+                }
+            }
         }
     }
 }

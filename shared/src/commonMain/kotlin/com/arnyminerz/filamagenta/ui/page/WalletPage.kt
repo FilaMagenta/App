@@ -4,8 +4,10 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.LinearProgressIndicator
@@ -18,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -88,7 +91,10 @@ fun WalletPage(account: Account) {
     val income = transactions.filter { it.income }.sumOf { it.units * it.cost }
     val outcome = transactions.filter { !it.income }.sumOf { it.units * it.cost }
 
-    LazyColumn {
+    LazyColumn(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize()
+    ) {
         if (isLoading) {
             stickyHeader {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -99,6 +105,7 @@ fun WalletPage(account: Account) {
                 income,
                 outcome,
                 modifier = Modifier
+                    .widthIn(max = 600.dp)
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             )
@@ -107,6 +114,7 @@ fun WalletPage(account: Account) {
             TransactionCard(
                 transaction,
                 modifier = Modifier
+                    .widthIn(max = 600.dp)
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             )
