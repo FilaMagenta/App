@@ -22,6 +22,7 @@
 
     <!-- Event item -->
     <string name="event_date">Date: %s</string>
+    <string name="event_options_available">Options available</string>
     <string name="event_warnings">Warnings:</string>
     <string name="event_warnings_date">Date not set</string>
     <string name="event_warnings_type">Type not set</string>

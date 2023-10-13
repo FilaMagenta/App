@@ -1,4 +1,6 @@
 import com.arnyminerz.filamagenta.cache.data.EventType;
+import com.arnyminerz.filamagenta.cache.data.EventVariation;
+import kotlin.collections.List;
 import kotlinx.datetime.LocalDateTime;
 
 CREATE TABLE Event (
@@ -6,6 +8,7 @@ CREATE TABLE Event (
     name TEXT NOT NULL,
     date INTEGER AS LocalDateTime DEFAULT NULL,
     type TEXT AS EventType DEFAULT NULL,
+    variations TEXT AS List<EventVariation> DEFAULT NULL,
     _cache_meta_data TEXT NOT NULL
 );
 
@@ -16,10 +19,10 @@ getById:
 SELECT * FROM Event WHERE id = ?;
 
 insert:
-INSERT INTO Event(id, name, _cache_meta_data) VALUES (?, ?, ?);
+INSERT INTO Event(id, name, date, type, variations, _cache_meta_data) VALUES (?, ?, ?, ?, ?, ?);
 
 update:
-UPDATE Event SET name=?, date=?, type=?, _cache_meta_data=? WHERE id=?;
+UPDATE Event SET name=?, date=?, type=?, variations=?, _cache_meta_data=? WHERE id=?;
 
 retainById:
 DELETE FROM Event WHERE id NOT IN ?;

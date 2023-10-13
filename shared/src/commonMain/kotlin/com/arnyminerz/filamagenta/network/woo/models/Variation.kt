@@ -60,7 +60,7 @@ data class Variation(
     val purchase_note: String? = null,
     val categories: ArrayList<Category>? = null,
     val tags: ArrayList<Tag>? = null,
-    val productAttributes: ArrayList<ProductAttribute>? = null,
+    val attributes: ArrayList<ProductAttribute>? = null,
     val default_attributes: ArrayList<DefaultAttribute>? = null,
     val grouped_products: ArrayList<Int>? = null,
     val menu_order: Int = 0,

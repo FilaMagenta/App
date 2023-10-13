@@ -24,7 +24,7 @@ object Cache {
     val transactions: Query<AccountTransaction> = database.accountTransactionQueries.getAll()
 
     @Composable
-    fun <RowType: Any> Query<RowType>.collectListAsState(): State<List<RowType>> {
+    fun <RowType : Any> Query<RowType>.collectListAsState(): State<List<RowType>> {
         val flow = remember { MutableStateFlow(executeAsList()) }
 
         DisposableEffect(this) {
@@ -50,10 +50,24 @@ object Cache {
             .executeAsOneOrNull()
         if (element == null) {
             // insert
-            database.eventQueries.insert(event.id, event.name, event._cache_meta_data)
+            database.eventQueries.insert(
+                event.id,
+                event.name,
+                event.date,
+                event.type,
+                event.variations,
+                event._cache_meta_data
+            )
         } else {
             // update
-            database.eventQueries.update(event.name, event.date, event.type, event._cache_meta_data, event.id)
+            database.eventQueries.update(
+                event.name,
+                event.date,
+                event.type,
+                event.variations,
+                event._cache_meta_data,
+                event.id
+            )
         }
     }
 

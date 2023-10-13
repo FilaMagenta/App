@@ -1,6 +1,7 @@
 package com.arnyminerz.filamagenta.cache.data
 
 import com.arnyminerz.filamagenta.cache.Event
+import com.arnyminerz.filamagenta.cache.data.EventVariation.Companion.toEventVariations
 import com.arnyminerz.filamagenta.network.woo.models.Metadata
 import com.arnyminerz.filamagenta.network.woo.models.Product
 import com.arnyminerz.filamagenta.network.woo.models.Variation
@@ -58,5 +59,5 @@ fun Product.toEvent(variations: List<Variation>): Event {
     val date = metaData.getDateTime(ProductMeta.EVENT_DATE)
     val type = metaData.getEnum(ProductMeta.CATEGORY, EventType::valueOf)
 
-    return Event(id, name, date, type, DefaultJson.encodeToString(metaData))
+    return Event(id, name, date, type, variations.toEventVariations(), DefaultJson.encodeToString(metaData))
 }

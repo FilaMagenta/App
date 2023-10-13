@@ -8,6 +8,7 @@ class ProductAttribute {
     var name: String? = null
     var slug: String? = null
     var type: String? = null
+    val option: String? = null
     var position: Int = 0
     var isVisible: Boolean = false
     var isVariation: Boolean = false
