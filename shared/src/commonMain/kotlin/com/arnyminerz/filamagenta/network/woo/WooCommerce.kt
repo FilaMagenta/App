@@ -2,6 +2,7 @@ package com.arnyminerz.filamagenta.network.woo
 
 import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.network.woo.models.Product
+import com.arnyminerz.filamagenta.network.woo.models.Variation
 import com.arnyminerz.filamagenta.network.woo.update.MetadataUpdate
 import com.arnyminerz.filamagenta.network.woo.update.WooProductUpdate
 import io.github.aakira.napier.Napier
@@ -30,6 +31,13 @@ import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.reflect.TypeInfo
 import io.ktor.util.reflect.typeInfo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 
 object WooCommerce {
@@ -72,9 +80,10 @@ object WooCommerce {
         )
     }
 
-    private suspend fun <T: Any> getList(
+    private suspend fun <T : Any> getList(
         type: TypeInfo,
         vararg pathSegments: Any,
+        parameters: Map<String, Any?> = emptyMap(),
         page: Int = 1,
         perPage: Int = 10,
         block: HttpRequestBuilder.() -> Unit = {}
@@ -93,6 +102,12 @@ object WooCommerce {
                 port = baseUrl.port,
                 pathSegments = baseUrl.pathSegments,
                 parameters = parameters {
+                    for ((k, v) in parameters) {
+                        if (v != null) {
+                            set(k, v.toString())
+                        }
+                    }
+
                     set("per_page", perPage.toString())
                     set("page", page.toString())
                 }
@@ -117,12 +132,20 @@ object WooCommerce {
         return builder
     }
 
-    private suspend inline fun <reified T: Any> getList(
+    private suspend inline fun <reified T : Any> getList(
         vararg pathSegments: Any,
+        parameters: Map<String, Any?> = emptyMap(),
         page: Int = 1,
         perPage: Int = 10,
         noinline block: HttpRequestBuilder.() -> Unit = {}
-    ): List<T> = getList(typeInfo<List<T>>(), *pathSegments, page = page, perPage = perPage, block = block)
+    ): List<T> = getList(
+        type = typeInfo<List<T>>(),
+        *pathSegments,
+        parameters = parameters,
+        page = page,
+        perPage = perPage,
+        block = block
+    )
 
     private suspend fun put(
         vararg pathSegments: Any,
@@ -139,15 +162,73 @@ object WooCommerce {
     }
 
     object Products {
-        suspend fun getProducts(): List<Product> {
-            return getList("products", perPage = 50)
+        private const val CATEGORY_ID_EVENTS = 21
+
+        private val productsJob = SupervisorJob()
+        private val coroutineScope = CoroutineScope(Dispatchers.IO + productsJob)
+
+        /**
+         * Gets all the products available in the server in the events category ([CATEGORY_ID_EVENTS]).
+         */
+        suspend fun getProducts(modifiedAfter: LocalDate? = null): List<Product> {
+            return getList(
+                "products",
+                perPage = 50,
+                parameters = mapOf(
+                    "category" to CATEGORY_ID_EVENTS,
+                    "modified_after" to modifiedAfter?.toString() + "T00:00:00"
+                )
+            )
+        }
+
+        suspend fun getProductsAndVariations(modifiedAfter: LocalDate? = null): Map<Product, List<Variation>> {
+            val products = getProducts(modifiedAfter)
+            val variationsCache = mutableMapOf<Int, Variation>()
+            val result = mutableMapOf<Product, List<Variation>>()
+
+            val jobs = mutableListOf<Job>()
+
+            for (product in products) {
+                if (product.variations.isEmpty()) {
+                    Napier.d("Product#${product.id} doesn't have any variations.")
+                    jobs += coroutineScope.launch {
+                        result[product] = emptyList()
+                    }
+                } else {
+                    Napier.d("Product#${product.id} has ${product.variations.size} variations.")
+                    jobs += coroutineScope.launch {
+                        if (product.variations.all { variationsCache.containsKey(it) }) {
+                            // All the variations are cached, load from there
+                            Napier.v("Variations for Product#${product.id} are available in cache.")
+                            val variations = variationsCache.filterKeys { product.variations.contains(it) }
+                            result[product] = variations.values.toList()
+                        } else {
+                            // Variations are missing from cache, load from server
+                            Napier.v("Fetching variations for Product#${product.id} from server.")
+                            val variations = getList<Variation>("products", product.id, "variations")
+                            result[product] = variations
+                            // Store all the variations in memory
+                            variationsCache.putAll(
+                                variations.associateBy { it.id }
+                            )
+                        }
+                    }
+                }
+            }
+            jobs.forEachIndexed { index, job ->
+                job.join()
+
+                Napier.d("Progress: $index / ${products.size}")
+            }
+
+            return result
         }
 
         /**
          * Performs an update to the product with id [productId].
-         * 
+         *
          * [API reference](https://woocommerce.github.io/woocommerce-rest-api-docs/#update-a-product)
-         * 
+         *
          * @param productId The ID ([Product.id] of the product to update.
          * @param update The update to make. Must be a serializable object of type [WooProductUpdate].
          *

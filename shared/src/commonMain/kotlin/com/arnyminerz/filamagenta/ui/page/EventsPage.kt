@@ -16,44 +16,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.arnyminerz.filamagenta.cache.Cache
-import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.isComplete
-import com.arnyminerz.filamagenta.cache.data.toEvent
-import com.arnyminerz.filamagenta.network.woo.WooCommerce
 import com.arnyminerz.filamagenta.ui.list.EventItem
-import io.github.aakira.napier.Napier
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.launch
+import com.arnyminerz.filamagenta.ui.state.MainViewModel
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
-fun EventsPage(isAdmin: Boolean, onEventRequested: (Event) -> Unit) {
+fun EventsPage(
+    isAdmin: Boolean,
+    viewModel: MainViewModel
+) {
     val events by Cache.events.collectAsState(null)
-    var isRefreshing by remember { mutableStateOf(false) }
+    val isRefreshing by viewModel.isLoadingEvents.collectAsState(false)
 
     DisposableEffect(Unit) {
-        val coroutine = CoroutineScope(Dispatchers.IO).launch {
-            isRefreshing = true
-
-            Napier.d("Getting products from server...")
-            WooCommerce.Products.getProducts().also { products ->
-                Napier.i("Got ${products.size} products from server. Updating cache...")
-                for (product in products) {
-                    Cache.insertOrUpdate(
-                        product.toEvent()
-                    )
-                }
-            }
-        }
-        coroutine.invokeOnCompletion { isRefreshing = false }
+        val coroutine = viewModel.refreshEvents()
 
         onDispose { coroutine.cancel() }
     }
@@ -93,7 +73,7 @@ fun EventsPage(isAdmin: Boolean, onEventRequested: (Event) -> Unit) {
                     EventItem(
                         event,
                         modifier = Modifier.animateItemPlacement()
-                    ) { onEventRequested(event) }
+                    ) { viewModel.viewEvent(event) }
                 }
             }
         }

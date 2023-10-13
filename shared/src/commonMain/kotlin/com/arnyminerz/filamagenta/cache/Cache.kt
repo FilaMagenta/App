@@ -58,6 +58,19 @@ object Cache {
     }
 
     /**
+     * Synchronizes the local cache with the given list of events. This includes creating, updating and deleting.
+     */
+    fun synchronizeEvents(events: List<Event>) {
+        val ids = arrayListOf<Long>()
+        for (item in events) {
+            insertOrUpdate(item)
+            ids.add(item.id)
+        }
+        // Now remove all the elements from the database which are not inside ids
+        database.eventQueries.retainById(ids)
+    }
+
+    /**
      * Inserts the given [transaction] if it's not cached, or updates the cache entry otherwise.
      */
     fun insertOrUpdate(transaction: AccountTransaction) {
@@ -82,6 +95,6 @@ object Cache {
             ids.add(transaction.id)
         }
         // Now remove all the elements from the database which are not inside ids
-        database.accountTransactionQueries.removeIfNotIncluded(ids)
+        database.accountTransactionQueries.retainById(ids)
     }
 }

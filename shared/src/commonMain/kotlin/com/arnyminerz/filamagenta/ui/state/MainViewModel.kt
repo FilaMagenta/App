@@ -16,6 +16,7 @@ import com.arnyminerz.filamagenta.network.woo.utils.ProductMeta
 import com.arnyminerz.filamagenta.network.woo.utils.set
 import com.arnyminerz.filamagenta.utils.toEpochMillisecondsString
 import com.doublesymmetry.viewmodel.ViewModel
+import io.github.aakira.napier.Napier
 import io.ktor.http.Parameters
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
@@ -25,15 +26,27 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Month
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 class MainViewModel : ViewModel() {
+    companion object {
+        private const val MONTH_INDEX_AUGUST = 8
+    }
+
     private val _isRequestingToken = MutableStateFlow(false)
 
     /**
      * Reports the progress of [requestToken].
      */
     val isRequestingToken: StateFlow<Boolean> get() = _isRequestingToken
+
+    private val _isLoadingEvents = MutableStateFlow(false)
+    val isLoadingEvents: StateFlow<Boolean> get() = _isLoadingEvents
 
     private val _viewingEvent = MutableStateFlow<Event?>(null)
     val viewingEvent: StateFlow<Event?> get() = _viewingEvent
@@ -124,10 +137,40 @@ class MainViewModel : ViewModel() {
                     event.extractMetadata().set(key, value)
                 )
             )
-            val newEvent = product.toEvent()
+            // fixme - should include variations
+            val newEvent = product.toEvent(emptyList())
 
             Cache.insertOrUpdate(newEvent)
             viewEvent(newEvent)
         }
+    }
+
+    /**
+     * Fetches all events from the server and updates the local cache.
+     */
+    fun refreshEvents() = viewModelScope.launch(Dispatchers.IO) {
+        _isLoadingEvents.emit(true)
+
+        // Events will only be fetched for this year. Year is considered until August
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val year = if (now.monthNumber > MONTH_INDEX_AUGUST) {
+            // If right now is after August, the working year is the current one
+            now.year
+        } else {
+            // If before August, working year is the last one
+            now.year - 1
+        }
+        val modifiedAfter = LocalDate(year, Month.AUGUST, 1)
+
+        Napier.d("Getting products from server after $modifiedAfter...")
+
+        WooCommerce.Products.getProductsAndVariations(modifiedAfter).also { pairs ->
+            Napier.i("Got ${pairs.size} products from server. Updating cache...")
+            Cache.synchronizeEvents(
+                pairs.map { (product, variations) -> product.toEvent(variations) }
+            )
+        }
+
+        _isLoadingEvents.emit(false)
     }
 }

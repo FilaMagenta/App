@@ -26,11 +26,11 @@ import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.Account
 import com.arnyminerz.filamagenta.account.accounts
-import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarItem
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarScaffold
 import com.arnyminerz.filamagenta.ui.page.EventsPage
 import com.arnyminerz.filamagenta.ui.page.WalletPage
+import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.stringResource
 
 val appScreenItems = listOf(
@@ -56,7 +56,7 @@ val appScreenItems = listOf(
 fun AppScreen(
     account: Account,
     state: PagerState,
-    onEventRequested: (Event) -> Unit
+    viewModel: MainViewModel
 ) {
     NavigationBarScaffold(
         items = appScreenItems,
@@ -94,7 +94,7 @@ fun AppScreen(
             }
             // Events
             1 -> {
-                EventsPage(accounts.isAdmin(account), onEventRequested)
+                EventsPage(accounts.isAdmin(account), viewModel)
             }
             // Settings
             2 -> {

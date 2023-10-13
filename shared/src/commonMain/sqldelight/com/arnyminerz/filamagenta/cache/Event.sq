@@ -20,3 +20,6 @@ INSERT INTO Event(id, name, _cache_meta_data) VALUES (?, ?, ?);
 
 update:
 UPDATE Event SET name=?, date=?, type=?, _cache_meta_data=? WHERE id=?;
+
+retainById:
+DELETE FROM Event WHERE id NOT IN ?;
