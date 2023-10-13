@@ -1,14 +1,13 @@
 package com.arnyminerz.filamagenta.cache.data
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -17,12 +16,15 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerState
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -32,8 +34,11 @@ import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 sealed class EventField<T>(
     val displayName: StringResource,
@@ -132,54 +137,118 @@ sealed class EventFieldEditor<Type> {
         }
     }
 
-    @OptIn(ExperimentalFoundationApi::class)
+    @OptIn(ExperimentalMaterial3Api::class)
     class Date: EventFieldEditor<LocalDateTime>() {
-        @Composable
-        fun ToggleButton(toggled: Boolean, text: kotlin.String, modifier: Modifier = Modifier, onClick: () -> Unit) {
-            if (toggled) {
-                Button(
-                    onClick = onClick,
-                    modifier = modifier
-                ) {
-                    Text(text)
-                }
-            } else {
-                OutlinedButton(
-                    onClick = onClick,
-                    modifier = modifier
-                ) {
-                    Text(text)
-                }
+
+        private fun updateValue(datePickerState: DatePickerState, timePickerState: TimePickerState) {
+            mutableValue.value = datePickerState.selectedDateMillis?.let { dateMillis ->
+                val date = Instant.fromEpochMilliseconds(dateMillis)
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                LocalDateTime(
+                    year = date.year,
+                    month = date.month,
+                    dayOfMonth = date.dayOfMonth,
+                    hour = timePickerState.hour,
+                    minute = timePickerState.minute
+                )
             }
         }
 
         @Composable
         override fun Content() {
-            val scope = rememberCoroutineScope()
-            val pagerState = rememberPagerState { 2 }
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = Clock.System.now().toEpochMilliseconds()
+            )
+            val timePickerState = rememberTimePickerState(
+                is24Hour = true
+            )
+
+            var displayingDatePicker by remember { mutableStateOf(false) }
+            if (displayingDatePicker) {
+                DatePickerDialog(
+                    onDismissRequest = { displayingDatePicker = false },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                updateValue(datePickerState, timePickerState)
+                                displayingDatePicker = false
+                            }
+                        ) {
+                            Text(stringResource(MR.strings.ok))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { displayingDatePicker = false }
+                        ) {
+                            Text(stringResource(MR.strings.cancel))
+                        }
+                    }
+                ) {
+                    DatePicker(
+                        state = datePickerState,
+                        showModeToggle = false
+                    )
+                }
+            }
+
+            var displayingTimePicker by remember { mutableStateOf(false) }
+            if (displayingTimePicker) {
+                DatePickerDialog(
+                    onDismissRequest = {
+                        updateValue(datePickerState, timePickerState)
+                        displayingTimePicker = false
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                updateValue(datePickerState, timePickerState)
+                                displayingTimePicker = false
+                            }
+                        ) {
+                            Text(stringResource(MR.strings.ok))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { displayingTimePicker = false }
+                        ) {
+                            Text(stringResource(MR.strings.cancel))
+                        }
+                    }
+                ) {
+                    TimePicker(
+                        state = timePickerState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    )
+                }
+            }
 
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
+                val value by value.collectAsState()
+                Text(
+                    text = value?.toString()?.replace('T', ' ') ?: ""
+                )
+
                 Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    ToggleButton(
-                        toggled = pagerState.currentPage == 0,
-                        text = stringResource(MR.strings.event_editor_date),
+                    OutlinedButton(
+                        onClick = { displayingDatePicker = true },
                         modifier = Modifier.weight(1f).padding(end = 4.dp)
-                    ) { scope.launch { pagerState.animateScrollToPage(0) } }
-
-                    ToggleButton(
-                        toggled = pagerState.currentPage == 1,
-                        text = stringResource(MR.strings.event_editor_time),
+                    ) {
+                        Text(stringResource(MR.strings.event_editor_date))
+                    }
+                    OutlinedButton(
+                        onClick = { displayingTimePicker = true },
                         modifier = Modifier.weight(1f).padding(start = 4.dp)
-                    ) { scope.launch { pagerState.animateScrollToPage(1) } }
-                }
-                HorizontalPager(
-                    state = pagerState
-                ) { page ->
-                    Text("page: $page")
+                    ) {
+                        Text(stringResource(MR.strings.event_editor_time))
+                    }
                 }
             }
         }

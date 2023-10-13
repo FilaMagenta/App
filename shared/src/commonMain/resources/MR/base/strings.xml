@@ -8,6 +8,7 @@
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="badge_admin">admin</string>
+    <string name="ok">OK</string>
 
     <!-- Login Screen -->
     <string name="login_title">Login</string>
