@@ -13,7 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,8 +39,8 @@ fun EventsPage(isAdmin: Boolean, onEventRequested: (Event) -> Unit) {
     val events by Cache.events.collectAsState(null)
     var isRefreshing by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
+    DisposableEffect(Unit) {
+        val coroutine = CoroutineScope(Dispatchers.IO).launch {
             isRefreshing = true
 
             Napier.d("Getting products from server...")
@@ -52,7 +52,10 @@ fun EventsPage(isAdmin: Boolean, onEventRequested: (Event) -> Unit) {
                     )
                 }
             }
-        }.invokeOnCompletion { isRefreshing = false }
+        }
+        coroutine.invokeOnCompletion { isRefreshing = false }
+
+        onDispose { coroutine.cancel() }
     }
 
     AnimatedContent(
