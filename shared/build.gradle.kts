@@ -31,6 +31,7 @@ kotlin {
     ).forEach {
         it.binaries.framework {
             baseName = "shared"
+            isStatic = true
 
             export(libs.moko.resources)
             export(libs.moko.graphics) // toUIColor here
@@ -46,8 +47,10 @@ kotlin {
                 // Compose Dependencies
                 implementation(compose.runtime)
                 implementation(compose.foundation)
+                implementation(compose.material)
                 implementation(compose.material3)
                 implementation(compose.materialIconsExtended)
+                implementation(compose.ui)
                 api(libs.compose.webview)
 
                 // Kotlin libraries
@@ -93,6 +96,7 @@ kotlin {
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.ktor.okhttp)
+                implementation(libs.qrcode.android)
                 implementation(libs.sqldelight.android)
             }
         }

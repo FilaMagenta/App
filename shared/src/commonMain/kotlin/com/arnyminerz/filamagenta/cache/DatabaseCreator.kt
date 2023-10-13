@@ -19,6 +19,9 @@ fun createDatabase(driverFactory: DriverFactory): Database {
         ),
         AccountTransactionAdapter = AccountTransaction.Adapter(
             dateAdapter = LocalDateAdapter
+        ),
+        ProductOrderAdapter = ProductOrder.Adapter(
+            dateAdapter = LocalDateTimeAdapter
         )
     ).also { database = it }
 }

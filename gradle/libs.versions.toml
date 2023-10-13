@@ -19,6 +19,7 @@ multiplatform-viewmodel = "0.0.3"
 moko-resources = "0.23.0"
 moko-graphics = "0.9.0"
 napier = "2.6.1"
+qrcode = "3.3.0"
 sentry = "0.2.1"
 sqldelight = "2.0.0"
 
@@ -49,6 +50,7 @@ moko-resourcescompose = { module = "dev.icerock.moko:resources-compose", version
 moko-graphics = { module = "dev.icerock.moko:graphics", version.ref = "moko-graphics" }
 moko-resourcestest = { module = "dev.icerock.moko:resources-test", version.ref = "moko-resources" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
+qrcode-android = { module = "io.github.g0dkar:qrcode-kotlin-android", version.ref = "qrcode" }
 sentry-multiplatform = { module = "io.sentry:sentry-kotlin-multiplatform", version.ref = "sentry" }
 sqldelight-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }

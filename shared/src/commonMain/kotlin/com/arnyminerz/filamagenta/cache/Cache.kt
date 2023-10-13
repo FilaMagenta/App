@@ -23,6 +23,8 @@ object Cache {
 
     val transactions: Query<AccountTransaction> = database.accountTransactionQueries.getAll()
 
+    val orders: Query<ProductOrder> = database.productOrderQueries.getAll()
+
     @Composable
     fun <RowType : Any> Query<RowType>.collectListAsState(): State<List<RowType>> {
         val flow = remember { MutableStateFlow(executeAsList()) }
@@ -110,5 +112,29 @@ object Cache {
         }
         // Now remove all the elements from the database which are not inside ids
         database.accountTransactionQueries.retainById(ids)
+    }
+
+    fun insertOrUpdate(order: ProductOrder) {
+        val element = database.productOrderQueries
+            .getById(order.id)
+            .executeAsOneOrNull()
+        with(order) {
+            if (element == null) {
+                // insert
+                database.productOrderQueries.insert(id, eventId, orderNumber, date)
+            } else {
+                // update
+                database.productOrderQueries.update(eventId, orderNumber, date, id)
+            }
+        }
+    }
+
+    suspend fun imageCache(key: String, block: suspend () -> ByteArray): ByteArray {
+        val cached = database.imageCacheQueries.getByKey(key).executeAsOneOrNull()
+        if (cached != null) return cached.data_
+
+        val new = block()
+        database.imageCacheQueries.insert(key, new)
+        return new
     }
 }

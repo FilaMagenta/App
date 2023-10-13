@@ -10,12 +10,14 @@ import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.extractMetadata
 import com.arnyminerz.filamagenta.cache.data.toAccountTransaction
 import com.arnyminerz.filamagenta.cache.data.toEvent
+import com.arnyminerz.filamagenta.cache.data.toProductOrder
 import com.arnyminerz.filamagenta.network.Authorization
 import com.arnyminerz.filamagenta.network.database.SqlServer
 import com.arnyminerz.filamagenta.network.database.SqlTunnelEntry
 import com.arnyminerz.filamagenta.network.database.SqlTunnelException
 import com.arnyminerz.filamagenta.network.database.getLong
 import com.arnyminerz.filamagenta.network.woo.WooCommerce
+import com.arnyminerz.filamagenta.network.woo.models.Order
 import com.arnyminerz.filamagenta.network.woo.update.MetadataUpdate
 import com.arnyminerz.filamagenta.network.woo.utils.ProductMeta
 import com.arnyminerz.filamagenta.network.woo.utils.set
@@ -28,6 +30,7 @@ import io.ktor.http.URLProtocol
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -54,6 +57,9 @@ class MainViewModel : ViewModel() {
 
     private val _isLoadingEvents = MutableStateFlow(false)
     val isLoadingEvents: StateFlow<Boolean> get() = _isLoadingEvents
+
+    private val _isLoadingOrders = MutableStateFlow(false)
+    val isLoadingOrders: StateFlow<Boolean> get() = _isLoadingOrders
 
     private val _viewingEvent = MutableStateFlow<Event?>(null)
     val viewingEvent: StateFlow<Event?> get() = _viewingEvent
@@ -311,11 +317,26 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun refreshOrders(productId: Int) = viewModelScope.launch(Dispatchers.IO) {
-        val customerId = getOrFetchCustomerId()
+    fun fetchOrders(productId: Int) = viewModelScope.launch(Dispatchers.IO) {
+        // Wait until another thread finishes loading
+        while (_isLoadingOrders.value) { delay(1) }
 
-        Napier.d("Fetching orders for Product#$productId made by Customer#$customerId")
-        val orders = WooCommerce.Orders.getOrdersForProductAndCustomer(customerId, productId)
-        Napier.i("Got ${orders.size} for Product#$productId.")
+        try {
+            _isLoadingOrders.emit(true)
+
+            val customerId = getOrFetchCustomerId()
+
+            Napier.d("Fetching orders for Product#$productId made by Customer#$customerId")
+            val orders = WooCommerce.Orders.getOrdersForProductAndCustomer(customerId, productId)
+            Napier.i("Got ${orders.size} for Product#$productId. Updating cache...")
+
+            orders.flatMap(Order::toProductOrder)
+                .forEach { order ->
+                    Napier.d("Inserting Order#${order.id}")
+                    Cache.insertOrUpdate(order)
+                }
+        } finally {
+            _isLoadingOrders.emit(false)
+        }
     }
 }
