@@ -7,6 +7,9 @@
     <string name="edit">Edit</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
+    <string name="badge_admin">admin</string>
+    <string name="ok">OK</string>
+    <string name="refresh">Refresh</string>
 
     <!-- Login Screen -->
     <string name="login_title">Login</string>
@@ -19,7 +22,9 @@
     <string name="nav_settings">Settings</string>
 
     <!-- Event item -->
+    <string name="event_info">Event Information</string>
     <string name="event_date">Date: %s</string>
+    <string name="event_options_available">Options available</string>
     <string name="event_warnings">Warnings:</string>
     <string name="event_warnings_date">Date not set</string>
     <string name="event_warnings_type">Type not set</string>
@@ -30,6 +35,7 @@
     <string name="event_type_dinner">Dinner</string>
     <string name="event_type_assembly">Assembly</string>
     <string name="event_type_workshop">Workshop</string>
+    <string name="event_type_lottery">Lottery</string>
     <string name="event_field_name">Name</string>
     <string name="event_field_date">Date</string>
     <string name="event_field_type">Type</string>
@@ -41,6 +47,7 @@
     <string name="event_screen_name">Event Name</string>
     <string name="event_screen_type">Event Type</string>
     <string name="event_screen_date">Event Date</string>
+    <string name="event_screen_loading_order">Loading Order...</string>
 
     <!-- Wallet Screen -->
     <string name="wallet_income">Income</string>

@@ -1,0 +1,24 @@
+import kotlinx.datetime.LocalDateTime;
+
+CREATE TABLE ProductOrder (
+    id INTEGER PRIMARY KEY NOT NULL,
+    eventId INTEGER NOT NULL,
+    orderNumber TEXT NOT NULL,
+    date INTEGER AS LocalDateTime NOT NULL,
+    FOREIGN KEY(eventId) REFERENCES Event(id)
+);
+
+getAll:
+SELECT * FROM ProductOrder;
+
+getById:
+SELECT * FROM ProductOrder WHERE id = ?;
+
+insert:
+INSERT INTO ProductOrder(id, eventId, orderNumber, date) VALUES (?, ?, ?, ?);
+
+update:
+UPDATE ProductOrder SET eventId=?, orderNumber=?, date=? WHERE id=?;
+
+retainById:
+DELETE FROM ProductOrder WHERE id NOT IN ?;

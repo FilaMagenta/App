@@ -10,8 +10,13 @@ android {
         applicationId = "com.arnyminerz.filamagenta.android"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.0.1"
+
+        val sharedVersionName = project.extra["shared.versionName"] as String
+        val androidVersionName = project.extra["android.versionName"] as String
+        val androidVersionCode = project.extra["android.versionCode"] as String
+
+        versionCode = androidVersionCode.toInt()
+        versionName = "$sharedVersionName-$androidVersionName~$versionCode"
     }
     buildFeatures {
         compose = true
@@ -22,6 +27,7 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/versions/9/previous-compilation-data.bin"
         }
     }
     buildTypes {

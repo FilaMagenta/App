@@ -1,6 +1,15 @@
 package com.arnyminerz.filamagenta.cache.data
 
 import com.arnyminerz.filamagenta.cache.Event
+import com.arnyminerz.filamagenta.cache.data.EventVariation.Companion.toEventVariations
+import com.arnyminerz.filamagenta.network.woo.models.Metadata
+import com.arnyminerz.filamagenta.network.woo.models.Product
+import com.arnyminerz.filamagenta.network.woo.models.Variation
+import com.arnyminerz.filamagenta.network.woo.utils.ProductMeta
+import com.arnyminerz.filamagenta.network.woo.utils.getDateTime
+import com.arnyminerz.filamagenta.network.woo.utils.getEnum
+import io.ktor.serialization.kotlinx.json.DefaultJson
+import kotlinx.serialization.encodeToString
 
 private val cleanNameCapExceptions = listOf("y", "i", "de", "del", "la", "les", "las", "el", "els", "los")
 
@@ -35,3 +44,20 @@ val Event.cleanName: String
  */
 val Event.isComplete: Boolean
     get() = date != null && type != null
+
+/**
+ * Extracts all the Metadata cached in [Event] to be used with [Product].
+ */
+fun Event.extractMetadata(): List<Metadata> {
+    return DefaultJson.decodeFromString(_cache_meta_data)
+}
+
+/**
+ * Converts the [Product] into a cacheable [Event].
+ */
+fun Product.toEvent(variations: List<Variation>): Event {
+    val date = metaData.getDateTime(ProductMeta.EVENT_DATE)
+    val type = metaData.getEnum(ProductMeta.CATEGORY, EventType::valueOf)
+
+    return Event(id, name, date, type, variations.toEventVariations(), DefaultJson.encodeToString(metaData))
+}

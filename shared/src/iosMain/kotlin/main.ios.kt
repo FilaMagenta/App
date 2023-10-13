@@ -3,6 +3,7 @@ import androidx.compose.ui.window.ComposeUIViewController
 import com.arnyminerz.filamagenta.account.AccountsProvider
 import com.arnyminerz.filamagenta.cache.DriverFactory
 import com.arnyminerz.filamagenta.cache.createDatabase
+import com.arnyminerz.filamagenta.diagnostics.SentryInitializer
 import com.arnyminerz.filamagenta.states.Action
 import com.arnyminerz.filamagenta.states.createStore
 import com.arnyminerz.filamagenta.storage.SettingsFactoryProvider
@@ -16,6 +17,8 @@ val store = CoroutineScope(SupervisorJob()).createStore()
 
 fun MainViewController() = ComposeUIViewController {
     LaunchedEffect(Unit) {
+        SentryInitializer().init()
+
         settingsFactory = SettingsFactoryProvider().factory
 
         AccountsProvider().provide()

@@ -18,7 +18,9 @@ actual class Accounts(private val am: AccountManager) {
         const val UserDataExpiration = "token_expiration"
         const val UserDataRefreshToken = "refresh_token"
         const val UserDataAdmin = "is_admin"
+        const val UserDataEmail = "email"
         const val UserDataIdSocio = "id_socio"
+        const val UserDataCustomerId = "customer_id"
     }
 
     private val accountTypeFilter: (android.accounts.Account) -> Boolean = { it.type == AccountType }
@@ -29,7 +31,7 @@ actual class Accounts(private val am: AccountManager) {
             .map { Account(it.name) }
     }
 
-    actual fun addAccount(account: Account, token: AccessToken, isAdmin: Boolean) {
+    actual fun addAccount(account: Account, token: AccessToken, isAdmin: Boolean, email: String) {
         /** The equivalent of [account] for Android. */
         val aa = account.androidAccount
         check(am.addAccountExplicitly(aa, "", Bundle())) {
@@ -39,6 +41,7 @@ actual class Accounts(private val am: AccountManager) {
         am.setUserData(aa, UserDataExpiration, token.expiration.toEpochMilliseconds().toString())
         am.setUserData(aa, UserDataRefreshToken, token.refreshToken)
         am.setUserData(aa, UserDataAdmin, isAdmin.toString())
+        am.setUserData(aa, UserDataEmail, email)
     }
 
     actual fun removeAccount(account: Account) {
@@ -56,7 +59,7 @@ actual class Accounts(private val am: AccountManager) {
         am.setUserData(aa, UserDataExpiration, expiration.toEpochMilliseconds().toString())
     }
 
-    private val accountsLive = MutableStateFlow<List<Account>>(value = emptyList())
+    private val accountsLive = MutableStateFlow<List<Account>?>(value = null)
 
     private val accountsUpdatedListener = OnAccountsUpdateListener { accounts ->
         accountsLive.value = accounts
@@ -67,7 +70,7 @@ actual class Accounts(private val am: AccountManager) {
     /**
      * Provides a live feed of the account list.
      */
-    actual fun getAccountsLive(): StateFlow<List<Account>> = accountsLive
+    actual fun getAccountsLive(): StateFlow<List<Account>?> = accountsLive
 
     fun startWatchingAccounts(looper: Looper) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -123,5 +126,37 @@ actual class Accounts(private val am: AccountManager) {
      */
     actual fun setIdSocio(account: Account, idSocio: Int) {
         am.setUserData(account.androidAccount, UserDataIdSocio, idSocio.toString())
+    }
+
+    /**
+     * Fetches the local accounts storage for the ID of the user in WooCommerce.
+     * Update the value with [setCustomerId].
+     *
+     * @param account The account to check for.
+     *
+     * @return The ID of the user in WooCommerce, or null if none is stored.
+     */
+    actual fun getCustomerId(account: Account): Int? {
+        return am.getUserData(account.androidAccount, UserDataCustomerId)?.toIntOrNull()
+    }
+
+    /**
+     * Stores the ID of the user for WooCommerce in the accounts' storage for the given user.
+     * Fetch the value with [getCustomerId].
+     *
+     * @param account The account to store the ID into.
+     * @param customerId The ID to store.
+     */
+    actual fun setCustomerId(account: Account, customerId: Int) {
+        am.setUserData(account.androidAccount, UserDataCustomerId, customerId.toString())
+    }
+
+    /**
+     * Fetches the email associated with the given [account].
+     *
+     * @return The email stored for the given [account].
+     */
+    actual fun getEmail(account: Account): String {
+        return am.getUserData(account.androidAccount, UserDataEmail)!!
     }
 }

@@ -9,6 +9,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -73,26 +74,27 @@ fun EventItem(
                 ),
                 style = MaterialTheme.typography.labelLarge,
             )
-            if (!event.isComplete) {
+            if (!event.variations.isNullOrEmpty()) {
                 Text(
-                    text = stringResource(MR.strings.event_warnings),
+                    text = stringResource(MR.strings.event_options_available),
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 4.dp)
+                    fontWeight = FontWeight.Bold
                 )
-                if (event.date == null) {
+            }
+            if (!event.isComplete) {
+                ProvideTextStyle(
+                    MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                ) {
                     Text(
-                        text = "- " + stringResource(MR.strings.event_warnings_date),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
+                        text = stringResource(MR.strings.event_warnings),
+                        modifier = Modifier.padding(top = 4.dp)
                     )
-                }
-                if (event.type == null) {
-                    Text(
-                        text = "- " + stringResource(MR.strings.event_warnings_type),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (event.date == null) {
+                        Text("- " + stringResource(MR.strings.event_warnings_date))
+                    }
+                    if (event.type == null) {
+                        Text("- " + stringResource(MR.strings.event_warnings_type))
+                    }
                 }
             }
         }

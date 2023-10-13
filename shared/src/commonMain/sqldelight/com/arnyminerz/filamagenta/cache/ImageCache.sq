@@ -1,0 +1,13 @@
+CREATE TABLE ImageCache (
+    key TEXT PRIMARY KEY NOT NULL,
+    data BLOB NOT NULL
+);
+
+getByKey:
+SELECT * FROM ImageCache WHERE key=?;
+
+insert:
+INSERT INTO ImageCache(key, data) VALUES (?, ?);
+
+update:
+UPDATE ImageCache SET key=?, data=?;

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,7 +42,9 @@ fun MainScreen(
     var addNewAccountRequested by remember { mutableStateOf(isAddingNewAccount) }
 
     /** If true, the login screen is shown */
-    val addingNewAccount = accountsList.isEmpty() || addNewAccountRequested
+    val addingNewAccount = accountsList?.isEmpty() == true || addNewAccountRequested
+
+    val account by viewModel.account.collectAsState()
 
     LaunchedEffect(Unit) {
         // Initialize logging library
@@ -50,7 +53,14 @@ fun MainScreen(
 
     val mainPagerState = rememberPagerState { appScreenItems.size }
 
-    if (isRequestingToken) {
+    LaunchedEffect(accountsList) {
+        // todo - eventually an account selector should be added
+        if (!accountsList.isNullOrEmpty()) {
+            viewModel.account.emit(accountsList?.first())
+        }
+    }
+
+    if (isRequestingToken || accountsList == null || (!addingNewAccount && account == null)) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
@@ -58,7 +68,7 @@ fun MainScreen(
         BrowserLoginScreen(
             authorizeUrl = viewModel.getAuthorizeUrl(),
             onDismissRequested = {
-                if (accountsList.isEmpty()) {
+                if (accountsList.isNullOrEmpty()) {
                     onApplicationEndRequested()
                 } else {
                     showingLoginWebpage = false
@@ -74,7 +84,7 @@ fun MainScreen(
         LoginScreen(
             onLoginRequested = { showingLoginWebpage = true },
             onBackRequested = {
-                if (accountsList.isEmpty()) {
+                if (accountsList.isNullOrEmpty()) {
                     onApplicationEndRequested()
                 } else {
                     addNewAccountRequested = false
@@ -82,7 +92,6 @@ fun MainScreen(
             }
         )
     } else {
-        val account = accountsList.first()
         val event by viewModel.viewingEvent.collectAsState()
         val editingField by viewModel.editingField.collectAsState()
 
@@ -98,16 +107,18 @@ fun MainScreen(
             editingField?.let { field ->
                 field.editor.Dialog(
                     title = ev.cleanName + " - " + stringResource(field.displayName),
-                    onSubmit = { /* TODO: submit edit */ },
+                    onSubmit = { viewModel.performUpdate(ev, field) },
                     onDismissRequest = viewModel::cancelEdit
                 )
             }
 
-            EventScreen(
-                ev,
-                viewModel::edit.takeIf { accounts!!.isAdmin(account) },
-                viewModel::stopViewingEvent
-            )
-        } ?: AppScreen(account, mainPagerState, viewModel::viewEvent)
+            DisposableEffect(ev) {
+                val job = viewModel.fetchOrders(ev.id.toInt())
+
+                onDispose { job.cancel() }
+            }
+
+            EventScreen(ev, viewModel)
+        } ?: AppScreen(mainPagerState, viewModel)
     }
 }

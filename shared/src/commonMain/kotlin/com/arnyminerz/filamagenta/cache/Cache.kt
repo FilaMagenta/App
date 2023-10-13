@@ -23,8 +23,10 @@ object Cache {
 
     val transactions: Query<AccountTransaction> = database.accountTransactionQueries.getAll()
 
+    val orders: Query<ProductOrder> = database.productOrderQueries.getAll()
+
     @Composable
-    fun <RowType: Any> Query<RowType>.collectListAsState(): State<List<RowType>> {
+    fun <RowType : Any> Query<RowType>.collectListAsState(): State<List<RowType>> {
         val flow = remember { MutableStateFlow(executeAsList()) }
 
         DisposableEffect(this) {
@@ -50,11 +52,38 @@ object Cache {
             .executeAsOneOrNull()
         if (element == null) {
             // insert
-            database.eventQueries.insert(event.id, event.name)
+            database.eventQueries.insert(
+                event.id,
+                event.name,
+                event.date,
+                event.type,
+                event.variations,
+                event._cache_meta_data
+            )
         } else {
             // update
-            database.eventQueries.update(event.name, event.id)
+            database.eventQueries.update(
+                event.name,
+                event.date,
+                event.type,
+                event.variations,
+                event._cache_meta_data,
+                event.id
+            )
         }
+    }
+
+    /**
+     * Synchronizes the local cache with the given list of events. This includes creating, updating and deleting.
+     */
+    fun synchronizeEvents(events: List<Event>) {
+        val ids = arrayListOf<Long>()
+        for (item in events) {
+            insertOrUpdate(item)
+            ids.add(item.id)
+        }
+        // Now remove all the elements from the database which are not inside ids
+        database.eventQueries.retainById(ids)
     }
 
     /**
@@ -82,6 +111,30 @@ object Cache {
             ids.add(transaction.id)
         }
         // Now remove all the elements from the database which are not inside ids
-        database.accountTransactionQueries.removeIfNotIncluded(ids)
+        database.accountTransactionQueries.retainById(ids)
+    }
+
+    fun insertOrUpdate(order: ProductOrder) {
+        val element = database.productOrderQueries
+            .getById(order.id)
+            .executeAsOneOrNull()
+        with(order) {
+            if (element == null) {
+                // insert
+                database.productOrderQueries.insert(id, eventId, orderNumber, date)
+            } else {
+                // update
+                database.productOrderQueries.update(eventId, orderNumber, date, id)
+            }
+        }
+    }
+
+    suspend fun imageCache(key: String, block: suspend () -> ByteArray): ByteArray {
+        val cached = database.imageCacheQueries.getByKey(key).executeAsOneOrNull()
+        if (cached != null) return cached.data_
+
+        val new = block()
+        database.imageCacheQueries.insert(key, new)
+        return new
     }
 }

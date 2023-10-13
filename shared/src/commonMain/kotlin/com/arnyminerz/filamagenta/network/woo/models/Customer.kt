@@ -4,44 +4,43 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-class Customer {
-    var id: Int = 0
+@Suppress("LongParameterList")
+class Customer(
+    val id: Int = 0,
 
     @SerialName("created_at")
-    lateinit var createdAt: String
+    val createdAt: String? = null,
 
-    lateinit var email: String
+    val email: String,
 
     @SerialName("first_name")
-    lateinit var firstName: String
+    val firstName: String,
 
     @SerialName("last_name")
-    lateinit var lastName: String
+    val lastName: String,
 
-    lateinit var username: String
-    lateinit var password: String
-    lateinit var role: String
+    val username: String,
+    val password: String? = null,
+    val role: String,
 
     @SerialName("last_order_id")
-    lateinit var lastOrderId: String
+    val lastOrderId: String? = null,
 
     @SerialName("last_order_date")
-    lateinit var lastOrderDate: String
+    val lastOrderDate: String? = null,
 
     @SerialName("orders_count")
-    var ordersCount: Int = 0
+    val ordersCount: Int = 0,
 
     @SerialName("total_spent")
-    lateinit var totalSpent: String
+    val totalSpent: String? = null,
 
     @SerialName("avatar_url")
-    lateinit var avatarUrl: String
+    val avatarUrl: String,
 
     @SerialName("billing")
-    lateinit var billingAddress: com.arnyminerz.filamagenta.network.woo.models.BillingAddress
+    val billingAddress: BillingAddress,
 
     @SerialName("shipping")
-    lateinit var shippingAddress: com.arnyminerz.filamagenta.network.woo.models.ShippingAddress
-
-
-}
+    val shippingAddress: ShippingAddress,
+)

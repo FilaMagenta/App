@@ -47,6 +47,8 @@ fun BrowserLoginScreen(
     // Set custom agent
     LaunchedEffect(state) {
         state.webSettings.customUserAgentString = "Fila-Magenta-App"
+        // Do not store any cookies
+        state.cookieManager.removeAllCookies()
     }
     if (state.lastLoadedUrl?.startsWith("app://filamagenta") == true) {
         // Redirection complete, extract code

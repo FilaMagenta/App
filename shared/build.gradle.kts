@@ -1,3 +1,4 @@
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import java.util.Properties
 
@@ -30,6 +31,7 @@ kotlin {
     ).forEach {
         it.binaries.framework {
             baseName = "shared"
+            isStatic = true
 
             export(libs.moko.resources)
             export(libs.moko.graphics) // toUIColor here
@@ -45,8 +47,10 @@ kotlin {
                 // Compose Dependencies
                 implementation(compose.runtime)
                 implementation(compose.foundation)
+                implementation(compose.material)
                 implementation(compose.material3)
                 implementation(compose.materialIconsExtended)
+                implementation(compose.ui)
                 api(libs.compose.webview)
 
                 // Kotlin libraries
@@ -58,6 +62,7 @@ kotlin {
                 api(libs.multiplatform.settings)
                 api(libs.multiplatform.viewmodel)
                 api(libs.napier)
+                api(libs.sentry.multiplatform)
 
                 // Moko Resources
                 api(libs.moko.resources)
@@ -65,8 +70,9 @@ kotlin {
 
                 // Ktor
                 implementation(libs.ktor.core)
-                implementation(libs.ktor.client.contentNegotiation)
                 implementation(libs.ktor.client.auth)
+                implementation(libs.ktor.client.contentNegotiation)
+                implementation(libs.ktor.client.logging)
                 implementation(libs.ktor.serialization.json)
 
                 // SQlDelight
@@ -90,6 +96,7 @@ kotlin {
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.ktor.okhttp)
+                implementation(libs.qrcode.android)
                 implementation(libs.sqldelight.android)
             }
         }
@@ -126,11 +133,12 @@ multiplatformResources {
 buildkonfig {
     packageName = "com.arnyminerz.filamagenta"
 
-    defaultConfigs {
-        val properties = Properties().apply {
-            load(rootProject.file("local.properties").inputStream())
-        }
+    val properties = Properties().apply {
+        load(rootProject.file("local.properties").inputStream())
+    }
+    val sharedVersionName = project.extra["shared.versionName"] as String
 
+    defaultConfigs {
         buildConfigField(STRING, "ServerHostname", properties.getProperty("server.hostname"))
 
         buildConfigField(STRING, "OAuthClientId", properties.getProperty("oauth.clientId"))
@@ -146,6 +154,40 @@ buildkonfig {
         buildConfigField(STRING, "SqlUsername", properties.getProperty("sql.username"))
         buildConfigField(STRING, "SqlPassword", properties.getProperty("sql.password"))
         buildConfigField(STRING, "SqlDatabase", properties.getProperty("sql.database"))
+
+        // buildConfigField(BOOLEAN, "IsProduction", "false")
+    }
+
+    targetConfigs {
+        create("android") {
+            val versionName = project.extra["android.versionName"] as String
+            val versionCode = project.extra["android.versionCode"] as String
+
+            buildConfigField(STRING, "SentryDsn", properties.getProperty("sentry.dsn.android"))
+            buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName~$versionCode")
+        }
+        create("ios") {
+            val versionName = project.extra["ios.versionName"] as String
+
+            buildConfigField(STRING, "SentryDsn", properties.getProperty("sentry.dsn.ios"))
+            buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName")
+        }
+    }
+    targetConfigs("dev") {
+        create("android") {
+            buildConfigField(BOOLEAN, "IsProduction", "false")
+        }
+        create("ios") {
+            buildConfigField(BOOLEAN, "IsProduction", "false")
+        }
+    }
+    targetConfigs("production") {
+        create("android") {
+            buildConfigField(BOOLEAN, "IsProduction", "true")
+        }
+        create("ios") {
+            buildConfigField(BOOLEAN, "IsProduction", "true")
+        }
     }
 }
 

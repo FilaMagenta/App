@@ -5,68 +5,63 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-class Order {
-    var id: Int = 0
+@Suppress("LongParameterList")
+class Order(
+    val id: Int = 0,
     @SerialName("number")
-    lateinit var orderNumber: String
+    val orderNumber: String,
     @SerialName("created_at")
-    lateinit var createdAt: String
+    val createdAt: String? = null,
 
     @SerialName("date_created")
-    lateinit var dateCreated: LocalDateTime
+    val dateCreated: LocalDateTime,
 
     @SerialName("updated_at")
-    lateinit var updatedAt: String
+    val updatedAt: String? = null,
     @SerialName("completed_at")
-    lateinit var completedAt: String
-    lateinit var status: String
-    lateinit var currency: String
-    lateinit var total: String
-    lateinit var subtotal: String
+    val completedAt: String? = null,
+    val status: String,
+    val currency: String,
+    val total: String,
+    val subtotal: String? = null,
     @SerialName("total_line_items_quantity")
-    var totalLineItemsQuantity: Int = 0
+    val totalLineItemsQuantity: Int = 0,
     @SerialName("total_tax")
-    lateinit var totalTax: String
+    val totalTax: String,
     @SerialName("total_shipping")
-    lateinit var totalShipping: String
+    val totalShipping: String? = null,
     @SerialName("cart_tax")
-    lateinit var cartTax: String
+    val cartTax: String,
     @SerialName("shipping_tax")
-    lateinit var shippingTax: String
+    val shippingTax: String,
     @SerialName("total_discount")
-    lateinit var totalDiscount: String
+    val totalDiscount: String? = null,
     @SerialName("shipping_methods")
-    lateinit var shippingMethods: String
+    val shippingMethods: String? = null,
     @SerialName("payment_details")
-    lateinit var paymentDetails: com.arnyminerz.filamagenta.network.woo.models.PaymentDetails
+    val paymentDetails: PaymentDetails? = null,
     @SerialName("billing")
-    lateinit var billingAddress: com.arnyminerz.filamagenta.network.woo.models.BillingAddress
+    val billingAddress: BillingAddress,
     @SerialName("shipping")
-    lateinit var shippingAddress: com.arnyminerz.filamagenta.network.woo.models.ShippingAddress
-    lateinit var note: String
+    val shippingAddress: ShippingAddress,
+    val note: String? = null,
     @SerialName("customer_ip")
-    lateinit var customerIp: String
+    val customerIp: String? = null,
     @SerialName("customer_user_agent")
-    lateinit var customerUserAgent: String
+    val customerUserAgent: String,
     @SerialName("customer_id")
-    var customerId: Int? = null
+    val customerId: Int? = null,
     @SerialName("view_order_url")
-    lateinit var viewOrderUrl: String
+    val viewOrderUrl: String? = null,
     @SerialName("line_items")
-    var lineItems: MutableList<com.arnyminerz.filamagenta.network.woo.models.LineItem> = ArrayList()
+    val lineItems: MutableList<LineItem> = ArrayList(),
     @SerialName("shipping_lines")
-    var shippingLines: List<com.arnyminerz.filamagenta.network.woo.models.ShippingLine> = ArrayList()
+    val shippingLines: List<ShippingLine> = ArrayList(),
     @SerialName("tax_lines")
-    var taxLines: List<com.arnyminerz.filamagenta.network.woo.models.TaxLine> = ArrayList()
+    val taxLines: List<TaxLine> = ArrayList(),
     @SerialName("fee_lines")
-    var feeLines: List<com.arnyminerz.filamagenta.network.woo.models.FeeLine> = ArrayList()
+    val feeLines: List<FeeLine> = ArrayList(),
     @SerialName("coupon_lines")
-    var couponLines: List<com.arnyminerz.filamagenta.network.woo.models.CouponLine> = ArrayList()
-    lateinit var customer: com.arnyminerz.filamagenta.network.woo.models.Customer
-
-
-    fun addLineItem(lineItem: com.arnyminerz.filamagenta.network.woo.models.LineItem) {
-        lineItems.add(lineItem)
-
-    }
-}
+    val couponLines: List<CouponLine> = ArrayList(),
+    val customer: Customer? = null
+)

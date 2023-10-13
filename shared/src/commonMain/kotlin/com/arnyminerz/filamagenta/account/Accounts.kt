@@ -15,7 +15,7 @@ expect class Accounts {
     /**
      * Provides a live feed of the account list.
      */
-    fun getAccountsLive(): StateFlow<List<Account>>
+    fun getAccountsLive(): StateFlow<List<Account>?>
 
     /**
      * Adds the given account to the system storage. This method is blocking, which means that
@@ -24,8 +24,9 @@ expect class Accounts {
      * @param account The account to store.
      * @param token The token that authorizes the account to use the backend.
      * @param isAdmin Whether the user is an administrator or not.
+     * @param email The email associated with the user. Can be fetched later with [getEmail].
      */
-    fun addAccount(account: Account, token: AccessToken, isAdmin: Boolean)
+    fun addAccount(account: Account, token: AccessToken, isAdmin: Boolean, email: String)
 
     /**
      * Clears all the data stored for the given account. This method is blocking, which means that
@@ -57,6 +58,13 @@ expect class Accounts {
     fun isAdmin(account: Account): Boolean
 
     /**
+     * Fetches the email associated with the given [account].
+     *
+     * @return The email stored for the given [account].
+     */
+    fun getEmail(account: Account): String
+
+    /**
      * Fetches the local accounts storage for the ID of the user in the SQLServer database.
      * Update the value with [setIdSocio].
      *
@@ -74,4 +82,23 @@ expect class Accounts {
      * @param idSocio The ID to store.
      */
     fun setIdSocio(account: Account, idSocio: Int)
+
+    /**
+     * Fetches the local accounts storage for the ID of the user in WooCommerce.
+     * Update the value with [setCustomerId].
+     *
+     * @param account The account to check for.
+     *
+     * @return The ID of the user in WooCommerce, or null if none is stored.
+     */
+    fun getCustomerId(account: Account): Int?
+
+    /**
+     * Stores the ID of the user for WooCommerce in the accounts' storage for the given user.
+     * Fetch the value with [getCustomerId].
+     *
+     * @param account The account to store the ID into.
+     * @param customerId The ID to store.
+     */
+    fun setCustomerId(account: Account, customerId: Int)
 }

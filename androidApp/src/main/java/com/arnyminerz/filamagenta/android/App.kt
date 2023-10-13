@@ -5,12 +5,15 @@ import com.arnyminerz.filamagenta.account.AccountsProvider
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.DriverFactory
 import com.arnyminerz.filamagenta.cache.createDatabase
+import com.arnyminerz.filamagenta.diagnostics.SentryInitializer
 import com.arnyminerz.filamagenta.storage.SettingsFactoryProvider
 import com.arnyminerz.filamagenta.storage.settingsFactory
 
 class App: Application() {
     override fun onCreate() {
         super.onCreate()
+
+        SentryInitializer(this).init()
 
         settingsFactory = SettingsFactoryProvider(this).factory
 
@@ -20,12 +23,12 @@ class App: Application() {
             DriverFactory(this)
         )
 
-        accounts!!.startWatchingAccounts(mainLooper)
+        accounts.startWatchingAccounts(mainLooper)
     }
 
     override fun onTerminate() {
         super.onTerminate()
 
-        accounts!!.stopWatchingAccounts()
+        accounts.stopWatchingAccounts()
     }
 }

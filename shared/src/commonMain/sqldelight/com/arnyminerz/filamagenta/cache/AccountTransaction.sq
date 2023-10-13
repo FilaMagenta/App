@@ -23,5 +23,5 @@ INSERT INTO AccountTransaction(id, date, description, units, cost, income) VALUE
 update:
 UPDATE AccountTransaction SET date=?, description=?, units=?, cost=?, income=? WHERE id=?;
 
-removeIfNotIncluded:
+retainById:
 DELETE FROM AccountTransaction WHERE id NOT IN ?;
