@@ -30,31 +30,53 @@ android {
         versionCode = androidVersionCode
         versionName = "$sharedVersionName-$androidVersionName~$versionCode"
     }
+
     buildFeatures {
         compose = true
     }
+
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/versions/9/previous-compilation-data.bin"
         }
     }
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
 
         isCoreLibraryDesugaringEnabled = true
     }
+
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    signingConfigs {
+        create("release") {
+            val properties = Properties()
+            project.rootProject.file("local.properties").inputStream().use(properties::load)
+
+            val signingKeystorePassword: String? = properties.getProperty("signing.keystore.password")
+            val signingKeyAlias: String? = properties.getProperty("signing.key.alias")
+            val signingKeyPassword: String? = properties.getProperty("signing.key.password")
+
+            storeFile = File(project.rootDir, "keystore.jks")
+            storePassword = signingKeystorePassword
+            keyAlias = signingKeyAlias
+            keyPassword = signingKeyPassword
+        }
     }
 }
 
