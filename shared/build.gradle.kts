@@ -1,5 +1,6 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import java.time.LocalDateTime
 import java.util.Properties
 
 plugins {
@@ -161,10 +162,9 @@ buildkonfig {
     targetConfigs {
         create("android") {
             val versionName = project.extra["android.versionName"] as String
-            val versionCode = project.extra["android.versionCode"] as String
 
             buildConfigField(STRING, "SentryDsn", properties.getProperty("sentry.dsn.android"))
-            buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName~$versionCode")
+            buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName")
         }
         create("ios") {
             val versionName = project.extra["ios.versionName"] as String
@@ -196,5 +196,26 @@ sqldelight {
         create("Database") {
             packageName.set("com.arnyminerz.filamagenta.cache")
         }
+    }
+}
+
+task("increaseVersionCode") {
+    doFirst {
+        val versionPropsFile = project.rootProject.file("version.properties")
+        if (!versionPropsFile.canRead()) {
+            throw GradleException("Cannot read version.properties")
+        }
+        val versionProps = Properties().apply {
+            versionPropsFile.inputStream().use {
+                load(versionPropsFile.inputStream())
+            }
+        }
+        val code = versionProps.getProperty("VERSION_CODE").toInt() + 1
+        versionProps["VERSION_CODE"] = code.toString()
+        versionPropsFile.outputStream().use {
+            val date = LocalDateTime.now()
+            versionProps.store(it, "Updated at $date")
+        }
+        println("Increased version code to $code")
     }
 }

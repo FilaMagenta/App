@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
@@ -11,11 +13,21 @@ android {
         minSdk = 24
         targetSdk = 34
 
+        val versionPropsFile = project.rootProject.file("version.properties")
+        if (!versionPropsFile.canRead()) {
+            throw GradleException("Cannot read version.properties")
+        }
+        val versionProps = Properties().apply {
+            versionPropsFile.inputStream().use {
+                load(versionPropsFile.inputStream())
+            }
+        }
+        val androidVersionCode = versionProps.getProperty("VERSION_CODE").toInt()
+
         val sharedVersionName = project.extra["shared.versionName"] as String
         val androidVersionName = project.extra["android.versionName"] as String
-        val androidVersionCode = project.extra["android.versionCode"] as String
 
-        versionCode = androidVersionCode.toInt()
+        versionCode = androidVersionCode
         versionName = "$sharedVersionName-$androidVersionName~$versionCode"
     }
     buildFeatures {
