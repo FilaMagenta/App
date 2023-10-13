@@ -44,6 +44,8 @@ fun MainScreen(
     /** If true, the login screen is shown */
     val addingNewAccount = accountsList?.isEmpty() == true || addNewAccountRequested
 
+    val account by viewModel.account.collectAsState()
+
     LaunchedEffect(Unit) {
         // Initialize logging library
         Napier.base(DebugAntilog())
@@ -51,7 +53,14 @@ fun MainScreen(
 
     val mainPagerState = rememberPagerState { appScreenItems.size }
 
-    if (isRequestingToken || accountsList == null) {
+    LaunchedEffect(accountsList) {
+        // todo - eventually an account selector should be added
+        if (!accountsList.isNullOrEmpty()) {
+            viewModel.account.emit(accountsList?.first())
+        }
+    }
+
+    if (isRequestingToken || accountsList == null || (!addingNewAccount && account == null)) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
@@ -83,12 +92,6 @@ fun MainScreen(
             }
         )
     } else {
-        LaunchedEffect(Unit) {
-            // todo - eventually an account selector should be added
-            viewModel.account.emit(accountsList?.first())
-        }
-
-        val isAdmin by viewModel.isAdmin.collectAsState(false)
         val event by viewModel.viewingEvent.collectAsState()
         val editingField by viewModel.editingField.collectAsState()
 
@@ -110,16 +113,12 @@ fun MainScreen(
             }
 
             DisposableEffect(ev) {
-                val job = viewModel.refreshOrders(ev.id.toInt())
+                val job = viewModel.fetchOrders(ev.id.toInt())
 
                 onDispose { job.cancel() }
             }
 
-            EventScreen(
-                ev,
-                viewModel::edit.takeIf { isAdmin == true },
-                viewModel::stopViewingEvent
-            )
+            EventScreen(ev, viewModel)
         } ?: AppScreen(mainPagerState, viewModel)
     }
 }
