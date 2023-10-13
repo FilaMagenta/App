@@ -2,8 +2,8 @@
 The official app for Android and iOS.
 
 <div style="text-align: center; width: 100%">
-<img src="badge/google-play-badge.png" alt="Google Play Badge" style="width: 200px" />
-<img src="badge/app-store-badge.svg" alt="App Store Badge" style="width: 200px" />
+<img src="https://raw.githubusercontent.com/Volorf/Badges/master/Google%20Play/Google%20Play%20Badge.png" alt="Google Play Badge" style="width: 150px" />
+<img src="https://raw.githubusercontent.com/Volorf/Badges/master/App%20Store/App%20Store%20Badge.png" alt="App Store Badge" style="width: 150px" />
 </div>
 
 ## Performance considerations
