@@ -56,7 +56,7 @@ actual class Accounts(private val am: AccountManager) {
         am.setUserData(aa, UserDataExpiration, expiration.toEpochMilliseconds().toString())
     }
 
-    private val accountsLive = MutableStateFlow<List<Account>>(value = emptyList())
+    private val accountsLive = MutableStateFlow<List<Account>?>(value = null)
 
     private val accountsUpdatedListener = OnAccountsUpdateListener { accounts ->
         accountsLive.value = accounts
@@ -67,7 +67,7 @@ actual class Accounts(private val am: AccountManager) {
     /**
      * Provides a live feed of the account list.
      */
-    actual fun getAccountsLive(): StateFlow<List<Account>> = accountsLive
+    actual fun getAccountsLive(): StateFlow<List<Account>?> = accountsLive
 
     fun startWatchingAccounts(looper: Looper) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

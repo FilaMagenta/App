@@ -15,7 +15,7 @@ expect class Accounts {
     /**
      * Provides a live feed of the account list.
      */
-    fun getAccountsLive(): StateFlow<List<Account>>
+    fun getAccountsLive(): StateFlow<List<Account>?>
 
     /**
      * Adds the given account to the system storage. This method is blocking, which means that

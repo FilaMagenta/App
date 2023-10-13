@@ -41,7 +41,7 @@ fun MainScreen(
     var addNewAccountRequested by remember { mutableStateOf(isAddingNewAccount) }
 
     /** If true, the login screen is shown */
-    val addingNewAccount = accountsList.isEmpty() || addNewAccountRequested
+    val addingNewAccount = accountsList?.isEmpty() == true || addNewAccountRequested
 
     LaunchedEffect(Unit) {
         // Initialize logging library
@@ -50,7 +50,7 @@ fun MainScreen(
 
     val mainPagerState = rememberPagerState { appScreenItems.size }
 
-    if (isRequestingToken) {
+    if (isRequestingToken || accountsList == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
@@ -58,7 +58,7 @@ fun MainScreen(
         BrowserLoginScreen(
             authorizeUrl = viewModel.getAuthorizeUrl(),
             onDismissRequested = {
-                if (accountsList.isEmpty()) {
+                if (accountsList.isNullOrEmpty()) {
                     onApplicationEndRequested()
                 } else {
                     showingLoginWebpage = false
@@ -74,7 +74,7 @@ fun MainScreen(
         LoginScreen(
             onLoginRequested = { showingLoginWebpage = true },
             onBackRequested = {
-                if (accountsList.isEmpty()) {
+                if (accountsList.isNullOrEmpty()) {
                     onApplicationEndRequested()
                 } else {
                     addNewAccountRequested = false
@@ -82,7 +82,7 @@ fun MainScreen(
             }
         )
     } else {
-        val account = accountsList.first()
+        val account = accountsList?.first() ?: return
         val event by viewModel.viewingEvent.collectAsState()
         val editingField by viewModel.editingField.collectAsState()
 

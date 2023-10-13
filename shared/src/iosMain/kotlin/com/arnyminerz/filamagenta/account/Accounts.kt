@@ -83,7 +83,7 @@ actual class Accounts {
     /**
      * Provides a live feed of the account list.
      */
-    actual fun getAccountsLive(): StateFlow<List<Account>> = accountsLive
+    actual fun getAccountsLive(): StateFlow<List<Account>?> = accountsLive
 
     /**
      * Checks the local storage to see whether the given user is an administrator or not.
