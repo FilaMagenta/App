@@ -1,7 +1,6 @@
 package com.arnyminerz.filamagenta.ui.page
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -23,7 +22,7 @@ import com.arnyminerz.filamagenta.cache.data.isComplete
 import com.arnyminerz.filamagenta.ui.list.EventItem
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EventsPage(viewModel: MainViewModel) {
     val isAdmin by viewModel.isAdmin.collectAsState(false)
@@ -41,44 +40,34 @@ fun EventsPage(viewModel: MainViewModel) {
         onDispose { coroutine?.cancel() }
     }
 
-    AnimatedContent(
-        targetState = events,
-        modifier = Modifier.fillMaxSize()
-    ) { list ->
-        if (list == null) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) { CircularProgressIndicator() }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                if (isRefreshing) {
-                    stickyHeader {
-                        LinearProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .animateEnterExit(
-                                    enter = slideInVertically { -it },
-                                    exit = slideOutVertically { -it }
-                                )
-                        )
-                    }
-                }
-
-                items(
-                    items = list
-                        // Just display events without a date to admins
-                        .filter { event -> isAdmin == true || event.isComplete },
-                    key = { it.id }
-                ) { event ->
-                    EventItem(
-                        event,
-                        modifier = Modifier.animateItemPlacement()
-                    ) { viewModel.viewEvent(event) }
+    events?.let { list ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            stickyHeader {
+                AnimatedVisibility(
+                    visible = isRefreshing,
+                    enter = slideInVertically { -it },
+                    exit = slideOutVertically { -it }
+                ) {
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
                 }
             }
+
+            items(
+                items = list
+                    // Just display events without a date to admins
+                    .filter { event -> isAdmin == true || event.isComplete },
+                key = { it.id }
+            ) { event ->
+                EventItem(
+                    event,
+                    modifier = Modifier.animateItemPlacement()
+                ) { viewModel.viewEvent(event) }
+            }
         }
-    }
+    } ?: Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()
+    ) { CircularProgressIndicator() }
 }
