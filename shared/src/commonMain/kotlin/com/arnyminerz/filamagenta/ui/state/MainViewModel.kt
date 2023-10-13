@@ -119,8 +119,28 @@ class MainViewModel : ViewModel() {
             val me = Authorization.requestMe(token)
 
             val account = Account(me.userLogin)
-            accounts.addAccount(account, token.toAccessToken(), me.userRoles.contains("administrator"))
+            accounts.addAccount(account, token.toAccessToken(), me.userRoles.contains("administrator"), me.userEmail)
         }.invokeOnCompletion { _isRequestingToken.value = false }
+    }
+
+    /**
+     * Gets the start date of the current working year.
+     * This can be used for fetching events only for the desired date range.
+     *
+     * @return The beginning date of the current working year.
+     * Will always be the 1st of August, the thing that changes is the year.
+     */
+    fun getWorkingYearStart(): LocalDate {
+        // Events will only be fetched for this year. Year is considered until August
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val year = if (now.monthNumber > MONTH_INDEX_AUGUST) {
+            // If right now is after August, the working year is the current one
+            now.year
+        } else {
+            // If before August, working year is the last one
+            now.year - 1
+        }
+        return LocalDate(year, Month.AUGUST, 1)
     }
 
     /**
@@ -238,6 +258,37 @@ class MainViewModel : ViewModel() {
     }
 
     /**
+     * Returns the stored WooCommerce's Customer ID for the selected [account] if there's one stored, or searches in the
+     * server for one if there's none stored.
+     *
+     * @throws NullPointerException If [account] doesn't have a selected account.
+     * @throws IllegalStateException If the server doesn't return a valid customer id for [account].
+     */
+    private suspend fun getOrFetchCustomerId(): Int {
+        val account = account.value!!
+        var customerId = accounts.getCustomerId(account)
+
+        if (customerId == null) {
+            try {
+                Napier.i("Account doesn't have an stored customerId. Searching now...")
+
+                val customer = WooCommerce.Customers.search(account.name)
+                checkNotNull(customer) { "A user that matches \"${account.name}\" was not found in the server." }
+
+                customerId = customer.id
+                accounts.setCustomerId(account, customerId)
+                Napier.i("Updated customerId for $account: $customerId")
+            } catch (e: SqlTunnelException) {
+                Napier.e("SQLServer returned an error.", throwable = e)
+            }
+        }
+
+        checkNotNull(customerId) { "customerId must not be null." }
+
+        return customerId
+    }
+
+    /**
      * Fetches all events from the server and updates the local cache.
      */
     fun refreshEvents() = viewModelScope.launch(Dispatchers.IO) {
@@ -245,15 +296,7 @@ class MainViewModel : ViewModel() {
             _isLoadingEvents.emit(true)
 
             // Events will only be fetched for this year. Year is considered until August
-            val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-            val year = if (now.monthNumber > MONTH_INDEX_AUGUST) {
-                // If right now is after August, the working year is the current one
-                now.year
-            } else {
-                // If before August, working year is the last one
-                now.year - 1
-            }
-            val modifiedAfter = LocalDate(year, Month.AUGUST, 1)
+            val modifiedAfter = getWorkingYearStart()
 
             Napier.d("Getting products from server after $modifiedAfter...")
 
@@ -266,5 +309,13 @@ class MainViewModel : ViewModel() {
         } finally {
             _isLoadingEvents.emit(false)
         }
+    }
+
+    fun refreshOrders(productId: Int) = viewModelScope.launch(Dispatchers.IO) {
+        val customerId = getOrFetchCustomerId()
+
+        Napier.d("Fetching orders for Product#$productId made by Customer#$customerId")
+        val orders = WooCommerce.Orders.getOrdersForProductAndCustomer(customerId, productId)
+        Napier.i("Got ${orders.size} for Product#$productId.")
     }
 }

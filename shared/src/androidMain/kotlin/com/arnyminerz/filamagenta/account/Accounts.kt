@@ -18,6 +18,7 @@ actual class Accounts(private val am: AccountManager) {
         const val UserDataExpiration = "token_expiration"
         const val UserDataRefreshToken = "refresh_token"
         const val UserDataAdmin = "is_admin"
+        const val UserDataEmail = "email"
         const val UserDataIdSocio = "id_socio"
         const val UserDataCustomerId = "customer_id"
     }
@@ -30,7 +31,7 @@ actual class Accounts(private val am: AccountManager) {
             .map { Account(it.name) }
     }
 
-    actual fun addAccount(account: Account, token: AccessToken, isAdmin: Boolean) {
+    actual fun addAccount(account: Account, token: AccessToken, isAdmin: Boolean, email: String) {
         /** The equivalent of [account] for Android. */
         val aa = account.androidAccount
         check(am.addAccountExplicitly(aa, "", Bundle())) {
@@ -40,6 +41,7 @@ actual class Accounts(private val am: AccountManager) {
         am.setUserData(aa, UserDataExpiration, token.expiration.toEpochMilliseconds().toString())
         am.setUserData(aa, UserDataRefreshToken, token.refreshToken)
         am.setUserData(aa, UserDataAdmin, isAdmin.toString())
+        am.setUserData(aa, UserDataEmail, email)
     }
 
     actual fun removeAccount(account: Account) {
@@ -147,5 +149,14 @@ actual class Accounts(private val am: AccountManager) {
      */
     actual fun setCustomerId(account: Account, customerId: Int) {
         am.setUserData(account.androidAccount, UserDataCustomerId, customerId.toString())
+    }
+
+    /**
+     * Fetches the email associated with the given [account].
+     *
+     * @return The email stored for the given [account].
+     */
+    actual fun getEmail(account: Account): String {
+        return am.getUserData(account.androidAccount, UserDataEmail)!!
     }
 }

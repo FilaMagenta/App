@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -106,6 +107,12 @@ fun MainScreen(
                     onSubmit = { viewModel.performUpdate(ev, field) },
                     onDismissRequest = viewModel::cancelEdit
                 )
+            }
+
+            DisposableEffect(ev) {
+                val job = viewModel.refreshOrders(ev.id.toInt())
+
+                onDispose { job.cancel() }
             }
 
             EventScreen(

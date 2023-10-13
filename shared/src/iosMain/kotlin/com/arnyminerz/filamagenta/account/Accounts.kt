@@ -18,6 +18,7 @@ actual class Accounts {
         private val accountTExpiration = StringIndex("account_%d_token_expiration")
         private val accountTRefresh = StringIndex("account_%d_token_refresh")
         private val accountIsAdmin = StringIndex("account_%d_admin")
+        private val accountEmail = StringIndex("account_%d_email")
         private val accountIdSocio = StringIndex("account_%d_id_socio")
         private val accountCustomerId = StringIndex("account_%d_customer_id")
     }
@@ -41,12 +42,13 @@ actual class Accounts {
         return accounts
     }
 
-    actual fun addAccount(account: Account, token: AccessToken, isAdmin: Boolean) {
+    actual fun addAccount(account: Account, token: AccessToken, isAdmin: Boolean, email: String) {
         settings[accountName(length)] = account.name
         settings[accountToken(length)] = token.token
         settings[accountTExpiration(length)] = token.expiration.toEpochMilliseconds()
         settings[accountTRefresh(length)] = token.refreshToken
         settings[accountIsAdmin(length)] = isAdmin
+        settings[accountEmail(length)] = email
         length += 1
 
         accountsLive.value = getAccounts()
@@ -147,5 +149,15 @@ actual class Accounts {
     actual fun setCustomerId(account: Account, customerId: Int) {
         val accountId = getAccounts().indexOf(account)
         settings[accountCustomerId(accountId)] = customerId
+    }
+
+    /**
+     * Fetches the email associated with the given [account].
+     *
+     * @return The email stored for the given [account].
+     */
+    actual fun getEmail(account: Account): String {
+        val accountId = getAccounts().indexOf(account)
+        return settings.getStringOrNull(accountEmail(accountId))!!
     }
 }

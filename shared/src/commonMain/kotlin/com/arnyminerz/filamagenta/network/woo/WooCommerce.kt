@@ -1,6 +1,8 @@
 package com.arnyminerz.filamagenta.network.woo
 
 import com.arnyminerz.filamagenta.BuildKonfig
+import com.arnyminerz.filamagenta.network.woo.models.Customer
+import com.arnyminerz.filamagenta.network.woo.models.Order
 import com.arnyminerz.filamagenta.network.woo.models.Product
 import com.arnyminerz.filamagenta.network.woo.models.Variation
 import com.arnyminerz.filamagenta.network.woo.update.MetadataUpdate
@@ -242,6 +244,38 @@ object WooCommerce {
                 }
             }
             return request.body()
+        }
+    }
+
+    object Customers {
+        /**
+         * Searches for a customer that matches the given [query].
+         *
+         * @param query The string to search for. Preferably the user's login username.
+         *
+         * @return The user requested, or `null` if none was found.
+         */
+        suspend fun search(query: String): Customer? {
+            val customers = getList<Customer>(
+                "customers",
+                parameters = mapOf(
+                    "search" to query,
+                    "role" to "all"
+                )
+            )
+            return customers.firstOrNull()
+        }
+    }
+
+    object Orders {
+        /**
+         * Fetches all the orders made by the customer with id [customerId], for the product with id [productId].
+         */
+        suspend fun getOrdersForProductAndCustomer(customerId: Int, productId: Int): List<Order> {
+            return getList<Order>(
+                "orders",
+                parameters = mapOf("customer" to customerId, "product" to productId)
+            )
         }
     }
 }
