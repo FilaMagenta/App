@@ -19,6 +19,7 @@ actual class Accounts(private val am: AccountManager) {
         const val UserDataRefreshToken = "refresh_token"
         const val UserDataAdmin = "is_admin"
         const val UserDataIdSocio = "id_socio"
+        const val UserDataCustomerId = "customer_id"
     }
 
     private val accountTypeFilter: (android.accounts.Account) -> Boolean = { it.type == AccountType }
@@ -123,5 +124,28 @@ actual class Accounts(private val am: AccountManager) {
      */
     actual fun setIdSocio(account: Account, idSocio: Int) {
         am.setUserData(account.androidAccount, UserDataIdSocio, idSocio.toString())
+    }
+
+    /**
+     * Fetches the local accounts storage for the ID of the user in WooCommerce.
+     * Update the value with [setCustomerId].
+     *
+     * @param account The account to check for.
+     *
+     * @return The ID of the user in WooCommerce, or null if none is stored.
+     */
+    actual fun getCustomerId(account: Account): Int? {
+        return am.getUserData(account.androidAccount, UserDataCustomerId)?.toIntOrNull()
+    }
+
+    /**
+     * Stores the ID of the user for WooCommerce in the accounts' storage for the given user.
+     * Fetch the value with [getCustomerId].
+     *
+     * @param account The account to store the ID into.
+     * @param customerId The ID to store.
+     */
+    actual fun setCustomerId(account: Account, customerId: Int) {
+        am.setUserData(account.androidAccount, UserDataCustomerId, customerId.toString())
     }
 }

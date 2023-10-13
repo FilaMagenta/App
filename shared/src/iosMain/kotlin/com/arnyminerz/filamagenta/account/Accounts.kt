@@ -19,6 +19,7 @@ actual class Accounts {
         private val accountTRefresh = StringIndex("account_%d_token_refresh")
         private val accountIsAdmin = StringIndex("account_%d_admin")
         private val accountIdSocio = StringIndex("account_%d_id_socio")
+        private val accountCustomerId = StringIndex("account_%d_customer_id")
     }
 
     private val settings: Settings = KeychainSettings("accounts")
@@ -121,5 +122,30 @@ actual class Accounts {
     actual fun setIdSocio(account: Account, idSocio: Int) {
         val accountId = getAccounts().indexOf(account)
         settings[accountIdSocio(accountId)] = idSocio
+    }
+
+    /**
+     * Fetches the local accounts storage for the ID of the user in WooCommerce.
+     * Update the value with [setCustomerId].
+     *
+     * @param account The account to check for.
+     *
+     * @return The ID of the user in WooCommerce, or null if none is stored.
+     */
+    actual fun getCustomerId(account: Account): Int? {
+        val accountId = getAccounts().indexOf(account)
+        return settings.getIntOrNull(accountCustomerId(accountId))
+    }
+
+    /**
+     * Stores the ID of the user for WooCommerce in the accounts' storage for the given user.
+     * Fetch the value with [getCustomerId].
+     *
+     * @param account The account to store the ID into.
+     * @param customerId The ID to store.
+     */
+    actual fun setCustomerId(account: Account, customerId: Int) {
+        val accountId = getAccounts().indexOf(account)
+        settings[accountCustomerId(accountId)] = customerId
     }
 }

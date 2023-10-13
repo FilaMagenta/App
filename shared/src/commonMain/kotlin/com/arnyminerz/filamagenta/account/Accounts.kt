@@ -74,4 +74,23 @@ expect class Accounts {
      * @param idSocio The ID to store.
      */
     fun setIdSocio(account: Account, idSocio: Int)
+
+    /**
+     * Fetches the local accounts storage for the ID of the user in WooCommerce.
+     * Update the value with [setCustomerId].
+     *
+     * @param account The account to check for.
+     *
+     * @return The ID of the user in WooCommerce, or null if none is stored.
+     */
+    fun getCustomerId(account: Account): Int?
+
+    /**
+     * Stores the ID of the user for WooCommerce in the accounts' storage for the given user.
+     * Fetch the value with [getCustomerId].
+     *
+     * @param account The account to store the ID into.
+     * @param customerId The ID to store.
+     */
+    fun setCustomerId(account: Account, customerId: Int)
 }

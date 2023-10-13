@@ -82,7 +82,12 @@ fun MainScreen(
             }
         )
     } else {
-        val account = accountsList?.first() ?: return
+        LaunchedEffect(Unit) {
+            // todo - eventually an account selector should be added
+            viewModel.account.emit(accountsList?.first())
+        }
+
+        val isAdmin by viewModel.isAdmin.collectAsState(false)
         val event by viewModel.viewingEvent.collectAsState()
         val editingField by viewModel.editingField.collectAsState()
 
@@ -105,9 +110,9 @@ fun MainScreen(
 
             EventScreen(
                 ev,
-                viewModel::edit.takeIf { accounts.isAdmin(account) },
+                viewModel::edit.takeIf { isAdmin == true },
                 viewModel::stopViewingEvent
             )
-        } ?: AppScreen(account, mainPagerState, viewModel)
+        } ?: AppScreen(mainPagerState, viewModel)
     }
 }

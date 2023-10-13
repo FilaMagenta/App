@@ -30,8 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
-import com.arnyminerz.filamagenta.account.Account
-import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarItem
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarScaffold
 import com.arnyminerz.filamagenta.ui.page.EventsPage
@@ -60,10 +58,11 @@ val appScreenItems = listOf(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 fun AppScreen(
-    account: Account,
     state: PagerState,
     viewModel: MainViewModel
 ) {
+    val isAdmin by viewModel.isAdmin.collectAsState(false)
+
     NavigationBarScaffold(
         items = appScreenItems,
         state = state,
@@ -76,7 +75,7 @@ fun AppScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(stringResource(MR.strings.app_name))
-                        if (accounts.isAdmin(account)) {
+                        if (isAdmin == true) {
                             Text(
                                 text = stringResource(MR.strings.badge_admin),
                                 style = MaterialTheme.typography.labelMedium,
@@ -112,11 +111,11 @@ fun AppScreen(
         when (page) {
             // Wallet
             0 -> {
-                WalletPage(account)
+                WalletPage(viewModel)
             }
             // Events
             1 -> {
-                EventsPage(accounts.isAdmin(account), viewModel)
+                EventsPage(viewModel)
             }
             // Settings
             2 -> {

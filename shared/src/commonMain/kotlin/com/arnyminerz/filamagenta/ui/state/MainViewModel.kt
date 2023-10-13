@@ -8,8 +8,13 @@ import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.extractMetadata
+import com.arnyminerz.filamagenta.cache.data.toAccountTransaction
 import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.network.Authorization
+import com.arnyminerz.filamagenta.network.database.SqlServer
+import com.arnyminerz.filamagenta.network.database.SqlTunnelEntry
+import com.arnyminerz.filamagenta.network.database.SqlTunnelException
+import com.arnyminerz.filamagenta.network.database.getLong
 import com.arnyminerz.filamagenta.network.woo.WooCommerce
 import com.arnyminerz.filamagenta.network.woo.update.MetadataUpdate
 import com.arnyminerz.filamagenta.network.woo.utils.ProductMeta
@@ -25,6 +30,8 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
@@ -42,6 +49,9 @@ class MainViewModel : ViewModel() {
     /** Reports the progress of [requestToken]. */
     val isRequestingToken: StateFlow<Boolean> get() = _isRequestingToken
 
+    private val _isLoadingWallet = MutableStateFlow(false)
+    val isLoadingWallet: StateFlow<Boolean> get() = _isLoadingWallet
+
     private val _isLoadingEvents = MutableStateFlow(false)
     val isLoadingEvents: StateFlow<Boolean> get() = _isLoadingEvents
 
@@ -54,7 +64,19 @@ class MainViewModel : ViewModel() {
     /**
      * Whether there's something being loaded in the background.
      */
-    val isLoading = isLoadingEvents
+    val isLoading = isLoadingWallet.combine(isLoadingEvents) { wallet, events ->
+        wallet || events
+    }
+
+    /**
+     * Stores the currently selected account.
+     */
+    val account = MutableStateFlow<Account?>(null)
+
+    /**
+     * Stores whether the selected [account] is an admin.
+     */
+    val isAdmin = account.map { ac -> ac?.let(accounts::isAdmin) }
 
     /**
      * For each index of the pages in the main navigation, which function can be used for refreshing. If null, refresh
@@ -62,7 +84,7 @@ class MainViewModel : ViewModel() {
      */
     val refreshFunctions = listOf<(() -> Job)?>(
         // Wallet
-        null,
+        ::refreshWallet,
         // Events
         ::refreshEvents,
         // Settings
@@ -161,31 +183,88 @@ class MainViewModel : ViewModel() {
     }
 
     /**
+     * Tries getting the IdSocio from [accounts] for the selected [account].
+     * If it's still not set, fetches it from the SQL server according to the user's [Account.name]
+     *
+     * @throws NullPointerException If [account] doesn't have a selected account.
+     * @throws IllegalStateException If the server doesn't return a valid idSocio for [account].
+     */
+    private suspend fun getOrFetchIdSocio(): Int {
+        val account = account.value!!
+        var idSocio = accounts.getIdSocio(account)
+        if (idSocio == null) {
+            try {
+                Napier.i("Account doesn't have an stored idSocio. Searching now...")
+                val result = SqlServer.query("SELECT idSocio FROM tbSocios WHERE Dni='${account.name}';")
+                check(result.isNotEmpty()) { "SQLServer returned a null or empty list." }
+
+                // we only have a query, so fetch that one
+                val entries = result[0]
+                require(entries.isNotEmpty()) { "Could not find user in tbSocios." }
+
+                // There should be one resulting entry, so take that one. We have already checked that there's one
+                val row = entries[0]
+
+                idSocio = row.getLong("idSocio")!!.toInt()
+                accounts.setIdSocio(account, idSocio)
+
+                Napier.i("Updated idSocio for $account: $idSocio")
+            } catch (e: SqlTunnelException) {
+                Napier.e("SQLServer returned an error.", throwable = e)
+            }
+        }
+        checkNotNull(idSocio) { "idSocio must not be null." }
+
+        return idSocio
+    }
+
+    /**
+     * Fetches all the transactions from the SQL server, and updates the local cache.
+     */
+    fun refreshWallet() = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            _isLoadingWallet.emit(true)
+
+            val idSocio = getOrFetchIdSocio()
+
+            Napier.d("Getting transactions list from server...")
+            val result = SqlServer.query("SELECT * FROM tbApuntesSocios WHERE idSocio=$idSocio;")[0]
+            Cache.synchronizeTransactions(
+                result.map(List<SqlTunnelEntry>::toAccountTransaction)
+            )
+        } finally {
+            _isLoadingWallet.emit(false)
+        }
+    }
+
+    /**
      * Fetches all events from the server and updates the local cache.
      */
     fun refreshEvents() = viewModelScope.launch(Dispatchers.IO) {
-        _isLoadingEvents.emit(true)
+        try {
+            _isLoadingEvents.emit(true)
 
-        // Events will only be fetched for this year. Year is considered until August
-        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        val year = if (now.monthNumber > MONTH_INDEX_AUGUST) {
-            // If right now is after August, the working year is the current one
-            now.year
-        } else {
-            // If before August, working year is the last one
-            now.year - 1
+            // Events will only be fetched for this year. Year is considered until August
+            val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            val year = if (now.monthNumber > MONTH_INDEX_AUGUST) {
+                // If right now is after August, the working year is the current one
+                now.year
+            } else {
+                // If before August, working year is the last one
+                now.year - 1
+            }
+            val modifiedAfter = LocalDate(year, Month.AUGUST, 1)
+
+            Napier.d("Getting products from server after $modifiedAfter...")
+
+            WooCommerce.Products.getProductsAndVariations(modifiedAfter).also { pairs ->
+                Napier.i("Got ${pairs.size} products from server. Updating cache...")
+                Cache.synchronizeEvents(
+                    pairs.map { (product, variations) -> product.toEvent(variations) }
+                )
+            }
+        } finally {
+            _isLoadingEvents.emit(false)
         }
-        val modifiedAfter = LocalDate(year, Month.AUGUST, 1)
-
-        Napier.d("Getting products from server after $modifiedAfter...")
-
-        WooCommerce.Products.getProductsAndVariations(modifiedAfter).also { pairs ->
-            Napier.i("Got ${pairs.size} products from server. Updating cache...")
-            Cache.synchronizeEvents(
-                pairs.map { (product, variations) -> product.toEvent(variations) }
-            )
-        }
-
-        _isLoadingEvents.emit(false)
     }
 }

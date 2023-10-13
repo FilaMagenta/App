@@ -25,15 +25,13 @@ import com.arnyminerz.filamagenta.ui.state.MainViewModel
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalAnimationApi::class)
 @Composable
-fun EventsPage(
-    isAdmin: Boolean,
-    viewModel: MainViewModel
-) {
+fun EventsPage(viewModel: MainViewModel) {
+    val isAdmin by viewModel.isAdmin.collectAsState(false)
+
     val events by Cache.events.collectAsState(null)
     val isRefreshing by viewModel.isLoadingEvents.collectAsState(false)
 
     DisposableEffect(events) {
-        // todo - there should be a reload button on the navbar
         val coroutine = if (events?.isEmpty() == true) {
             viewModel.refreshEvents()
         } else {
@@ -72,7 +70,7 @@ fun EventsPage(
                 items(
                     items = list
                         // Just display events without a date to admins
-                        .filter { event -> isAdmin || event.isComplete },
+                        .filter { event -> isAdmin == true || event.isComplete },
                     key = { it.id }
                 ) { event ->
                     EventItem(
