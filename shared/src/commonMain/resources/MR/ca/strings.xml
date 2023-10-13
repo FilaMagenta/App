@@ -42,8 +42,14 @@
     <string name="event_screen_type">Event Type</string>
     <string name="event_screen_date">Event Date</string>
     <string name="event_screen_loading_order">Loading Order...</string>
+    <string name="event_screen_ticket_title">Entry Ticket</string>
+    <string name="event_screen_ticket_subtitle">This is your receipt for accessing the Filà the day of the event. Don\'t lose it.</string>
     <!-- Wallet Screen -->
     <string name="wallet_income">Income</string>
     <string name="wallet_balance">Balance</string>
     <string name="wallet_outcome">Outcome</string>
+    <!-- Settings -->
+    <string name="settings_section_user_interface">User Interface</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_system">System Default</string>
 </resources>
