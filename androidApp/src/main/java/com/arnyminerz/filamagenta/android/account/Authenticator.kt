@@ -49,7 +49,7 @@ class Authenticator(private val context: Context) : AbstractAccountAuthenticator
         if (now > tokenExpiration) {
             // token has expired, refresh it
             val response = runBlocking { Authorization.refreshToken(refreshToken) }
-            accounts!!.updateToken(account.commonAccount, response.accessToken, response.expiration)
+            accounts.updateToken(account.commonAccount, response.accessToken, response.expiration)
             token = response.accessToken
         }
 
