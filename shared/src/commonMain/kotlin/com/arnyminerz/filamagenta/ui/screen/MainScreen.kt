@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.data.cleanName
+import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.getBooleanState
 import com.arnyminerz.filamagenta.storage.settings
@@ -190,10 +191,12 @@ fun MainScreen(
                 )
             }
 
-            DisposableEffect(event) {
-                val job = viewModel.fetchOrders(event.id.toInt())
+            if (event.hasTicket) {
+                DisposableEffect(event) {
+                    val job = viewModel.fetchOrders(event.id.toInt())
 
-                onDispose { job.cancel() }
+                    onDispose { job.cancel() }
+                }
             }
 
             EventScreen(event, viewModel)
