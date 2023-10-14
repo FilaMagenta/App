@@ -12,6 +12,8 @@
     <string name="ok">OK</string>
     <string name="refresh">Refresh</string>
     <string name="done">Done</string>
+    <string name="delete">Delete</string>
+    <string name="synchronize" comment="A generic string for buttons that synchronize some data with the server.">Synchronize</string>
 
     <!-- Login Screen -->
     <string name="login_title">Login</string>
@@ -52,6 +54,12 @@
     <string name="event_screen_loading_order">Loading Order...</string>
     <string name="event_screen_ticket_title">Entry Ticket</string>
     <string name="event_screen_ticket_subtitle">This is your receipt for accessing the Filà the day of the event. Don\'t lose it.</string>
+    <string name="event_screen_admin_scanner">Ticket Scanner</string>
+    <string name="event_screen_admin_scanner_download">Download Tickets</string>
+    <string name="event_screen_admin_scanner_scan">Launch Scanner</string>
+    <string name="event_screen_admin_scanner_scan_not_supported" comment="Shown when the device doesn't have a camera">Scanner Unsupported</string>
+    <string name="event_screen_admin_scanner_sync_title">Sync with Server</string>
+    <string name="event_screen_admin_scanner_sync_message">If you have scanned new tickets, make sure to press the button below when you have an Internet connection. It will synchronize everything with the server.</string>
 
     <!-- Wallet Screen -->
     <string name="wallet_income">Income</string>

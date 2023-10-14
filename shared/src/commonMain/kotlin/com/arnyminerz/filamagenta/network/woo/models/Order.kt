@@ -50,7 +50,7 @@ class Order(
     @SerialName("customer_user_agent")
     val customerUserAgent: String,
     @SerialName("customer_id")
-    val customerId: Int? = null,
+    val customerId: Int,
     @SerialName("view_order_url")
     val viewOrderUrl: String? = null,
     @SerialName("line_items")
@@ -63,5 +63,7 @@ class Order(
     val feeLines: List<FeeLine> = ArrayList(),
     @SerialName("coupon_lines")
     val couponLines: List<CouponLine> = ArrayList(),
+    @SerialName("meta_data")
+    val metadata: List<Metadata> = emptyList(),
     val customer: Customer? = null
 )

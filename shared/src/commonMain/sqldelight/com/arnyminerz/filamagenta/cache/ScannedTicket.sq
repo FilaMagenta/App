@@ -1,0 +1,18 @@
+-- Stores scanned tickets
+CREATE TABLE ScannedTicket(
+    id INTEGER PRIMARY KEY NOT NULL,
+    orderId INTEGER NOT NULL,
+    customerId INTEGER NOT NULL
+);
+
+getByOrderId:
+SELECT * FROM ScannedTicket WHERE orderId=?;
+
+insert:
+INSERT INTO ScannedTicket(id, orderId, customerId) VALUES (?, ?, ?);
+
+update:
+UPDATE ScannedTicket SET orderId=?, customerId=? WHERE id=?;
+
+getAll:
+SELECT * FROM ScannedTicket;

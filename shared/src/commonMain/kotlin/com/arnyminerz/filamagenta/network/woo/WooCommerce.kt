@@ -5,6 +5,7 @@ import com.arnyminerz.filamagenta.network.woo.models.Customer
 import com.arnyminerz.filamagenta.network.woo.models.Order
 import com.arnyminerz.filamagenta.network.woo.models.Product
 import com.arnyminerz.filamagenta.network.woo.models.Variation
+import com.arnyminerz.filamagenta.network.woo.update.BatchMetadataUpdate
 import com.arnyminerz.filamagenta.network.woo.update.MetadataUpdate
 import com.arnyminerz.filamagenta.network.woo.update.WooProductUpdate
 import io.github.aakira.napier.Napier
@@ -163,6 +164,22 @@ object WooCommerce {
         }
     }
 
+    private suspend inline fun <reified T: Any> post(
+        body: T,
+        vararg pathSegments: Any,
+        block: HttpRequestBuilder.() -> Unit = {}
+    ): HttpResponse {
+        return client.post(
+            URLBuilder(baseUrl)
+                .appendPathSegments(pathSegments.map { it.toString() })
+                .build()
+        ) {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+            block()
+        }
+    }
+
     object Products {
         private const val CATEGORY_ID_EVENTS = 21
 
@@ -276,6 +293,25 @@ object WooCommerce {
                 "orders",
                 parameters = mapOf("customer" to customerId, "product" to productId)
             )
+        }
+
+        /**
+         * Fetches all the orders made for a given product.
+         */
+        suspend fun getOrdersForProduct(productId: Int): List<Order> {
+            return getList<Order>(
+                "orders",
+                parameters = mapOf("product" to productId),
+                perPage = 100
+            )
+        }
+
+        suspend fun batchUpdateMetadata(data: BatchMetadataUpdate) {
+            post(data, "orders", "batch").apply {
+                require(status.value in 200..299) {
+                    "Server returned a non-successful status code."
+                }
+            }
         }
     }
 }

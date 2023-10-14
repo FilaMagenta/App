@@ -2,8 +2,10 @@ package com.arnyminerz.filamagenta.cache.data
 
 import com.arnyminerz.filamagenta.cache.ProductOrder
 import com.arnyminerz.filamagenta.network.woo.models.Order
+import io.ktor.serialization.kotlinx.json.DefaultJson
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlinx.serialization.encodeToString
 
 /**
  * Converts all the items ordered in the current [Order] into [ProductOrder].
@@ -14,8 +16,9 @@ fun Order.toProductOrder(): List<ProductOrder> = lineItems.map {
         it.productId.toLong(),
         orderNumber,
         dateCreated,
-        customerId!!.toLong(),
-        "${billingAddress.firstName} ${billingAddress.lastName}"
+        customerId.toLong(),
+        "${billingAddress.firstName} ${billingAddress.lastName}",
+        DefaultJson.encodeToString(metadata)
     )
 }
 

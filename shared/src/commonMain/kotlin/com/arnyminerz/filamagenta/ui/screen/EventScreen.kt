@@ -1,6 +1,9 @@
 package com.arnyminerz.filamagenta.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,10 +15,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronLeft
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -41,6 +46,7 @@ import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.qrcode
+import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.image.QRCodeGenerator
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.EventInformationRow
@@ -67,7 +73,11 @@ fun EventScreen(
 ) {
     val isAdmin by viewModel.isAdmin.collectAsState(false)
     val loadingOrders by viewModel.isLoadingOrders.collectAsState(false)
+    val isDownloadingTickets by viewModel.isDownloadingTickets.collectAsState(false)
+    val isUploadingScannedTickets by viewModel.isUploadingScannedTickets.collectAsState(false)
+
     val orders by Cache.orders.collectListAsState()
+    val adminTickets by Cache.adminTicketsForEvent(event.id).collectListAsState()
 
     val onEditRequested = viewModel::edit.takeIf { isAdmin == true }
 
@@ -90,9 +100,10 @@ fun EventScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item {
+            item(key = "event-information", contentType = "information") {
                 OutlinedCard(
                     modifier = Modifier
                         .widthIn(max = 600.dp)
@@ -127,7 +138,75 @@ fun EventScreen(
                 }
             }
 
-            item {
+            item(key = "admin-scanner", contentType = "admin-panel") {
+                OutlinedCard(
+                    modifier = Modifier
+                        .widthIn(max = 600.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(MR.strings.event_screen_admin_scanner),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { viewModel.downloadTickets(event.id) },
+                            modifier = Modifier.weight(1f).padding(end = 4.dp),
+                            enabled = !isDownloadingTickets
+                        ) {
+                            Text(stringResource(MR.strings.event_screen_admin_scanner_download))
+                        }
+
+                        val hasCamera = PlatformInformation.isCameraSupported()
+                        OutlinedButton(
+                            onClick = { viewModel.startScanner() },
+                            modifier = Modifier.weight(1f).padding(start = 4.dp),
+                            enabled = adminTickets.isNotEmpty() && hasCamera
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    if (hasCamera)
+                                        MR.strings.event_screen_admin_scanner_scan
+                                    else
+                                        MR.strings.event_screen_admin_scanner_scan_not_supported
+                                )
+                            )
+                        }
+                        AnimatedVisibility(
+                            visible = adminTickets.isNotEmpty()
+                        ) {
+                            IconButton(
+                                onClick = { viewModel.deleteTickets(event.id) }
+                            ) {
+                                Icon(Icons.Rounded.Delete, stringResource(MR.strings.delete))
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = stringResource(MR.strings.event_screen_admin_scanner_sync_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
+                    )
+                    Text(
+                        text = stringResource(MR.strings.event_screen_admin_scanner_sync_message),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                    )
+                    OutlinedButton(
+                        onClick = { viewModel.syncScannedTickets(event.id) },
+                        modifier = Modifier.padding(8.dp).align(Alignment.End),
+                        enabled = !isUploadingScannedTickets && adminTickets.isNotEmpty()
+                    ) {
+                        Text(stringResource(MR.strings.synchronize))
+                    }
+                }
+            }
+
+            item(key = "order-loading-indicator", contentType = "loading-indicator") {
                 LoadingCard(
                     visible = loadingOrders && orders.isEmpty(),
                     modifier = Modifier.padding(top = 12.dp),
@@ -137,7 +216,10 @@ fun EventScreen(
 
             if (orders.isNotEmpty()) {
                 val moreThanOne = orders.size > 1
-                itemsIndexed(orders) { index, order ->
+                itemsIndexed(
+                    items = orders,
+                    key = { _, order -> "order-${order.id}" }
+                ) { index, order ->
                     OutlinedCard(
                         shape = BrokenPaperShape(BrokenPaperShapeSize),
                         modifier = Modifier
@@ -215,7 +297,7 @@ fun EventScreen(
                 }
             }
 
-            item { Spacer(Modifier.height(12.dp)) }
+            item(key = "final-spacer", contentType = "spacer") { Spacer(Modifier.height(12.dp)) }
         }
     }
 }

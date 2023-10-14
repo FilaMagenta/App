@@ -16,6 +16,7 @@ import com.arnyminerz.filamagenta.cache.data.toAccountTransaction
 import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.cache.data.toProductOrder
 import com.arnyminerz.filamagenta.cache.data.validateProductQr
+import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.data.QrCodeScanResult
 import com.arnyminerz.filamagenta.network.Authorization
 import com.arnyminerz.filamagenta.network.database.SqlServer
@@ -23,7 +24,9 @@ import com.arnyminerz.filamagenta.network.database.SqlTunnelEntry
 import com.arnyminerz.filamagenta.network.database.SqlTunnelException
 import com.arnyminerz.filamagenta.network.database.getLong
 import com.arnyminerz.filamagenta.network.woo.WooCommerce
+import com.arnyminerz.filamagenta.network.woo.models.Metadata
 import com.arnyminerz.filamagenta.network.woo.models.Order
+import com.arnyminerz.filamagenta.network.woo.update.BatchMetadataUpdate
 import com.arnyminerz.filamagenta.network.woo.update.MetadataUpdate
 import com.arnyminerz.filamagenta.network.woo.utils.ProductMeta
 import com.arnyminerz.filamagenta.network.woo.utils.set
@@ -33,6 +36,7 @@ import io.github.aakira.napier.Napier
 import io.ktor.http.Parameters
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
+import io.ktor.serialization.kotlinx.json.DefaultJson
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.Dispatchers
@@ -58,6 +62,7 @@ class MainViewModel : ViewModel() {
     }
 
     private val _isRequestingToken = MutableStateFlow(false)
+
     /** Reports the progress of [requestToken]. */
     val isRequestingToken: StateFlow<Boolean> get() = _isRequestingToken
 
@@ -69,6 +74,12 @@ class MainViewModel : ViewModel() {
 
     private val _isLoadingOrders = MutableStateFlow(false)
     val isLoadingOrders: StateFlow<Boolean> get() = _isLoadingOrders
+
+    private val _isDownloadingTickets = MutableStateFlow(false)
+    val isDownloadingTickets: StateFlow<Boolean> get() = _isDownloadingTickets
+
+    private val _isUploadingScannedTickets = MutableStateFlow(false)
+    val isUploadingScannedTickets: StateFlow<Boolean> get() = _isUploadingScannedTickets
 
     private val _viewingEvent = MutableStateFlow<Event?>(null)
     val viewingEvent: StateFlow<Event?> get() = _viewingEvent
@@ -217,7 +228,7 @@ class MainViewModel : ViewModel() {
     fun <T> performUpdate(event: Event, field: EventField<T>): Job {
         return viewModelScope.launch(Dispatchers.IO) {
             val rawValue = field.value
-            val (key, value) = when(field) {
+            val (key, value) = when (field) {
                 is EventField.Name -> throw UnsupportedOperationException("Cannot change names right now")
                 is EventField.Date -> ProductMeta.EVENT_DATE to (rawValue as LocalDateTime).toEpochMillisecondsString()
                 is EventField.Type -> ProductMeta.CATEGORY to (rawValue as EventType).name
@@ -348,7 +359,9 @@ class MainViewModel : ViewModel() {
 
     fun fetchOrders(productId: Int) = viewModelScope.launch(Dispatchers.IO) {
         // Wait until another thread finishes loading
-        while (_isLoadingOrders.value) { delay(1) }
+        while (_isLoadingOrders.value) {
+            delay(1)
+        }
 
         try {
             _isLoadingOrders.emit(true)
@@ -384,7 +397,6 @@ class MainViewModel : ViewModel() {
             _scanResult.emit(QrCodeScanResult.Invalid)
             return@launch
         }
-        Napier.i("Got valid QR, checking if reused...")
 
         val split = decoded.split("/")
         val orderId = split[OrderQRIndexOrderId].toLong()
@@ -392,13 +404,75 @@ class MainViewModel : ViewModel() {
         val customerId = split[OrderQRIndexCustomerId].toLong()
         val customerName = split[OrderQRIndexCustomerName]
 
+        Napier.i("Got valid QR, checking if stored...")
+        val exists = database.adminTicketsQueries.getById(orderId).executeAsOneOrNull() != null
+        if (!exists) {
+            Napier.i("QR is not stored locally")
+            _scanResult.emit(QrCodeScanResult.Invalid)
+            return@launch
+        }
+
+        Napier.i("QR is stored, checking if reused...")
+
         val scannedTicket = Cache.getScannedTickets().find { it.customerId == customerId && it.orderId == orderId }
         if (scannedTicket != null) {
             _scanResult.emit(QrCodeScanResult.AlreadyUsed)
         } else {
-            Cache.insertScannedTicket(orderId, customerId)
+            Cache.insertOrUpdateScannedTicket(orderId, customerId)
 
             _scanResult.emit(QrCodeScanResult.Success(customerName, orderNumber))
+        }
+    }
+
+    fun downloadTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            _isDownloadingTickets.emit(true)
+
+            val orders = WooCommerce.Orders.getOrdersForProduct(eventId.toInt())
+            for (order: Order in orders) {
+                val isValidated = order.metadata.find { it.key == "validated" }?.value == "true"
+                if (isValidated) {
+                    Cache.insertOrUpdateScannedTicket(order.id.toLong(), order.customerId.toLong())
+                }
+
+                order.toProductOrder().forEach(Cache::insertOrUpdateAdminTicket)
+            }
+        } finally {
+            _isDownloadingTickets.emit(false)
+        }
+    }
+
+    fun deleteTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
+        database.adminTicketsQueries.deleteByEventId(eventId)
+    }
+
+    fun syncScannedTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            _isUploadingScannedTickets.emit(true)
+
+            val update = mutableListOf<BatchMetadataUpdate.Entry>()
+
+            val tickets = database.adminTicketsQueries.getByEventId(eventId).executeAsList()
+            for (ticket in tickets) {
+                val scannedTickets = database.scannedTicketQueries.getByOrderId(ticket.orderId).executeAsList()
+                for (scannedTicket in scannedTickets) {
+                    val existingMeta = DefaultJson.decodeFromString<List<Metadata>>(ticket._cache_meta_data)
+                        .set("validated", "true")
+
+                    update.add(
+                        BatchMetadataUpdate.Entry(
+                            scannedTicket.orderId,
+                            existingMeta
+                        )
+                    )
+                }
+            }
+
+            WooCommerce.Orders.batchUpdateMetadata(
+                BatchMetadataUpdate(update)
+            )
+        } finally {
+            _isUploadingScannedTickets.emit(false)
         }
     }
 }

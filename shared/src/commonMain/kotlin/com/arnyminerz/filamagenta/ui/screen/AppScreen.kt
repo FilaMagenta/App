@@ -1,7 +1,6 @@
 package com.arnyminerz.filamagenta.ui.screen
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Wallet
-import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.BadgeDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -32,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
-import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarItem
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarScaffold
 import com.arnyminerz.filamagenta.ui.page.EventsPage
@@ -96,16 +93,6 @@ fun AppScreen(
                 actions = {
                     val isRefreshing by viewModel.isLoading.collectAsState(false)
 
-                    val hasCamera = PlatformInformation.isCameraSupported()
-                    AnimatedVisibility(
-                        visible = hasCamera && state.currentPage == 1 && isAdmin == true
-                    ) {
-                        IconButton(
-                            onClick = { viewModel.startScanner() }
-                        ) {
-                            Icon(Icons.Rounded.QrCodeScanner, stringResource(MR.strings.refresh))
-                        }
-                    }
                     AnimatedContent(
                         targetState = viewModel.refreshFunctions.getOrNull(state.currentPage)
                     ) { refresh ->

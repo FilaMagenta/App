@@ -1,0 +1,24 @@
+-- Stores a list of all the tickets available in the server for specific events
+CREATE TABLE AdminTickets (
+    orderId INTEGER NOT NULL PRIMARY KEY,
+    eventId INTEGER NOT NULL,
+    orderNumber TEXT NOT NULL,
+    customerId INTEGER NOT NULL,
+    customerName TEXT NOT NULL,
+    _cache_meta_data TEXT NOT NULL
+);
+
+getById:
+SELECT * FROM AdminTickets WHERE orderId=?;
+
+getByEventId:
+SELECT * FROM AdminTickets WHERE eventId=?;
+
+insert:
+INSERT INTO AdminTickets(orderId, eventId, orderNumber, customerId, customerName, _cache_meta_data) VALUES (?, ?, ?, ?, ?, ?);
+
+update:
+UPDATE AdminTickets SET eventId=?, orderNumber=?, customerId=?, customerName=?, _cache_meta_data=? WHERE orderId=?;
+
+deleteByEventId:
+DELETE FROM AdminTickets WHERE eventId=?;

@@ -25,7 +25,9 @@ object Cache {
 
     val orders: Query<ProductOrder> = database.productOrderQueries.getAll()
 
-    val pendingTicketsToUpload: Query<PendingTicketUpload> = database.pendingTicketUploadQueries.getAll()
+    val scannedTickets: Query<ScannedTicket> = database.scannedTicketQueries.getAll()
+
+    fun adminTicketsForEvent(eventId: Long) = database.adminTicketsQueries.getByEventId(eventId)
 
     @Composable
     fun <RowType : Any> Query<RowType>.collectListAsState(): State<List<RowType>> {
@@ -123,10 +125,10 @@ object Cache {
         with(order) {
             if (element == null) {
                 // insert
-                database.productOrderQueries.insert(id, eventId, orderNumber, date, customerId, customerName)
+                database.productOrderQueries.insert(id, eventId, orderNumber, date, customerId, customerName, _cache_meta_data)
             } else {
                 // update
-                database.productOrderQueries.update(eventId, orderNumber, date, customerId, customerName, id)
+                database.productOrderQueries.update(eventId, orderNumber, date, customerId, customerName, _cache_meta_data, id)
             }
         }
     }
@@ -147,12 +149,36 @@ object Cache {
     /**
      * Requests an updated list of all the pending ticket upload queries.
      */
-    fun getScannedTickets() = database.pendingTicketUploadQueries.getAll().executeAsList()
+    fun getScannedTickets() = database.scannedTicketQueries.getAll().executeAsList()
 
     /**
      * Inserts a scanned ticket for order [orderId] and customer [customerId].
      */
-    fun insertScannedTicket(orderId: Long, customerId: Long) {
-        database.pendingTicketUploadQueries.insert(null, orderId, customerId)
+    fun insertOrUpdateScannedTicket(orderId: Long, customerId: Long) {
+        val element = database.scannedTicketQueries
+            .getByOrderId(orderId)
+            .executeAsOneOrNull()
+        if (element == null) {
+            // insert
+            database.scannedTicketQueries.insert(null, orderId, customerId)
+        } else {
+            // update
+            database.scannedTicketQueries.update(orderId, customerId, element.id)
+        }
+    }
+
+    fun insertOrUpdateAdminTicket(order: ProductOrder) {
+        val element = database.adminTicketsQueries
+            .getById(order.id)
+            .executeAsOneOrNull()
+        with(order) {
+            if (element == null) {
+                // insert
+                database.adminTicketsQueries.insert(id, eventId, orderNumber, customerId, customerName, _cache_meta_data)
+            } else {
+                // update
+                database.adminTicketsQueries.update(eventId, orderNumber, customerId, customerName, _cache_meta_data, id)
+            }
+        }
     }
 }
