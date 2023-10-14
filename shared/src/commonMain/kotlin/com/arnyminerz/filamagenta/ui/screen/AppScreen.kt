@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
+import com.arnyminerz.filamagenta.cache.data.validateProductQr
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarItem
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarScaffold
 import com.arnyminerz.filamagenta.ui.page.EventsPage
@@ -45,6 +46,8 @@ import com.arnyminerz.filamagenta.ui.page.WalletPage
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.stringResource
 import io.github.aakira.napier.Napier
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 val appScreenItems = listOf(
     NavigationBarItem(
@@ -65,7 +68,7 @@ val appScreenItems = listOf(
  * Once logged in, this is the first screen shown to the user.
  */
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalEncodingApi::class)
 fun AppScreen(
     state: PagerState,
     viewModel: MainViewModel
@@ -137,8 +140,10 @@ fun AppScreen(
             // Events
             1 -> {
                 if (isScanningQr)
-                    QrScannerScreen(modifier = Modifier.fillMaxSize()) {
-                        Napier.i { "Scanned: $it" }
+                    QrScannerScreen(modifier = Modifier.fillMaxSize()) { data ->
+                        val decoded = Base64.decode(data).decodeToString()
+                        Napier.i { "Ticket: $decoded" }
+                        Napier.i { "Is ticket valid? ${validateProductQr(decoded)}" }
                         isScanningQr = false
                     }
                 else

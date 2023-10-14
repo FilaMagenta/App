@@ -23,3 +23,8 @@ fun ProductOrder.qrcode(): String {
     val text = "$id/$eventId/$orderNumber/${customerName.replace(" ", "").lowercase()}"
     return Base64.encode(text.encodeToByteArray())
 }
+
+fun validateProductQr(data: String): Boolean {
+    val pieces = data.split('/')
+    return pieces.size == 4
+}
