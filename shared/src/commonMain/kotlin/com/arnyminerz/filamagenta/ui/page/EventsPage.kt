@@ -1,16 +1,11 @@
 package com.arnyminerz.filamagenta.ui.page
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -28,7 +23,6 @@ fun EventsPage(viewModel: MainViewModel) {
     val isAdmin by viewModel.isAdmin.collectAsState(false)
 
     val events by Cache.events.collectAsState(null)
-    val isRefreshing by viewModel.isLoadingEvents.collectAsState(false)
 
     DisposableEffect(events) {
         val coroutine = if (events?.isEmpty() == true) {
@@ -44,16 +38,6 @@ fun EventsPage(viewModel: MainViewModel) {
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
-            stickyHeader {
-                AnimatedVisibility(
-                    visible = isRefreshing,
-                    enter = slideInVertically { -it },
-                    exit = slideOutVertically { -it }
-                ) {
-                    LinearProgressIndicator(Modifier.fillMaxWidth())
-                }
-            }
-
             items(
                 items = list
                     // Just display events without a date to admins

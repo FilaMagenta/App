@@ -63,10 +63,12 @@ fun AppScreen(
     viewModel: MainViewModel
 ) {
     val isAdmin by viewModel.isAdmin.collectAsState(false)
+    val isLoading by viewModel.isPageLoading[state.currentPage].collectAsState(false)
 
     NavigationBarScaffold(
         items = appScreenItems,
         state = state,
+        isLoading = isLoading,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {

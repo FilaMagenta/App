@@ -1,5 +1,8 @@
 package com.arnyminerz.filamagenta.ui.navigation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -7,11 +10,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
@@ -41,13 +46,37 @@ import kotlinx.coroutines.launch
 fun NavigationBarScaffold(
     items: List<NavigationBarItem>,
     state: PagerState = rememberPagerState { items.size },
-    maxContentWidth: Dp = 600.dp,
+    maxContentWidth: Dp = 750.dp,
+    isLoading: Boolean = false,
     topBar: @Composable () -> Unit = {},
     content: @Composable BoxScope.(index: Int) -> Unit
 ) {
     val windowSizeClass = calculateWindowSizeClass()
 
     val scope = rememberCoroutineScope()
+
+    @Composable
+    fun Content(page: Int) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AnimatedVisibility(
+                visible = isLoading,
+                enter = slideInVertically { -it },
+                exit = slideOutVertically { -it },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+
+            Box(
+                modifier = Modifier.widthIn(max = maxContentWidth).fillMaxSize()
+            ) {
+                content(page)
+            }
+        }
+    }
 
     when (windowSizeClass) {
         WindowSizeClass.Compact -> {
@@ -73,13 +102,7 @@ fun NavigationBarScaffold(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
-                ) { page ->
-                    Box(
-                        modifier = Modifier.widthIn(max = maxContentWidth).fillMaxSize()
-                    ) {
-                        content(page)
-                    }
-                }
+                ) { Content(it) }
             }
         }
 
@@ -110,18 +133,7 @@ fun NavigationBarScaffold(
                         modifier = Modifier
                             .fillMaxHeight()
                             .weight(1f)
-                    ) { page ->
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Box(
-                                modifier = Modifier.widthIn(max = maxContentWidth).fillMaxSize()
-                            ) {
-                                content(page)
-                            }
-                        }
-                    }
+                    ) { Content(it) }
                 }
             }
         }

@@ -123,6 +123,19 @@ class MainViewModel : ViewModel() {
         null
     )
 
+    /**
+     * Stores the state flow that indicates when there's a process loading in the background for each page of the main
+     * layout.
+     */
+    val isPageLoading = listOf(
+        // Wallet
+        isLoadingWallet,
+        // Events
+        isLoadingEvents,
+        // Settings
+        MutableStateFlow(false)
+    )
+
     fun getAuthorizeUrl() =
         // First, request the server
         URLBuilder(
