@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Filà Magenta</string>
+    <!-- Generic Strings -->
+    <string name="back">Enrere</string>
+    <string name="edit">Editar</string>
+    <string name="save">Desa</string>
+    <string name="cancel">Cancel·la</string>
+    <string name="badge_admin">admin</string>
+    <string name="ok">OK</string>
+    <string name="refresh">Actualitza</string>
+    <!-- Login Screen -->
+    <string name="login_title">Iniciar Sessió</string>
+    <string name="login_message">Benvingut/da a l\'aplicació de la Filà Magenta. Per favor, prem el botó de sota, i un navegador s\'obrirà. Inicia sessió A la pàgina web. De la resta ens encarreguem nosaltres.</string>
+    <string name="login_action">Iniciar Sessió</string>
+    <!-- Main Navigation bar -->
+    <string name="nav_wallet">Comptes</string>
+    <string name="nav_events">Actes</string>
+    <string name="nav_settings">Ajustos</string>
+    <!-- Event item -->
+    <string name="event_info">Informació de l\'esdeveniment</string>
+    <string name="event_date">Data: %s</string>
+    <string name="event_options_available">Opcions disponibles</string>
+    <string name="event_warnings">Alertes:</string>
+    <string name="event_warnings_date">Data no establerta</string>
+    <string name="event_warnings_type">Tipus no establert</string>
+    <string name="event_date_unknown">Desconeguda</string>
+    <string name="event_type_unknown">Desconegut</string>
+    <string name="event_type_breakfast">Esmorzar</string>
+    <string name="event_type_lunch">Dinar</string>
+    <string name="event_type_dinner">Sopar</string>
+    <string name="event_type_assembly">Assemblea</string>
+    <string name="event_type_workshop">Taller</string>
+    <string name="event_type_lottery">Loteria</string>
+    <string name="event_field_name">Nom</string>
+    <string name="event_field_date">Data</string>
+    <string name="event_field_type">Tipus</string>
+    <string name="event_editor_date">Data</string>
+    <string name="event_editor_time">Hora</string>
+    <!-- Event Screen -->
+    <string name="event_screen_name">Nom de l\'Esdeveniment</string>
+    <string name="event_screen_type">Tipus d\'Esdeveniment</string>
+    <string name="event_screen_date">Data de l\'Esdeveniment</string>
+    <string name="event_screen_loading_order">Carregant Ordre...</string>
+    <string name="event_screen_ticket_title">Tiquet d\'Entrada</string>
+    <string name="event_screen_ticket_subtitle">Aquest és el teu justificant per accedir a la Filà el dia de l\'esdeveniment. No el pergues.</string>
+    <!-- Wallet Screen -->
+    <string name="wallet_income">Ingressos</string>
+    <string name="wallet_balance">Saldo</string>
+    <string name="wallet_outcome">Eixides</string>
+    <!-- Settings -->
+    <string name="settings_section_user_interface">Interfície d\'Usuari</string>
+    <string name="settings_language_title">Idioma</string>
+    <string name="settings_language_system">Per defecte</string>
+    <!-- Barcode Scanner -->
+    <string name="scan_barcode_instruction">Escanejar codi QR</string>
+    <string name="scan_qr_code">Col·loca el codi al centre de la pantalla</string>
+</resources>
