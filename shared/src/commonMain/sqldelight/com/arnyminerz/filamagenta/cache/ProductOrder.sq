@@ -17,6 +17,9 @@ SELECT * FROM ProductOrder;
 getById:
 SELECT * FROM ProductOrder WHERE id = ?;
 
+getByEventId:
+SELECT * FROM ProductOrder WHERE eventId = ?;
+
 insert:
 INSERT INTO ProductOrder(id, eventId, orderNumber, date, customerId, customerName, _cache_meta_data) VALUES (?, ?, ?, ?, ?, ?, ?);
 

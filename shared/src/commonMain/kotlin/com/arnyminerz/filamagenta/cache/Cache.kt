@@ -23,9 +23,9 @@ object Cache {
 
     val transactions: Query<AccountTransaction> = database.accountTransactionQueries.getAll()
 
-    val orders: Query<ProductOrder> = database.productOrderQueries.getAll()
-
     val scannedTickets: Query<ScannedTicket> = database.scannedTicketQueries.getAll()
+
+    fun ordersForEvent(eventId: Long): Query<ProductOrder> = database.productOrderQueries.getByEventId(eventId)
 
     fun adminTicketsForEvent(eventId: Long) = database.adminTicketsQueries.getByEventId(eventId)
 

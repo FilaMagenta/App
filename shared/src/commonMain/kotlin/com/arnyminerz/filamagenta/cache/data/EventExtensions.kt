@@ -46,6 +46,14 @@ val Event.isComplete: Boolean
     get() = date != null && type != null
 
 /**
+ * Checks whether the event type has ticket support.
+ *
+ * Supported ones: [EventType.Breakfast], [EventType.Lunch] and [EventType.Dinner].
+ */
+val Event.hasTicket: Boolean
+    get() = sequenceOf(EventType.Breakfast, EventType.Lunch, EventType.Dinner).contains(type)
+
+/**
  * Extracts all the Metadata cached in [Event] to be used with [Product].
  */
 fun Event.extractMetadata(): List<Metadata> {

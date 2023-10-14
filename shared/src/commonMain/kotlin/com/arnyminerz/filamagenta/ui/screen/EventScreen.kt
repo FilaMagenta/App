@@ -45,6 +45,7 @@ import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.cleanName
+import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.data.qrcode
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.image.QRCodeGenerator
@@ -76,7 +77,7 @@ fun EventScreen(
     val isDownloadingTickets by viewModel.isDownloadingTickets.collectAsState(false)
     val isUploadingScannedTickets by viewModel.isUploadingScannedTickets.collectAsState(false)
 
-    val orders by Cache.orders.collectListAsState()
+    val orders by Cache.ordersForEvent(event.id).collectListAsState()
     val adminTickets by Cache.adminTicketsForEvent(event.id).collectListAsState()
 
     val onEditRequested = viewModel::edit.takeIf { isAdmin == true }
@@ -214,7 +215,7 @@ fun EventScreen(
                 )
             }
 
-            if (orders.isNotEmpty()) {
+            if (event.hasTicket && orders.isNotEmpty()) {
                 val moreThanOne = orders.size > 1
                 itemsIndexed(
                     items = orders,

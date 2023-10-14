@@ -201,6 +201,7 @@ class MainViewModel : ViewModel() {
      * Use [viewEvent] to start displaying an event.
      */
     fun stopViewingEvent() = viewModelScope.launch {
+
         _viewingEvent.emit(null)
         _editingField.emit(null)
     }
