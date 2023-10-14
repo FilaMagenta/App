@@ -87,7 +87,7 @@ fun BalanceCard(income: Double, outcome: Double, modifier: Modifier = Modifier) 
                     style = MaterialTheme.typography.labelLarge
                 )
                 Text(
-                    text = income.toString(),
+                    text = income.euros,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.titleMedium,
@@ -104,7 +104,7 @@ fun BalanceCard(income: Double, outcome: Double, modifier: Modifier = Modifier) 
                     style = MaterialTheme.typography.labelLarge
                 )
                 Text(
-                    text = (income - outcome).toString(),
+                    text = (income - outcome).euros,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.titleMedium,
@@ -121,7 +121,7 @@ fun BalanceCard(income: Double, outcome: Double, modifier: Modifier = Modifier) 
                     style = MaterialTheme.typography.labelLarge
                 )
                 Text(
-                    text = outcome.toString(),
+                    text = outcome.euros,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                     style = MaterialTheme.typography.titleMedium,
