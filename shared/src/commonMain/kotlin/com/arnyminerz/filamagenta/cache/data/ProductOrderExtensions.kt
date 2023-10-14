@@ -14,17 +14,24 @@ fun Order.toProductOrder(): List<ProductOrder> = lineItems.map {
         it.productId.toLong(),
         orderNumber,
         dateCreated,
+        customerId!!.toLong(),
         "${billingAddress.firstName} ${billingAddress.lastName}"
     )
 }
 
+const val OrderQRIndexOrderId = 0
+const val OrderQRIndexOrderNumber = 2
+const val OrderQRIndexCustomerId = 3
+const val OrderQRIndexCustomerName = 4
+const val OrderQRFieldsCount = 5
+
 @ExperimentalEncodingApi
 fun ProductOrder.qrcode(): String {
-    val text = "$id/$eventId/$orderNumber/${customerName.replace(" ", "").lowercase()}"
+    val text = "$id/$eventId/$orderNumber/$customerId/$customerName"
     return Base64.encode(text.encodeToByteArray())
 }
 
 fun validateProductQr(data: String): Boolean {
     val pieces = data.split('/')
-    return pieces.size == 4
+    return pieces.size == OrderQRFieldsCount
 }

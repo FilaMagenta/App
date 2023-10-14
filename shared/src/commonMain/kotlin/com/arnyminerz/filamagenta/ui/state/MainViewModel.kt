@@ -7,10 +7,16 @@ import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.cache.data.EventType
+import com.arnyminerz.filamagenta.cache.data.OrderQRIndexCustomerId
+import com.arnyminerz.filamagenta.cache.data.OrderQRIndexCustomerName
+import com.arnyminerz.filamagenta.cache.data.OrderQRIndexOrderId
+import com.arnyminerz.filamagenta.cache.data.OrderQRIndexOrderNumber
 import com.arnyminerz.filamagenta.cache.data.extractMetadata
 import com.arnyminerz.filamagenta.cache.data.toAccountTransaction
 import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.cache.data.toProductOrder
+import com.arnyminerz.filamagenta.cache.data.validateProductQr
+import com.arnyminerz.filamagenta.data.QrCodeScanResult
 import com.arnyminerz.filamagenta.network.Authorization
 import com.arnyminerz.filamagenta.network.database.SqlServer
 import com.arnyminerz.filamagenta.network.database.SqlTunnelEntry
@@ -27,6 +33,8 @@ import io.github.aakira.napier.Napier
 import io.ktor.http.Parameters
 import io.ktor.http.URLBuilder
 import io.ktor.http.URLProtocol
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
@@ -43,6 +51,7 @@ import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
+@Suppress("TooManyFunctions")
 class MainViewModel : ViewModel() {
     companion object {
         private const val MONTH_INDEX_AUGUST = 8
@@ -66,6 +75,12 @@ class MainViewModel : ViewModel() {
 
     private val _editingField = MutableStateFlow<EventField<*>?>(null)
     val editingField: StateFlow<EventField<*>?> get() = _editingField
+
+    private val _scanningQr = MutableStateFlow(false)
+    val scanningQr: StateFlow<Boolean> get() = _scanningQr
+
+    private val _scanResult = MutableStateFlow<QrCodeScanResult?>(null)
+    val scanResult: StateFlow<QrCodeScanResult?> get() = _scanResult
 
     /**
      * Whether there's something being loaded in the background.
@@ -180,6 +195,20 @@ class MainViewModel : ViewModel() {
      */
     fun cancelEdit() {
         viewModelScope.launch { _editingField.emit(null) }
+    }
+
+    /**
+     * Updates [scanningQr] to `true`.
+     */
+    fun startScanner() {
+        _scanningQr.value = true
+    }
+
+    /**
+     * Updates [scanningQr] to `false`.
+     */
+    fun stopScanner() {
+        _scanningQr.value = false
     }
 
     /**
@@ -337,6 +366,39 @@ class MainViewModel : ViewModel() {
                 }
         } finally {
             _isLoadingOrders.emit(false)
+        }
+    }
+
+    fun dismissScanResult() {
+        _scanResult.value = null
+    }
+
+    /**
+     * Validates the data contained in a QR for event assistance.
+     */
+    @OptIn(ExperimentalEncodingApi::class)
+    fun validateQr(data: String) = viewModelScope.launch(Dispatchers.IO) {
+        val decoded = Base64.decode(data).decodeToString()
+        if (!validateProductQr(decoded)) {
+            Napier.i("Got invalid QR")
+            _scanResult.emit(QrCodeScanResult.Invalid)
+            return@launch
+        }
+        Napier.i("Got valid QR, checking if reused...")
+
+        val split = decoded.split("/")
+        val orderId = split[OrderQRIndexOrderId].toLong()
+        val orderNumber = split[OrderQRIndexOrderNumber]
+        val customerId = split[OrderQRIndexCustomerId].toLong()
+        val customerName = split[OrderQRIndexCustomerName]
+
+        val scannedTicket = Cache.getScannedTickets().find { it.customerId == customerId && it.orderId == orderId }
+        if (scannedTicket != null) {
+            _scanResult.emit(QrCodeScanResult.AlreadyUsed)
+        } else {
+            Cache.insertScannedTicket(orderId, customerId)
+
+            _scanResult.emit(QrCodeScanResult.Success(customerName, orderNumber))
         }
     }
 }

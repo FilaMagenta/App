@@ -25,6 +25,8 @@ object Cache {
 
     val orders: Query<ProductOrder> = database.productOrderQueries.getAll()
 
+    val pendingTicketsToUpload: Query<PendingTicketUpload> = database.pendingTicketUploadQueries.getAll()
+
     @Composable
     fun <RowType : Any> Query<RowType>.collectListAsState(): State<List<RowType>> {
         val flow = remember { MutableStateFlow(executeAsList()) }
@@ -121,10 +123,10 @@ object Cache {
         with(order) {
             if (element == null) {
                 // insert
-                database.productOrderQueries.insert(id, eventId, orderNumber, date, customerName)
+                database.productOrderQueries.insert(id, eventId, orderNumber, date, customerId, customerName)
             } else {
                 // update
-                database.productOrderQueries.update(eventId, orderNumber, date, customerName, id)
+                database.productOrderQueries.update(eventId, orderNumber, date, customerId, customerName, id)
             }
         }
     }
@@ -140,5 +142,17 @@ object Cache {
         val new = block()
         database.imageCacheQueries.insert(key, new)
         return new
+    }
+
+    /**
+     * Requests an updated list of all the pending ticket upload queries.
+     */
+    fun getScannedTickets() = database.pendingTicketUploadQueries.getAll().executeAsList()
+
+    /**
+     * Inserts a scanned ticket for order [orderId] and customer [customerId].
+     */
+    fun insertScannedTicket(orderId: Long, customerId: Long) {
+        database.pendingTicketUploadQueries.insert(null, orderId, customerId)
     }
 }

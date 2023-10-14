@@ -5,6 +5,7 @@ CREATE TABLE ProductOrder (
     eventId INTEGER NOT NULL,
     orderNumber TEXT NOT NULL,
     date INTEGER AS LocalDateTime NOT NULL,
+    customerId INTEGER NOT NULL,
     customerName TEXT NOT NULL,
     FOREIGN KEY(eventId) REFERENCES Event(id)
 );
@@ -16,10 +17,10 @@ getById:
 SELECT * FROM ProductOrder WHERE id = ?;
 
 insert:
-INSERT INTO ProductOrder(id, eventId, orderNumber, date, customerName) VALUES (?, ?, ?, ?, ?);
+INSERT INTO ProductOrder(id, eventId, orderNumber, date, customerId, customerName) VALUES (?, ?, ?, ?, ?, ?);
 
 update:
-UPDATE ProductOrder SET eventId=?, orderNumber=?, date=?, customerName=? WHERE id=?;
+UPDATE ProductOrder SET eventId=?, orderNumber=?, date=?, customerId=?, customerName=? WHERE id=?;
 
 retainById:
 DELETE FROM ProductOrder WHERE id NOT IN ?;

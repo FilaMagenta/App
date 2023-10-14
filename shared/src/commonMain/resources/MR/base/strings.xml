@@ -74,4 +74,7 @@
     <string name="scan_qr_code">Place the code in the center of the screen</string>
     <string name="scan_info_title">Scanner Information</string>
     <string name="scan_info_message">You have launched the scanner. This will allow you to verify people\'s tickets. Please use only one device for scanning, since the server won\'t be updated automatically, and there can be false positives. Once you finish scanning, and leave the screen, the server will be updated with all the scanned tickets.</string>
+    <string name="scan_result_success">Ticket Valid!</string>
+    <string name="scan_result_reused">Ticket Reused!</string>
+    <string name="scan_result_invalid">Ticket Invalid!</string>
 </resources>

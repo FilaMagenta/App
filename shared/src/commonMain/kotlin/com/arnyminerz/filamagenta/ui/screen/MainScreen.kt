@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -18,12 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.accounts
-import com.arnyminerz.filamagenta.cache.Cache
-import com.arnyminerz.filamagenta.cache.Cache.collectListAsState
 import com.arnyminerz.filamagenta.cache.data.cleanName
-import com.arnyminerz.filamagenta.cache.data.validateProductQr
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.settings
+import com.arnyminerz.filamagenta.ui.dialog.ScanResultDialog
 import com.arnyminerz.filamagenta.ui.logic.BackHandler
 import com.arnyminerz.filamagenta.ui.screen.model.IntroScreen
 import com.arnyminerz.filamagenta.ui.screen.model.IntroScreenPage
@@ -34,13 +33,12 @@ import dev.icerock.moko.resources.compose.stringResource
 import dev.icerock.moko.resources.desc.StringDesc
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
-import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
  * The main composable that then renders all the app. Has some useful inputs to control what is displayed when.
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalEncodingApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalEncodingApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     isAddingNewAccount: Boolean = false,
@@ -112,10 +110,12 @@ fun MainScreen(
         )
     } else {
         val isAdmin by viewModel.isAdmin.collectAsState(false)
+
         val event by viewModel.viewingEvent.collectAsState()
         val editingField by viewModel.editingField.collectAsState()
+
         val isScanningQr by viewModel.scanningQr.collectAsState(false)
-        val tickets by Cache.pendingTicketsToUpload.collectListAsState()
+        val scanResult by viewModel.scanResult.collectAsState(null)
 
         BackHandler {
             if (isScanningQr) {
@@ -152,14 +152,13 @@ fun MainScreen(
                 }
             )
         } else if (isScanningQr) {
+            scanResult?.let { result ->
+                ScanResultDialog(result, viewModel::dismissScanResult)
+            }
+
             QrScannerScreen(
                 modifier = Modifier.fillMaxSize()
-            ) { data ->
-                val decoded = Base64.decode(data).decodeToString()
-                Napier.i { "Ticket: $decoded" }
-                Napier.i { "Is ticket valid? ${validateProductQr(decoded)}" }
-                viewModel.stopScanner()
-            }
+            ) { if (scanResult == null) viewModel.validateQr(it) }
         } else {
             event?.let { ev ->
                 editingField?.let { field ->
