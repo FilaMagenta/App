@@ -46,6 +46,22 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            val properties = Properties()
+            project.rootProject.file("local.properties").inputStream().use(properties::load)
+
+            val signingKeystorePassword: String? = properties.getProperty("signing.keystore.password")
+            val signingKeyAlias: String? = properties.getProperty("signing.key.alias")
+            val signingKeyPassword: String? = properties.getProperty("signing.key.password")
+
+            storeFile = File(project.rootDir, "keystore.jks")
+            storePassword = signingKeystorePassword
+            keyAlias = signingKeyAlias
+            keyPassword = signingKeyPassword
+        }
+    }
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
@@ -64,22 +80,6 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
-    }
-
-    signingConfigs {
-        create("release") {
-            val properties = Properties()
-            project.rootProject.file("local.properties").inputStream().use(properties::load)
-
-            val signingKeystorePassword: String? = properties.getProperty("signing.keystore.password")
-            val signingKeyAlias: String? = properties.getProperty("signing.key.alias")
-            val signingKeyPassword: String? = properties.getProperty("signing.key.password")
-
-            storeFile = File(project.rootDir, "keystore.jks")
-            storePassword = signingKeystorePassword
-            keyAlias = signingKeyAlias
-            keyPassword = signingKeyPassword
-        }
     }
 
     // Force inclusion of all translation files.
