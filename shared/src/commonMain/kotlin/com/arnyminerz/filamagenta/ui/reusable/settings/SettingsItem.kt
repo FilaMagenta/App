@@ -18,24 +18,28 @@ import androidx.compose.ui.unit.dp
 fun SettingsItem(
     headline: String,
     summary: String?,
-    icon: ImageVector?,
+    icon: ImageVector? = null,
     modifier: Modifier = Modifier,
     contentDescription: String? = headline,
-    onClick: () -> Unit
+    onClick: (() -> Unit)? = null
 ) {
     Row(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier.clickable(enabled = onClick != null, onClick = { onClick?.invoke() }),
         verticalAlignment = Alignment.CenterVertically
     ) {
         icon?.let {
             Icon(
                 imageVector = it,
                 contentDescription = contentDescription,
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier
+                    .padding(start = 8.dp, end = 12.dp)
+                    .padding(vertical = 8.dp)
             )
         }
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .padding(vertical = 4.dp)
         ) {
             Text(
                 text = headline,
