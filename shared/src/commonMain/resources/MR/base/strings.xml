@@ -4,12 +4,14 @@
 
     <!-- Generic Strings -->
     <string name="back">Back</string>
+    <string name="next">Next</string>
     <string name="edit">Edit</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="badge_admin">admin</string>
     <string name="ok">OK</string>
     <string name="refresh">Refresh</string>
+    <string name="done">Done</string>
 
     <!-- Login Screen -->
     <string name="login_title">Login</string>
@@ -61,7 +63,15 @@
     <string name="settings_language_title">Language</string>
     <string name="settings_language_system">System Default</string>
 
+    <!-- Admin Intro -->
+    <string name="intro_admin_welcome_title">Welcome! You are an administrator</string>
+    <string name="intro_admin_welcome_message">Administrators have more features on the app, so it\'s important that you know how all of them work.</string>
+    <string name="intro_admin_scanner_title">QR Code Scanner</string>
+    <string name="intro_admin_scanner_message">As an administrator, you can scan QR codes in the entrance of an event to verify that they are valid, as well as writing down all the people that attends. To make sure there are no problems with Internet connection, the scanned tickets are stored locally until all of them have been processed. For this reason, please, scan tickets with just one device.</string>
+
     <!-- Barcode Scanner -->
     <string name="scan_barcode_instruction">Scan QR Code</string>
     <string name="scan_qr_code">Place the code in the center of the screen</string>
+    <string name="scan_info_title">Scanner Information</string>
+    <string name="scan_info_message">You have launched the scanner. This will allow you to verify people\'s tickets. Please use only one device for scanning, since the server won\'t be updated automatically, and there can be false positives. Once you finish scanning, and leave the screen, the server will be updated with all the scanned tickets.</string>
 </resources>
