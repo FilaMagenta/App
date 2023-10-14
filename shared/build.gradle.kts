@@ -172,14 +172,21 @@ buildkonfig {
             // Add all languages to list
             .forEach { languages.add(it) }
         buildConfigField(STRING, "Languages", languages.joinToString(","))
+
+        buildConfigField(STRING, "ReleaseName", sharedVersionName)
     }
 
     targetConfigs {
         create("android") {
             val versionName = project.extra["android.versionName"] as String
 
+            val versionProps = Properties().apply {
+                project.rootProject.file("version.properties").inputStream().use(this::load)
+            }
+            val androidVersionCode = versionProps.getProperty("VERSION_CODE").toInt()
+
             buildConfigField(STRING, "SentryDsn", properties.getProperty("sentry.dsn.android"))
-            buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName")
+            buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName~${androidVersionCode}")
         }
         create("ios") {
             val versionName = project.extra["ios.versionName"] as String
