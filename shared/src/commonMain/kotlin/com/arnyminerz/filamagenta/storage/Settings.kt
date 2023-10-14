@@ -1,9 +1,11 @@
 package com.arnyminerz.filamagenta.storage
 
+import com.russhwolf.settings.ObservableSettings
+
 /**
  * The general configuration storage.
  */
-val settings by lazy { settingsFactory.create("settings") }
+val settings by lazy { settingsFactory.create("settings") as ObservableSettings }
 
 object SettingsKeys {
     /**

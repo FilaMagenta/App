@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -21,24 +20,23 @@ import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.storage.SettingsKeys
+import com.arnyminerz.filamagenta.storage.getBooleanState
 import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.dialog.ScanResultDialog
 import com.arnyminerz.filamagenta.ui.logic.BackHandler
 import com.arnyminerz.filamagenta.ui.screen.model.IntroScreen
 import com.arnyminerz.filamagenta.ui.screen.model.IntroScreenPage
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
-import com.russhwolf.settings.set
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
 import dev.icerock.moko.resources.desc.StringDesc
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
  * The main composable that then renders all the app. Has some useful inputs to control what is displayed when.
  */
-@OptIn(ExperimentalFoundationApi::class, ExperimentalEncodingApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     isAddingNewAccount: Boolean = false,
@@ -57,6 +55,15 @@ fun MainScreen(
     val addingNewAccount = accountsList?.isEmpty() == true || addNewAccountRequested
 
     val account by viewModel.account.collectAsState()
+    val isAdmin by viewModel.isAdmin.collectAsState(false)
+
+    val viewingEvent by viewModel.viewingEvent.collectAsState()
+    val editingField by viewModel.editingField.collectAsState()
+
+    val isScanningQr by viewModel.scanningQr.collectAsState(false)
+    val scanResult by viewModel.scanResult.collectAsState(null)
+
+    var shownAdmin by settings.getBooleanState(SettingsKeys.SYS_SHOWN_ADMIN, false)
 
     LaunchedEffect(Unit) {
         // Initialize logging library
@@ -77,59 +84,73 @@ fun MainScreen(
         }
     }
 
-    if (isRequestingToken || accountsList == null || (!addingNewAccount && account == null)) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-    } else if (showingLoginWebpage) {
-        BrowserLoginScreen(
-            authorizeUrl = viewModel.getAuthorizeUrl(),
-            onDismissRequested = {
-                if (accountsList.isNullOrEmpty()) {
-                    onApplicationEndRequested()
+    val isLoading = isRequestingToken || accountsList == null || (!addingNewAccount && account == null)
+
+    BackHandler {
+        if (isLoading) {
+            // ignore
+        } else if (showingLoginWebpage || addingNewAccount) {
+            if (accountsList.isNullOrEmpty()) {
+                // If there aren't any accounts, close the app
+                onApplicationEndRequested()
+            } else {
+                // If there's at least one account, hide the browser or the account adder
+                if (addNewAccountRequested) {
+                    addNewAccountRequested = false
                 } else {
                     showingLoginWebpage = false
                 }
-            },
-            onCodeObtained = { code ->
-                showingLoginWebpage = false
-
-                viewModel.requestToken(code)
             }
-        )
-    } else if (addingNewAccount) {
-        LoginScreen(
-            onLoginRequested = { showingLoginWebpage = true },
-            onBackRequested = {
-                if (accountsList.isNullOrEmpty()) {
-                    onApplicationEndRequested()
-                } else {
-                    addNewAccountRequested = false
-                }
-            }
-        )
-    } else {
-        val isAdmin by viewModel.isAdmin.collectAsState(false)
+        } else if (isScanningQr) {
+            // If it is scanning, and back is pressed, stop scanning
+            viewModel.stopScanner()
+        } else if (viewingEvent != null) {
+            // If there's an event being viewed
+            viewModel.stopViewingEvent()
+        } else {
+            onApplicationEndRequested()
+        }
+    }
 
-        val event by viewModel.viewingEvent.collectAsState()
-        val editingField by viewModel.editingField.collectAsState()
-
-        val isScanningQr by viewModel.scanningQr.collectAsState(false)
-        val scanResult by viewModel.scanResult.collectAsState(null)
-
-        BackHandler {
-            if (isScanningQr) {
-                viewModel.stopScanner()
-            } else if (event == null) {
-                onApplicationEndRequested()
-            } else {
-                viewModel.stopViewingEvent()
+    when {
+        isLoading -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
         }
 
-        var shownAdmin by remember { mutableStateOf(settings.getBoolean(SettingsKeys.SYS_SHOWN_ADMIN, false)) }
+        showingLoginWebpage -> {
+            BrowserLoginScreen(
+                authorizeUrl = viewModel.getAuthorizeUrl(),
+                onDismissRequested = {
+                    if (accountsList.isNullOrEmpty()) {
+                        onApplicationEndRequested()
+                    } else {
+                        showingLoginWebpage = false
+                    }
+                },
+                onCodeObtained = { code ->
+                    showingLoginWebpage = false
 
-        if (isAdmin == true && !shownAdmin) {
+                    viewModel.requestToken(code)
+                }
+            )
+        }
+
+        addingNewAccount -> {
+            LoginScreen(
+                onLoginRequested = { showingLoginWebpage = true },
+                onBackRequested = {
+                    if (accountsList.isNullOrEmpty()) {
+                        onApplicationEndRequested()
+                    } else {
+                        addNewAccountRequested = false
+                    }
+                }
+            )
+        }
+
+        isAdmin == true && !shownAdmin -> {
             IntroScreen(
                 pages = listOf(
                     IntroScreenPage(
@@ -143,15 +164,12 @@ fun MainScreen(
                         image = { painterResource(MR.images.undraw_security) }
                     )
                 ),
-                onFinish = {
-                    settings[SettingsKeys.SYS_SHOWN_ADMIN] = true
-                    shownAdmin = true
-                },
-                onCancel = {
-                    shownAdmin = false
-                }
+                onFinish = { shownAdmin = true },
+                onCancel = onApplicationEndRequested
             )
-        } else if (isScanningQr) {
+        }
+
+        isScanningQr -> {
             scanResult?.let { result ->
                 ScanResultDialog(result, viewModel::dismissScanResult)
             }
@@ -159,24 +177,30 @@ fun MainScreen(
             QrScannerScreen(
                 modifier = Modifier.fillMaxSize()
             ) { if (scanResult == null) viewModel.validateQr(it) }
-        } else {
-            event?.let { ev ->
-                editingField?.let { field ->
-                    field.editor.Dialog(
-                        title = ev.cleanName + " - " + stringResource(field.displayName),
-                        onSubmit = { viewModel.performUpdate(ev, field) },
-                        onDismissRequest = viewModel::cancelEdit
-                    )
-                }
+        }
 
-                DisposableEffect(ev) {
-                    val job = viewModel.fetchOrders(ev.id.toInt())
+        viewingEvent != null -> {
+            val event = viewingEvent!!
 
-                    onDispose { job.cancel() }
-                }
+            editingField?.let { field ->
+                field.editor.Dialog(
+                    title = event.cleanName + " - " + stringResource(field.displayName),
+                    onSubmit = { viewModel.performUpdate(event, field) },
+                    onDismissRequest = viewModel::cancelEdit
+                )
+            }
 
-                EventScreen(ev, viewModel)
-            } ?: AppScreen(mainPagerState, viewModel)
+            DisposableEffect(event) {
+                val job = viewModel.fetchOrders(event.id.toInt())
+
+                onDispose { job.cancel() }
+            }
+
+            EventScreen(event, viewModel)
+        }
+
+        else -> {
+            AppScreen(mainPagerState, viewModel)
         }
     }
 }
