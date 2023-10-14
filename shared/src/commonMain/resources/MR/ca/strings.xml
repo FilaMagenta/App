@@ -62,6 +62,12 @@
     <string name="settings_section_user_interface">Interfície d\'Usuari</string>
     <string name="settings_language_title">Idioma</string>
     <string name="settings_language_system">Per defecte</string>
+    <string name="settings_section_application">App Information</string>
+    <string name="settings_release_title">Release</string>
+    <string name="settings_translations_title">Translations</string>
+    <string name="settings_translations_summary">Translate the app into your own language in Crowdin.</string>
+    <string name="settings_source_title">Source Code</string>
+    <string name="settings_source_summary">The Source Code of the app is available at GitHub.</string>
     <!-- Admin Intro -->
     <string name="intro_admin_welcome_title">Welcome! You are an administrator</string>
     <string name="intro_admin_welcome_message">Administrators have more features on the app, so it\'s important that you know how all of them work.</string>
