@@ -5,4 +5,9 @@ expect object PlatformInformation {
      * Returns the platform that the current device is currently running.
      */
     fun currentPlatform(): Platform
+
+    /**
+     * Checks whether the device has a camera.
+     */
+    fun isCameraSupported(): Boolean
 }

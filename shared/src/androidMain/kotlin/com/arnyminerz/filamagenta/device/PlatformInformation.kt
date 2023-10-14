@@ -6,4 +6,14 @@ actual object PlatformInformation {
      */
     actual fun currentPlatform(): Platform = Platform.ANDROID
 
+    /**
+     * Should be updated by the Application when launching and stores whether the device has a
+     * camera.
+     */
+    var hasCameraFeature: Boolean = false
+
+    /**
+     * Checks whether the device has a camera.
+     */
+    actual fun isCameraSupported(): Boolean = hasCameraFeature
 }

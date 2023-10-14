@@ -1,13 +1,11 @@
 package com.arnyminerz.filamagenta.ui.screen
 
-import QrScannerScreen
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
@@ -29,15 +27,12 @@ import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
-import com.arnyminerz.filamagenta.cache.data.validateProductQr
+import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarItem
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarScaffold
 import com.arnyminerz.filamagenta.ui.page.EventsPage
@@ -45,9 +40,6 @@ import com.arnyminerz.filamagenta.ui.page.SettingsPage
 import com.arnyminerz.filamagenta.ui.page.WalletPage
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.stringResource
-import io.github.aakira.napier.Napier
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 val appScreenItems = listOf(
     NavigationBarItem(
@@ -68,13 +60,12 @@ val appScreenItems = listOf(
  * Once logged in, this is the first screen shown to the user.
  */
 @Composable
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalEncodingApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 fun AppScreen(
     state: PagerState,
     viewModel: MainViewModel
 ) {
     val isAdmin by viewModel.isAdmin.collectAsState(false)
-    var isScanningQr by remember { mutableStateOf(false) }
 
     NavigationBarScaffold(
         items = appScreenItems,
@@ -105,6 +96,16 @@ fun AppScreen(
                 actions = {
                     val isRefreshing by viewModel.isLoading.collectAsState(false)
 
+                    val hasCamera = PlatformInformation.isCameraSupported()
+                    AnimatedVisibility(
+                        visible = hasCamera && state.currentPage == 1 && isAdmin == true
+                    ) {
+                        IconButton(
+                            onClick = { viewModel.startScanner() }
+                        ) {
+                            Icon(Icons.Rounded.QrCodeScanner, stringResource(MR.strings.refresh))
+                        }
+                    }
                     AnimatedContent(
                         targetState = viewModel.refreshFunctions.getOrNull(state.currentPage)
                     ) { refresh ->
@@ -115,17 +116,6 @@ fun AppScreen(
                             ) {
                                 Icon(Icons.Rounded.Refresh, stringResource(MR.strings.refresh))
                             }
-                        }
-                    }
-                    AnimatedVisibility(
-                        visible = state.currentPage == 1 && isAdmin == true
-                    ) {
-                        IconButton(
-                            onClick = {
-                                isScanningQr = !isScanningQr
-                            }
-                        ) {
-                            Icon(Icons.Rounded.QrCodeScanner, stringResource(MR.strings.refresh))
                         }
                     }
                 }
@@ -139,15 +129,7 @@ fun AppScreen(
             }
             // Events
             1 -> {
-                if (isScanningQr)
-                    QrScannerScreen(modifier = Modifier.fillMaxSize()) { data ->
-                        val decoded = Base64.decode(data).decodeToString()
-                        Napier.i { "Ticket: $decoded" }
-                        Napier.i { "Is ticket valid? ${validateProductQr(decoded)}" }
-                        isScanningQr = false
-                    }
-                else
-                    EventsPage(viewModel)
+                EventsPage(viewModel)
             }
             // Settings
             2 -> {

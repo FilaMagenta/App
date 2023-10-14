@@ -6,4 +6,8 @@ actual object PlatformInformation {
      */
     actual fun currentPlatform(): Platform = Platform.IOS
 
+    /**
+     * Checks whether the device has a camera.
+     */
+    actual fun isCameraSupported(): Boolean = true
 }
