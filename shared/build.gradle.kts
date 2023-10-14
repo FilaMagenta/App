@@ -94,9 +94,13 @@ kotlin {
 
             dependencies {
                 implementation(libs.compose.material3.windowSizeClass)
+                implementation(libs.androidx.camera.camera2)
+                implementation(libs.androidx.camera.lifecycle)
+                implementation(libs.androidx.camera.view)
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
                 implementation(libs.ktor.okhttp)
+                implementation(libs.mlkit.barcode)
                 implementation(libs.qrcode.android)
                 implementation(libs.sqldelight.android)
             }

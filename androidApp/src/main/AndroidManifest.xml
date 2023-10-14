@@ -6,6 +6,8 @@
 
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
 
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <!-- Allows checking whether CustomTabs is supported -->
     <queries>
         <intent>

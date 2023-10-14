@@ -1,10 +1,13 @@
 package com.arnyminerz.filamagenta.ui.screen
 
+import QrScannerScreen
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
@@ -13,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Wallet
+import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.BadgeDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -25,6 +29,9 @@ import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +44,7 @@ import com.arnyminerz.filamagenta.ui.page.SettingsPage
 import com.arnyminerz.filamagenta.ui.page.WalletPage
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.stringResource
+import io.github.aakira.napier.Napier
 
 val appScreenItems = listOf(
     NavigationBarItem(
@@ -63,6 +71,7 @@ fun AppScreen(
     viewModel: MainViewModel
 ) {
     val isAdmin by viewModel.isAdmin.collectAsState(false)
+    var isScanningQr by remember { mutableStateOf(false) }
 
     NavigationBarScaffold(
         items = appScreenItems,
@@ -105,6 +114,17 @@ fun AppScreen(
                             }
                         }
                     }
+                    AnimatedVisibility(
+                        visible = state.currentPage == 1 && isAdmin == true
+                    ) {
+                        IconButton(
+                            onClick = {
+                                isScanningQr = !isScanningQr
+                            }
+                        ) {
+                            Icon(Icons.Rounded.QrCodeScanner, stringResource(MR.strings.refresh))
+                        }
+                    }
                 }
             )
         }
@@ -116,7 +136,13 @@ fun AppScreen(
             }
             // Events
             1 -> {
-                EventsPage(viewModel)
+                if (isScanningQr)
+                    QrScannerScreen(modifier = Modifier.fillMaxSize()) {
+                        Napier.i { "Scanned: $it" }
+                        isScanningQr = false
+                    }
+                else
+                    EventsPage(viewModel)
             }
             // Settings
             2 -> {
