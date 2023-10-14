@@ -3,7 +3,6 @@ package com.arnyminerz.filamagenta.ui.page
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -44,49 +43,45 @@ fun SettingsPage() {
             .padding(horizontal = 8.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Column(
-            modifier = Modifier.widthIn(max = 600.dp),
+        SettingsSection(
+            text = stringResource(MR.strings.settings_section_user_interface)
+        )
+
+        val languages = BuildKonfig.Languages.split(",").map { Language(it) }.prefixSystem()
+
+        Napier.d("Supported languages: $languages")
+
+        SettingsList(
+            default = settings.getStringOrNull(SettingsKeys.LANGUAGE)?.let { Language(it) } ?: Language.System,
+            options = languages,
+            dialogTitle = stringResource(MR.strings.settings_language_title),
+            headline = stringResource(MR.strings.settings_language_title),
+            toString = { it.displayName },
+            icon = Icons.Outlined.Language
         ) {
-            SettingsSection(
-                text = stringResource(MR.strings.settings_section_user_interface)
-            )
-
-            val languages = BuildKonfig.Languages.split(",").map { Language(it) }.prefixSystem()
-
-            Napier.d("Supported languages: $languages")
-
-            SettingsList(
-                default = settings.getStringOrNull(SettingsKeys.LANGUAGE)?.let { Language(it) } ?: Language.System,
-                options = languages,
-                dialogTitle = stringResource(MR.strings.settings_language_title),
-                headline = stringResource(MR.strings.settings_language_title),
-                toString = { it.displayName },
-                icon = Icons.Outlined.Language
-            ) {
-                settings[SettingsKeys.LANGUAGE] = it.langCode
-                StringDesc.localeType = it.localeType
-            }
-
-
-            SettingsSection(
-                text = stringResource(MR.strings.settings_section_application)
-            )
-
-            SettingsItem(
-                headline = stringResource(MR.strings.settings_release_title),
-                summary = BuildKonfig.ReleaseName,
-                icon = Icons.Outlined.Info
-            ) { clipboardManager.setText(buildAnnotatedString { append(BuildKonfig.ReleaseName) }) }
-            SettingsItem(
-                headline = stringResource(MR.strings.settings_translations_title),
-                summary = stringResource(MR.strings.settings_translations_summary),
-                icon = Icons.Rounded.Translate
-            ) { uriHandler.openUri("https://crowdin.com/project/fila-magenta-app") }
-            SettingsItem(
-                headline = stringResource(MR.strings.settings_source_title),
-                summary = stringResource(MR.strings.settings_source_summary),
-                icon = Icons.Rounded.Code
-            ) { uriHandler.openUri("https://github.com/FilaMagenta/App") }
+            settings[SettingsKeys.LANGUAGE] = it.langCode
+            StringDesc.localeType = it.localeType
         }
+
+
+        SettingsSection(
+            text = stringResource(MR.strings.settings_section_application)
+        )
+
+        SettingsItem(
+            headline = stringResource(MR.strings.settings_release_title),
+            summary = BuildKonfig.ReleaseName,
+            icon = Icons.Outlined.Info
+        ) { clipboardManager.setText(buildAnnotatedString { append(BuildKonfig.ReleaseName) }) }
+        SettingsItem(
+            headline = stringResource(MR.strings.settings_translations_title),
+            summary = stringResource(MR.strings.settings_translations_summary),
+            icon = Icons.Rounded.Translate
+        ) { uriHandler.openUri("https://crowdin.com/project/fila-magenta-app") }
+        SettingsItem(
+            headline = stringResource(MR.strings.settings_source_title),
+            summary = stringResource(MR.strings.settings_source_summary),
+            icon = Icons.Rounded.Code
+        ) { uriHandler.openUri("https://github.com/FilaMagenta/App") }
     }
 }
