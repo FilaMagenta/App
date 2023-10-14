@@ -5,12 +5,8 @@ The official app for Android and iOS.
 [![Crowdin](https://badges.crowdin.net/fila-magenta-app/localized.svg)](https://crowdin.com/project/fila-magenta-app)
 [![Publish Internal Release](https://github.com/FilaMagenta/App/actions/workflows/internal-release.yml/badge.svg)](https://github.com/FilaMagenta/App/actions/workflows/internal-release.yml)
 
-<div style="text-align: center; width: 100%">
-<a href="https://play.google.com/store/apps/details?id=com.arnyminerz.filamagenta.android">
-   <img src="https://raw.githubusercontent.com/Volorf/Badges/master/Google%20Play/Google%20Play%20Badge.png" alt="Google Play Badge" style="width: 150px" />
-</a>
-<img src="https://raw.githubusercontent.com/Volorf/Badges/master/App%20Store/App%20Store%20Badge.png" alt="App Store Badge" style="width: 150px" />
-</div>
+[![Play Store](https://img.shields.io/badge/Play_Store-Internal_Testing-yellow?logo=googleplay)](https://play.google.com/store/apps/details?id=com.arnyminerz.filamagenta.android)
+![App Store](https://img.shields.io/badge/App_Store-Not_Available-red?logo=appstore)
 
 ## Performance considerations
 Since WooCommerce is not the fastest thing in the world, there are some optimizations to be considered.
