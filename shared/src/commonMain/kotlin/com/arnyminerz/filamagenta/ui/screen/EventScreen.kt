@@ -40,6 +40,7 @@ import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.cleanName
+import com.arnyminerz.filamagenta.cache.data.qrcode
 import com.arnyminerz.filamagenta.image.QRCodeGenerator
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.EventInformationRow
@@ -151,8 +152,9 @@ fun EventScreen(
 
                         LaunchedEffect(order) {
                             CoroutineScope(Dispatchers.IO).launch {
-                                image = Cache.imageCache(order.orderNumber) {
-                                    QRCodeGenerator.generate(order.orderNumber)
+                                val data = order.qrcode()
+                                image = Cache.imageCache(data) {
+                                    QRCodeGenerator.generate(data)
                                 }
                             }
                         }
