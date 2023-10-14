@@ -6,7 +6,9 @@ The official app for Android and iOS.
 [![Publish Internal Release](https://github.com/FilaMagenta/App/actions/workflows/internal-release.yml/badge.svg)](https://github.com/FilaMagenta/App/actions/workflows/internal-release.yml)
 
 <div style="text-align: center; width: 100%">
-<img src="https://raw.githubusercontent.com/Volorf/Badges/master/Google%20Play/Google%20Play%20Badge.png" alt="Google Play Badge" style="width: 150px" />
+<a href="https://play.google.com/store/apps/details?id=com.arnyminerz.filamagenta.android">
+   <img src="https://raw.githubusercontent.com/Volorf/Badges/master/Google%20Play/Google%20Play%20Badge.png" alt="Google Play Badge" style="width: 150px" />
+</a>
 <img src="https://raw.githubusercontent.com/Volorf/Badges/master/App%20Store/App%20Store%20Badge.png" alt="App Store Badge" style="width: 150px" />
 </div>
 
