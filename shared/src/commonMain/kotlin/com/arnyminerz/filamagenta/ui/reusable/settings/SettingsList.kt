@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.arnyminerz.filamagenta.MR
 import dev.icerock.moko.resources.compose.stringResource
 
@@ -28,7 +29,8 @@ fun <T : Any> SettingsList(
     dialogTitle: String,
     modifier: Modifier = Modifier,
     toString: @Composable (T) -> String = { it.toString() },
-    leadingContent: @Composable (() -> Unit)? = null,
+    icon: ImageVector? = null,
+    contentDescription: String? = headline,
     onOptionSelected: (T) -> Unit
 ) {
     var isShowingDialog by remember { mutableStateOf(false) }
@@ -71,11 +73,11 @@ fun <T : Any> SettingsList(
         )
     }
 
-    ListItem(
-        headlineContent = { Text(headline) },
-        modifier = Modifier
-            .clickable { isShowingDialog = true }
-            .then(modifier),
-        leadingContent = leadingContent
-    )
+    SettingsItem(
+        headline = headline,
+        summary = default?.let { toString(it) },
+        modifier = modifier,
+        icon = icon,
+        contentDescription = contentDescription
+    ) { isShowingDialog = true }
 }

@@ -9,7 +9,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,7 +51,7 @@ fun SettingsPage() {
             headline = stringResource(MR.strings.settings_language_title),
             toString = { it.displayName },
             modifier = Modifier.widthIn(max = 600.dp),
-            leadingContent = { Icon(Icons.Outlined.Language, stringResource(MR.strings.settings_language_title)) }
+            icon = Icons.Outlined.Language
         ) {
             settings[SettingsKeys.LANGUAGE] = it.langCode
             StringDesc.localeType = it.localeType
