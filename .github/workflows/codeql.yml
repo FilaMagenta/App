@@ -32,6 +32,10 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
+
+      - name: Prepare Gradle secure file
+        run: echo '${{ secrets.LOCAL_PROPERTIES }}' >> local.properties
+
       - uses: gradle/gradle-build-action@v2
 
       # Initializes the CodeQL tools for scanning.
