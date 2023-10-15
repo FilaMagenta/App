@@ -12,7 +12,9 @@
     <string name="refresh">Actualitza</string>
     <string name="done">Fet</string>
     <string name="delete">Eliminar</string>
+    <string name="copy" comment="Copies something to the clipboard">Copy</string>
     <string name="synchronize" comment="A generic string for buttons that synchronize some data with the server.">Sincronitzar</string>
+    <string name="server_status" comment="Shown when there's an error, to launch the server status page, and know if something is down.">Server Status</string>
     <!-- Login Screen -->
     <string name="login_title">Iniciar Sessió</string>
     <string name="login_message">Benvingut/da a l\'aplicació de la Filà Magenta. Per favor, prem el botó de sota, i un navegador s\'obrirà. Inicia sessió A la pàgina web. De la resta ens encarreguem nosaltres.</string>
@@ -54,6 +56,7 @@
     <string name="event_screen_admin_scanner_scan_not_supported" comment="Shown when the device doesn't have a camera">Escàner no Suportat</string>
     <string name="event_screen_admin_scanner_sync_title">Sincronitza amb el Servidor</string>
     <string name="event_screen_admin_scanner_sync_message">Si has escanejat tiquets nous, assegura\'t de polsar el botó de baix quan tinguis una connexió a Internet activa. Sincronitzarà totes les dades amb el servidor.</string>
+    <string name="event_screen_admin_scanner_list">Users List</string>
     <!-- Wallet Screen -->
     <string name="wallet_income">Ingressos</string>
     <string name="wallet_balance">Saldo</string>
@@ -81,4 +84,12 @@
     <string name="scan_result_success">Tiquet Vàlid!</string>
     <string name="scan_result_reused">Tiquet Reutilitzat!</string>
     <string name="scan_result_invalid">Tiquet Invàlid!</string>
+    <!-- Error Dialog -->
+    <string name="error_dialog_title">Error</string>
+    <string name="error_dialog_message">The server has returned an error while making a request, please, share this information with an administrator:</string>
+    <string name="error_dialog_path">Path: </string>
+    <string name="error_dialog_status">Status: </string>
+    <string name="error_dialog_code">Code: </string>
+    <string name="error_dialog_msg">Message: </string>
+    <string name="error_dialog_trace">Stacktrace: </string>
 </resources>
