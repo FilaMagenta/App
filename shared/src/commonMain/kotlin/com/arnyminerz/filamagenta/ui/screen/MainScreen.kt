@@ -5,7 +5,13 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -16,10 +22,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.hasTicket
+import com.arnyminerz.filamagenta.network.server.exception.WordpressException
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.getBooleanState
 import com.arnyminerz.filamagenta.storage.settings
@@ -44,6 +58,9 @@ fun MainScreen(
     viewModel: MainViewModel = MainViewModel(),
     onApplicationEndRequested: () -> Unit
 ) {
+    val uriHandler = LocalUriHandler.current
+    val clipboardManager = LocalClipboardManager.current
+
     val isRequestingToken by viewModel.isRequestingToken.collectAsState(initial = false)
 
     var showingLoginWebpage by remember { mutableStateOf(false) }
@@ -58,6 +75,7 @@ fun MainScreen(
     val account by viewModel.account.collectAsState()
     val isAdmin by viewModel.isAdmin.collectAsState(false)
 
+    val error by viewModel.error.collectAsState()
     val viewingEvent by viewModel.viewingEvent.collectAsState()
     val editingField by viewModel.editingField.collectAsState()
 
@@ -83,6 +101,68 @@ fun MainScreen(
         if (!accountsList.isNullOrEmpty()) {
             viewModel.account.emit(accountsList?.first())
         }
+    }
+
+    error?.let { it as? WordpressException }?.let { wordpressException ->
+        val errorString = buildAnnotatedString {
+            appendLine(stringResource(MR.strings.error_dialog_message))
+
+            append(stringResource(MR.strings.error_dialog_path))
+            withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)) {
+                appendLine(wordpressException.path)
+            }
+            appendLine()
+
+            append(stringResource(MR.strings.error_dialog_status))
+            withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)) {
+                appendLine(wordpressException.error.data.status.toString())
+            }
+            appendLine()
+
+            append(stringResource(MR.strings.error_dialog_code))
+            withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)) {
+                appendLine(wordpressException.error.code)
+            }
+            appendLine()
+
+            appendLine(stringResource(MR.strings.error_dialog_msg))
+            withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace)) {
+                appendLine(wordpressException.error.message)
+            }
+            appendLine()
+
+            appendLine(stringResource(MR.strings.error_dialog_trace))
+            withStyle(SpanStyle(fontFamily = FontFamily.Monospace)) {
+                appendLine(wordpressException.stackTraceToString())
+            }
+            appendLine()
+        }
+
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissError() },
+            title = { Text(stringResource(MR.strings.error_dialog_title)) },
+            text = {
+                SelectionContainer(
+                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                ) {
+                    Text(errorString)
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { uriHandler.openUri("https://status.arnyminerz.com/status/filamagenta") }
+                ) {
+                    Text(stringResource(MR.strings.server_status))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { clipboardManager.setText(errorString) }
+                ) {
+                    Text(stringResource(MR.strings.copy))
+                }
+            }
+        )
     }
 
     val isLoading = isRequestingToken || accountsList == null || !addingNewAccount && account == null

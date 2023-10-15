@@ -24,6 +24,7 @@ import com.arnyminerz.filamagenta.network.database.SqlServer
 import com.arnyminerz.filamagenta.network.database.SqlTunnelEntry
 import com.arnyminerz.filamagenta.network.database.SqlTunnelException
 import com.arnyminerz.filamagenta.network.database.getLong
+import com.arnyminerz.filamagenta.network.server.exception.WordpressException
 import com.arnyminerz.filamagenta.network.woo.WooCommerce
 import com.arnyminerz.filamagenta.network.woo.models.Metadata
 import com.arnyminerz.filamagenta.network.woo.models.Order
@@ -93,6 +94,9 @@ class MainViewModel : ViewModel() {
 
     private val _scanResult = MutableStateFlow<QrCodeScanResult?>(null)
     val scanResult: StateFlow<QrCodeScanResult?> get() = _scanResult
+
+    private val _error = MutableStateFlow<Throwable?>(null)
+    val error: StateFlow<Throwable?> get() = _error
 
     /**
      * Whether there's something being loaded in the background.
@@ -367,6 +371,8 @@ class MainViewModel : ViewModel() {
                     pairs.map { (product, variations) -> product.toEvent(variations) }
                 )
             }
+        } catch (e: WordpressException) {
+            _error.emit(e)
         } finally {
             _isLoadingEvents.emit(false)
         }
@@ -493,4 +499,9 @@ class MainViewModel : ViewModel() {
             _isUploadingScannedTickets.emit(false)
         }
     }
+
+    /**
+     * Dismisses the current value of [error], if any.
+     */
+    fun dismissError() = viewModelScope.launch { _error.emit(null) }
 }

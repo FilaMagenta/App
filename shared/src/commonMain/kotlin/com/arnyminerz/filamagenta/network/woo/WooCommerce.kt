@@ -1,6 +1,7 @@
 package com.arnyminerz.filamagenta.network.woo
 
 import com.arnyminerz.filamagenta.BuildKonfig
+import com.arnyminerz.filamagenta.network.server.exception.WordpressException
 import com.arnyminerz.filamagenta.network.woo.models.Customer
 import com.arnyminerz.filamagenta.network.woo.models.Order
 import com.arnyminerz.filamagenta.network.woo.models.Product
@@ -24,7 +25,6 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
@@ -83,6 +83,20 @@ object WooCommerce {
         )
     }
 
+    /**
+     * Retrieves a paginated list of objects of type T from the specified endpoint.
+     *
+     * @param type The TypeInfo representing the type of objects in the list.
+     * @param pathSegments The path segments of the endpoint.
+     * @param parameters Optional parameters to pass to the request.
+     * @param page The page number to retrieve (default is 1).
+     * @param perPage The number of objects per page (default is 10).
+     * @param block An optional lambda to configure the HttpRequestBuilder before sending the request.
+     *
+     * @return The list of objects retrieved from the endpoint.
+     *
+     * @throws WordpressException If the request fails or returns an error status code.
+     */
     private suspend fun <T : Any> getList(
         type: TypeInfo,
         vararg pathSegments: Any,
@@ -128,13 +142,29 @@ object WooCommerce {
                     body<List<T>>(type)
                 )
             } else {
-                Napier.e("Listing for ${pathSegments.joinToString("/")} failed with ($status): ${bodyAsText()}")
+                throw WordpressException(
+                    pathSegments.joinToString("/"),
+                    body()
+                )
             }
         }
 
         return builder
     }
 
+    /**
+     * Retrieves a paginated list of objects of type T from the specified endpoint.
+     *
+     * @param pathSegments The path segments of the endpoint.
+     * @param parameters Optional parameters to pass to the request.
+     * @param page The page number to retrieve (default is 1).
+     * @param perPage The number of objects per page (default is 10).
+     * @param block An optional lambda to configure the HttpRequestBuilder before sending the request.
+     *
+     * @return The list of objects retrieved from the endpoint.
+     *
+     * @throws WordpressException If the request fails or returns an error status code.
+     */
     private suspend inline fun <reified T : Any> getList(
         vararg pathSegments: Any,
         parameters: Map<String, Any?> = emptyMap(),
