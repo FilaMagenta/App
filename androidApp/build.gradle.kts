@@ -27,7 +27,7 @@ android {
         val androidVersionName = versionProps.getProperty("android.versionName")
 
         versionCode = androidVersionCode
-        versionName = "$sharedVersionName-$androidVersionName~$versionCode"
+        versionName = "$sharedVersionName-$androidVersionName.$versionCode"
     }
 
     buildFeatures {

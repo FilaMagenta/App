@@ -186,7 +186,7 @@ buildkonfig {
             val androidVersionCode = versionProps["VERSION_CODE"] as String
 
             buildConfigField(STRING, "SentryDsn", properties.getProperty("sentry.dsn.android"))
-            buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName~$androidVersionCode")
+            buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName.$androidVersionCode")
         }
         create("ios") {
             val versionName = versionProps["ios.versionName"] as String
