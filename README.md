@@ -6,6 +6,7 @@ The official app for Android and iOS.
 [![Publish Internal Release](https://github.com/FilaMagenta/App/actions/workflows/internal-release.yml/badge.svg)](https://github.com/FilaMagenta/App/actions/workflows/internal-release.yml)
 
 [![Play Store](https://img.shields.io/badge/Play_Store-Internal_Testing-yellow?logo=googleplay)](https://play.google.com/store/apps/details?id=com.arnyminerz.filamagenta.android)
+[![GitHub](https://img.shields.io/badge/GitHub-Development_Build-yellow?logo=github)](https://github.com/FilaMagenta/App/releases/tag/development)
 ![App Store](https://img.shields.io/badge/App_Store-Not_Available-red?logo=appstore)
 
 ## Performance considerations
