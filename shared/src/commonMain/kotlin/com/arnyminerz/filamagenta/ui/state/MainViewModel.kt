@@ -9,6 +9,7 @@ import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.OrderQRIndexCustomerId
 import com.arnyminerz.filamagenta.cache.data.OrderQRIndexCustomerName
+import com.arnyminerz.filamagenta.cache.data.OrderQRIndexEventId
 import com.arnyminerz.filamagenta.cache.data.OrderQRIndexOrderId
 import com.arnyminerz.filamagenta.cache.data.OrderQRIndexOrderNumber
 import com.arnyminerz.filamagenta.cache.data.extractMetadata
@@ -413,6 +414,7 @@ class MainViewModel : ViewModel() {
         }
 
         val split = decoded.split("/")
+        val eventId = split[OrderQRIndexEventId].toLong()
         val orderId = split[OrderQRIndexOrderId].toLong()
         val orderNumber = split[OrderQRIndexOrderNumber]
         val customerId = split[OrderQRIndexCustomerId].toLong()
@@ -428,11 +430,13 @@ class MainViewModel : ViewModel() {
 
         Napier.i("QR is stored, checking if reused...")
 
-        val scannedTicket = Cache.getScannedTickets().find { it.customerId == customerId && it.orderId == orderId }
+        val scannedTicket = database.scannedTicketQueries
+            .find(orderId, customerId, eventId)
+            .executeAsOneOrNull()
         if (scannedTicket != null) {
             _scanResult.emit(QrCodeScanResult.AlreadyUsed)
         } else {
-            Cache.insertOrUpdateScannedTicket(orderId, customerId)
+            Cache.insertOrUpdateScannedTicket(orderId, customerId, eventId)
 
             _scanResult.emit(QrCodeScanResult.Success(customerName, orderNumber))
         }
@@ -446,7 +450,7 @@ class MainViewModel : ViewModel() {
             for (order: Order in orders) {
                 val isValidated = order.metadata.find { it.key == "validated" }?.value == "true"
                 if (isValidated) {
-                    Cache.insertOrUpdateScannedTicket(order.id.toLong(), order.customerId.toLong())
+                    Cache.insertOrUpdateScannedTicket(order.id.toLong(), order.customerId.toLong(), eventId)
                 }
 
                 order.toProductOrder().forEach(Cache::insertOrUpdateAdminTicket)

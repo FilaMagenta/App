@@ -60,6 +60,7 @@
     <string name="event_screen_admin_scanner_scan_not_supported" comment="Shown when the device doesn't have a camera">Scanner Unsupported</string>
     <string name="event_screen_admin_scanner_sync_title">Sync with Server</string>
     <string name="event_screen_admin_scanner_sync_message">If you have scanned new tickets, make sure to press the button below when you have an Internet connection. It will synchronize everything with the server.</string>
+    <string name="event_screen_admin_scanner_list">Users List</string>
 
     <!-- Wallet Screen -->
     <string name="wallet_income">Income</string>

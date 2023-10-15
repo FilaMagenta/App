@@ -23,6 +23,7 @@ fun Order.toProductOrder(): List<ProductOrder> = lineItems.map {
 }
 
 const val OrderQRIndexOrderId = 0
+const val OrderQRIndexEventId = 1
 const val OrderQRIndexOrderNumber = 2
 const val OrderQRIndexCustomerId = 3
 const val OrderQRIndexCustomerName = 4

@@ -29,6 +29,8 @@ object Cache {
 
     fun adminTicketsForEvent(eventId: Long) = database.adminTicketsQueries.getByEventId(eventId)
 
+    fun scannedTicketsForEvent(eventId: Long) = database.scannedTicketQueries.getByEventId(eventId)
+
     @Composable
     fun <RowType : Any> Query<RowType>.collectListAsState(): State<List<RowType>> {
         val flow = remember { MutableStateFlow(executeAsList()) }
@@ -147,23 +149,18 @@ object Cache {
     }
 
     /**
-     * Requests an updated list of all the pending ticket upload queries.
-     */
-    fun getScannedTickets() = database.scannedTicketQueries.getAll().executeAsList()
-
-    /**
      * Inserts a scanned ticket for order [orderId] and customer [customerId].
      */
-    fun insertOrUpdateScannedTicket(orderId: Long, customerId: Long) {
+    fun insertOrUpdateScannedTicket(orderId: Long, customerId: Long, eventId: Long) {
         val element = database.scannedTicketQueries
             .getByOrderId(orderId)
             .executeAsOneOrNull()
         if (element == null) {
             // insert
-            database.scannedTicketQueries.insert(null, orderId, customerId)
+            database.scannedTicketQueries.insert(null, orderId, customerId, eventId)
         } else {
             // update
-            database.scannedTicketQueries.update(orderId, customerId, element.id)
+            database.scannedTicketQueries.update(orderId, customerId, eventId, element.id)
         }
     }
 

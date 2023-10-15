@@ -11,8 +11,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.Delete
@@ -79,6 +80,7 @@ fun EventScreen(
 
     val orders by Cache.ordersForEvent(event.id).collectListAsState()
     val adminTickets by Cache.adminTicketsForEvent(event.id).collectListAsState()
+    val scannedTickets by Cache.scannedTicketsForEvent(event.id).collectListAsState()
 
     val onEditRequested = viewModel::edit.takeIf { isAdmin == true }
 
@@ -96,12 +98,13 @@ fun EventScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 400.dp),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item(key = "event-information", contentType = "information") {
@@ -204,6 +207,25 @@ fun EventScreen(
                     ) {
                         Text(stringResource(MR.strings.synchronize))
                     }
+                }
+            }
+
+            item(key = "admin-list", contentType = "admin-panel") {
+                OutlinedCard(
+                    modifier = Modifier
+                        .widthIn(max = 600.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(MR.strings.event_screen_admin_scanner_list),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
+                    )
+                    Text(
+                        text = "${scannedTickets.size} / ${adminTickets.size}",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                    )
                 }
             }
 
