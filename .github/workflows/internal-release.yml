@@ -46,13 +46,15 @@ jobs:
         run: |
           echo "Building ${{ steps.create_release.outputs.tag_name }}..."
           yes | $ANDROID_HOME/tools/bin/sdkmanager "build-tools;34.0.0"
-          bash ./gradlew :shared:increaseVersionCode :androidApp:bundleRelease -Pbuildkonfig.flavor=production --stacktrace
-      - name: AAB Artifact
-        id: aab_artifact
+          bash ./gradlew :shared:increaseVersionCode :androidApp:bundleRelease :androidApp:assembleRelease -Pbuildkonfig.flavor=production --stacktrace
+      - name: Artifact
+        id: artifact
         uses: actions/upload-artifact@v3
         with:
-          name: AAB Artifact
-          path: ./app/build/outputs/bundle/release/app-release.aab
+          name: Artifact
+          path: |
+            ./androidApp/build/outputs/bundle/release/androidApp-release.aab
+            ./androidApp/build/outputs/apk/release/androidApp-release.apk
 
       - name: Commit version.properties
         id: commit_version
@@ -60,6 +62,17 @@ jobs:
         with:
           commit_message: Increased Version Code
           file_pattern: 'version.properties'
+
+      - name: Create GitHub release
+        id: release_github
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "development"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            ./androidApp/build/outputs/apk/release/androidApp-release.apk
 
       - name: Upload to Play Store
         id: upload_play_store
