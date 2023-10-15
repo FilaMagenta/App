@@ -90,7 +90,7 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "${{ env.SHARED_VERSION_NAME }}-${{ env.ANDROID_VERSION_NAME }}.${{ env.ANDROID_VERSION_CODE }}"
           prerelease: true
-          title: "Android Development Build"
+          title: "Android Development Build (${{ env.SHARED_VERSION_NAME }}-${{ env.ANDROID_VERSION_NAME }}.${{ env.ANDROID_VERSION_CODE }})"
           files: |
             ./androidApp/build/outputs/apk/release/androidApp-release.apk
 
