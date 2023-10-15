@@ -141,7 +141,11 @@ buildkonfig {
     val properties = Properties().apply {
         load(rootProject.file("local.properties").inputStream())
     }
-    val sharedVersionName = project.extra["shared.versionName"] as String
+
+    val versionProps = Properties().apply {
+        project.rootProject.file("version.properties").inputStream().use(this::load)
+    }
+    val sharedVersionName = versionProps["shared.versionName"] as String
 
     defaultConfigs {
         buildConfigField(STRING, "ServerHostname", properties.getProperty("server.hostname"))
@@ -161,7 +165,7 @@ buildkonfig {
         buildConfigField(STRING, "SqlDatabase", properties.getProperty("sql.database"))
 
         val mokoSpecialDirectories = setOf("fonts", "images", "base")
-        val languages = mutableListOf<String>("en")
+        val languages = mutableListOf("en")
         project.rootProject.file("shared/src/commonMain/resources/MR")
             // Include only directories
             .listFiles(FileFilter { it.isDirectory })!!
@@ -178,18 +182,14 @@ buildkonfig {
 
     targetConfigs {
         create("android") {
-            val versionName = project.extra["android.versionName"] as String
-
-            val versionProps = Properties().apply {
-                project.rootProject.file("version.properties").inputStream().use(this::load)
-            }
-            val androidVersionCode = versionProps.getProperty("VERSION_CODE").toInt()
+            val versionName = versionProps["android.versionName"] as String
+            val androidVersionCode = versionProps["VERSION_CODE"] as String
 
             buildConfigField(STRING, "SentryDsn", properties.getProperty("sentry.dsn.android"))
-            buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName~${androidVersionCode}")
+            buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName~$androidVersionCode")
         }
         create("ios") {
-            val versionName = project.extra["ios.versionName"] as String
+            val versionName = versionProps["ios.versionName"] as String
 
             buildConfigField(STRING, "SentryDsn", properties.getProperty("sentry.dsn.ios"))
             buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName")

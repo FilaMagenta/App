@@ -63,6 +63,26 @@ jobs:
           commit_message: Increased Version Code
           file_pattern: 'version.properties'
 
+      - name: Get version tag
+        id: get_version_tag
+        run: ./scripts/load_version.sh
+
+      - name: Log version tag
+        id: log_version_tag
+        run: |
+          echo "-- Shared --"
+          echo "Version Code: $SHARED_VERSION_NAME"
+          echo "-- --- --"
+          echo ""
+          echo "-- Android --"
+          echo "Version Code: $VERSION_CODE"
+          echo "Version Name: $ANDROID_VERSION_NAME"
+          echo "-- --- --"
+          echo ""
+          echo "-- iOS --"
+          echo "Version Name: $IOS_VERSION_NAME"
+          echo "-- --- --"
+
       - name: Create GitHub release
         id: release_github
         uses: "marvinpinto/action-automatic-releases@latest"
