@@ -23,7 +23,7 @@ android {
             }
         }
         val sharedVersionName = versionProps.getProperty("shared.versionName")
-        val androidVersionCode = versionProps.getProperty("VERSION_CODE").toInt()
+        val androidVersionCode = versionProps.getProperty("android.versionCode").toInt()
         val androidVersionName = versionProps.getProperty("android.versionName")
 
         versionCode = androidVersionCode

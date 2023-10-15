@@ -183,7 +183,7 @@ buildkonfig {
     targetConfigs {
         create("android") {
             val versionName = versionProps["android.versionName"] as String
-            val androidVersionCode = versionProps["VERSION_CODE"] as String
+            val androidVersionCode = versionProps["android.versionCode"] as String
 
             buildConfigField(STRING, "SentryDsn", properties.getProperty("sentry.dsn.android"))
             buildConfigField(STRING, "ReleaseName", "$sharedVersionName-$versionName.$androidVersionCode")
@@ -232,8 +232,8 @@ task("increaseVersionCode") {
                 load(versionPropsFile.inputStream())
             }
         }
-        val code = versionProps.getProperty("VERSION_CODE").toInt() + 1
-        versionProps["VERSION_CODE"] = code.toString()
+        val code = versionProps.getProperty("android.versionCode").toInt() + 1
+        versionProps["android.versionCode"] = code.toString()
         versionPropsFile.outputStream().use {
             val date = LocalDateTime.now()
             versionProps.store(it, "Updated at $date")

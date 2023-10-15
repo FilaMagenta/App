@@ -7,9 +7,9 @@ function prop {
 }
 
 {
-  echo VERSION_CODE="$(prop 'VERSION_CODE')";
   echo SHARED_VERSION_NAME="$(prop 'shared.versionName')";
   echo ANDROID_VERSION_NAME="$(prop 'android.versionName')";
+  echo ANDROID_VERSION_CODE="$(prop 'android.versionCode')";
   echo IOS_VERSION_NAME="$(prop 'ios.versionName')"
 } >> $GITHUB_ENV
 
