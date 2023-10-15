@@ -88,7 +88,7 @@ jobs:
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "$SHARED_VERSION_NAME-$ANDROID_VERSION_NAME~$VERSION_CODE"
+          automatic_release_tag: "${{ env.SHARED_VERSION_NAME }}-${{ env.ANDROID_VERSION_NAME }}~${{ env.VERSION_CODE }}"
           prerelease: true
           title: "Android Development Build"
           files: |
