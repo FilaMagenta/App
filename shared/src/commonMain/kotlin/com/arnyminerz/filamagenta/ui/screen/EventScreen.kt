@@ -1,6 +1,9 @@
 package com.arnyminerz.filamagenta.ui.screen
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,16 +14,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronLeft
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
@@ -35,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -56,6 +68,7 @@ import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
 import com.arnyminerz.filamagenta.ui.reusable.LoadingCard
 import com.arnyminerz.filamagenta.ui.shape.BrokenPaperShape
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import com.arnyminerz.filamagenta.ui.theme.ExtendedColors
 import dev.icerock.moko.resources.compose.fontFamilyResource
 import dev.icerock.moko.resources.compose.stringResource
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -66,7 +79,7 @@ import kotlinx.coroutines.launch
 
 private const val BrokenPaperShapeSize = 100f
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalEncodingApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalEncodingApi::class, ExperimentalFoundationApi::class)
 @Composable
 @Suppress("LongMethod")
 fun EventScreen(
@@ -84,6 +97,18 @@ fun EventScreen(
 
     val onEditRequested = viewModel::edit.takeIf { isAdmin == true }
 
+    var showingPeopleDialog by remember { mutableStateOf(false) }
+
+    val usersList = adminTickets
+        .map { ticket ->
+            (scannedTickets.find {
+                it.orderId == ticket.orderId && it.customerId == ticket.customerId
+            } != null) to ticket
+        }
+        .sortedWith(
+            compareBy({ !it.first }, { it.second.customerName })
+        )
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -94,16 +119,92 @@ fun EventScreen(
                     ) {
                         Icon(Icons.Rounded.ChevronLeft, stringResource(MR.strings.back))
                     }
+                },
+                actions = {
+                    if (isAdmin == true && adminTickets.isNotEmpty()) {
+                        Text(
+                            text = "${scannedTickets.size} / ${adminTickets.size}",
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.secondary)
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .clickable { showingPeopleDialog = true },
+                            color = MaterialTheme.colorScheme.onSecondary
+                        )
+                    }
                 }
             )
         }
     ) { paddingValues ->
+        if (showingPeopleDialog) {
+            ModalBottomSheet(
+                onDismissRequest = { showingPeopleDialog = false }
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                ) {
+                    stickyHeader {
+                        Text(
+                            text = stringResource(MR.strings.event_screen_admin_scanner_list),
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)
+                        )
+                    }
+
+                    items(usersList) { (hasValidated, ticket) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (hasValidated) Icons.Rounded.Check else Icons.Rounded.Close,
+                                // todo - content description
+                                contentDescription = null,
+                                tint = (if (hasValidated) ExtendedColors.Positive else ExtendedColors.Negative).color()
+                            )
+                            Text(
+                                text = ticket.customerName,
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.weight(1f).padding(start = 4.dp)
+                            )
+                            AnimatedVisibility(
+                                visible = !hasValidated
+                            ) {
+                                IconButton(
+                                    onClick = { /* TODO - Insert into scanned tickets */ }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Check,
+                                        // todo - content description
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+                            AnimatedVisibility(
+                                visible = hasValidated
+                            ) {
+                                IconButton(
+                                    onClick = { /* TODO - Remove from scanned tickets */ }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Close,
+                                        // todo - content description
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 400.dp),
+            columns = GridCells.Adaptive(minSize = 500.dp),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -161,14 +262,24 @@ fun EventScreen(
                             modifier = Modifier.weight(1f).padding(end = 4.dp),
                             enabled = !isDownloadingTickets
                         ) {
-                            Text(stringResource(MR.strings.event_screen_admin_scanner_download))
+                            Text(
+                                text = stringResource(MR.strings.event_screen_admin_scanner_download),
+                                modifier = Modifier.weight(1f).align(Alignment.CenterVertically),
+                                textAlign = TextAlign.Center
+                            )
+                            AnimatedVisibility(isDownloadingTickets) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 3.dp
+                                )
+                            }
                         }
 
                         val hasCamera = PlatformInformation.isCameraSupported()
                         OutlinedButton(
                             onClick = { viewModel.startScanner() },
                             modifier = Modifier.weight(1f).padding(start = 4.dp),
-                            enabled = adminTickets.isNotEmpty() && hasCamera
+                            enabled = adminTickets.isNotEmpty() && hasCamera && !isDownloadingTickets
                         ) {
                             Text(
                                 text = stringResource(
@@ -183,7 +294,8 @@ fun EventScreen(
                             visible = adminTickets.isNotEmpty()
                         ) {
                             IconButton(
-                                onClick = { viewModel.deleteTickets(event.id) }
+                                onClick = { viewModel.deleteTickets(event.id) },
+                                enabled = !isDownloadingTickets
                             ) {
                                 Icon(Icons.Rounded.Delete, stringResource(MR.strings.delete))
                             }
@@ -210,25 +322,6 @@ fun EventScreen(
                 }
             }
 
-            item(key = "admin-list", contentType = "admin-panel") {
-                OutlinedCard(
-                    modifier = Modifier
-                        .widthIn(max = 600.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(MR.strings.event_screen_admin_scanner_list),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
-                    )
-                    Text(
-                        text = "${scannedTickets.size} / ${adminTickets.size}",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
-                    )
-                }
-            }
-
             item(key = "order-loading-indicator", contentType = "loading-indicator") {
                 LoadingCard(
                     visible = loadingOrders && orders.isEmpty(),
@@ -241,12 +334,13 @@ fun EventScreen(
                 val moreThanOne = orders.size > 1
                 itemsIndexed(
                     items = orders,
+                    span = { _, _ -> GridItemSpan(maxLineSpan) },
                     key = { _, order -> "order-${order.id}" }
                 ) { index, order ->
                     OutlinedCard(
                         shape = BrokenPaperShape(BrokenPaperShapeSize),
                         modifier = Modifier
-                            .widthIn(max = 450.dp)
+                            .widthIn(max = 350.dp)
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
                     ) {
