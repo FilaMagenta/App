@@ -85,7 +85,7 @@ fun MainScreen(
         }
     }
 
-    val isLoading = isRequestingToken || accountsList == null || (!addingNewAccount && account == null)
+    val isLoading = isRequestingToken || accountsList == null || !addingNewAccount && account == null
 
     BackHandler {
         if (isLoading) {
