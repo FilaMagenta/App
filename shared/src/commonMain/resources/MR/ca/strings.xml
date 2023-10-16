@@ -20,7 +20,7 @@
     <string name="password_show">Show Password</string>
     <!-- Login Screen -->
     <string name="login_title">Iniciar Sessió</string>
-    <string name="login_message">Welcome to the Filà Magenta app. Please introduce your DNI and the password you use for logging into the Filà Magenta website.</string>
+    <string name="login_message">Benvingut/da a l\'aplicació de la Filà Magenta. Per favor, prem el botó de sota, i un navegador s\'obrirà. Inicia sessió A la pàgina web. De la resta ens encarreguem nosaltres.</string>
     <string name="login_username">DNI</string>
     <string name="login_password">Password</string>
     <string name="login_action">Iniciar Sessió</string>
@@ -78,6 +78,10 @@
     <string name="settings_translations_summary">Tradueix l\'app al teu idioma a Crowdin.</string>
     <string name="settings_source_title">Codi Font</string>
     <string name="settings_source_summary">El codi font de l\'app està disponible a GitHub.</string>
+    <string name="settings_privacy_title">Privacy Policy</string>
+    <string name="settings_privacy_summary">When downloading and using the app, you have accepted the privacy policy available here.</string>
+    <string name="settings_collection_title">Anonymous Data Collection</string>
+    <string name="settings_collection_summary">Whether to collect anonymous crash, error and performance reports about the app. Changes apply after an app restart.</string>
     <!-- Admin Intro -->
     <string name="intro_admin_welcome_title">Benvingut! Eres un administrador</string>
     <string name="intro_admin_welcome_message">Els administradors tenen més funcions a l\'app, així que és important que conegues com funcionen.</string>
