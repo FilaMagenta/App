@@ -10,6 +10,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
@@ -95,6 +96,11 @@ fun SettingsPage() {
             summary = stringResource(MR.strings.settings_source_summary),
             icon = Icons.Rounded.Code
         ) { uriHandler.openUri("https://github.com/FilaMagenta/App") }
+        SettingsItem(
+            headline = stringResource(MR.strings.settings_privacy_title),
+            summary = stringResource(MR.strings.settings_privacy_summary),
+            icon = Icons.Rounded.Policy
+        ) { uriHandler.openUri("https://github.com/FilaMagenta/App/blob/master/docs/en/PRIVACY_POLICY.md") }
 
         SettingsItem(
             headline = stringResource(MR.strings.settings_collection_title),
