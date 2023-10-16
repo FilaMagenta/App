@@ -21,6 +21,7 @@ fun SettingsItem(
     icon: ImageVector? = null,
     modifier: Modifier = Modifier,
     contentDescription: String? = headline,
+    trailingContent: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null
 ) {
     Row(
@@ -53,5 +54,6 @@ fun SettingsItem(
                 )
             }
         }
+        trailingContent?.invoke()
     }
 }

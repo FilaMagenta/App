@@ -87,6 +87,8 @@
     <string name="settings_translations_summary">Translate the app into your own language in Crowdin.</string>
     <string name="settings_source_title">Source Code</string>
     <string name="settings_source_summary">The Source Code of the app is available at GitHub.</string>
+    <string name="settings_collection_title">Anonymous Data Collection</string>
+    <string name="settings_collection_summary">Whether to collect anonymous crash, error and performance reports about the app. Changes apply after an app restart.</string>
 
     <!-- Admin Intro -->
     <string name="intro_admin_welcome_title">Welcome! You are an administrator</string>

@@ -164,6 +164,10 @@ object Cache {
         }
     }
 
+    fun removeScannedTicket(id: Long) {
+        database.scannedTicketQueries.delete(id)
+    }
+
     fun insertOrUpdateAdminTicket(order: ProductOrder) {
         val element = database.adminTicketsQueries
             .getById(order.id)

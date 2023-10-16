@@ -7,28 +7,55 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.russhwolf.settings.ObservableSettings
+import com.russhwolf.settings.SettingsListener
 import com.russhwolf.settings.set
 import io.github.aakira.napier.Napier
 
 @Composable
-fun ObservableSettings.getBooleanState(key: String, defaultValue: Boolean): MutableState<Boolean> {
-    val state = remember { mutableStateOf(getBoolean(key, defaultValue)) }
+private fun <T: Any> ObservableSettings.getState(
+    key: String,
+    defaultValue: T,
+    addListener: ObservableSettings.(key: String, defaultValue: T, callback: (T) -> Unit) -> SettingsListener,
+    getter: ObservableSettings.(key: String, defaultValue: T) -> T,
+    setter: ObservableSettings.(key: String, value: T) -> Unit
+): MutableState<T> {
+    val state = remember { mutableStateOf(getter(key, defaultValue)) }
 
     DisposableEffect(Unit) {
-        val listener = addBooleanListener(key, defaultValue) { state.value = it }
+        val listener = addListener(key, defaultValue) { state.value = it }
 
         // Update the value stored initially
-        state.value = getBoolean(key, defaultValue)
+        state.value = getter(key, defaultValue)
 
         onDispose { listener.deactivate() }
     }
 
     LaunchedEffect(state.value) {
-        if (getBoolean(key, defaultValue) != state.value) {
+        if (getter(key, defaultValue) != state.value) {
             Napier.v("Updating value of $key to ${state.value}")
-            set(key, state.value)
+            setter(key, state.value)
         }
     }
 
     return state
+}
+
+@Composable
+fun ObservableSettings.getBooleanState(key: String, defaultValue: Boolean): MutableState<Boolean> {
+    return getState(
+        key,
+        defaultValue,
+        ObservableSettings::addBooleanListener,
+        ObservableSettings::getBoolean
+    ) { k, v -> this[k] = v }
+}
+
+@Composable
+fun ObservableSettings.getStringState(key: String, defaultValue: String): MutableState<String> {
+    return getState(
+        key,
+        defaultValue,
+        ObservableSettings::addStringListener,
+        ObservableSettings::getString
+    ) { k, v -> this[k] = v }
 }

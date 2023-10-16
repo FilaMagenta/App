@@ -14,6 +14,11 @@ object SettingsKeys {
     const val LANGUAGE = "lang"
 
     /**
+     * Whether the user wants their data to be collected for research.
+     */
+    const val DATA_COLLECTION = "data_collection"
+
+    /**
      * Stores whether the admin information screen has been shown to the user.
      */
     const val SYS_SHOWN_ADMIN = "_shown_admin"

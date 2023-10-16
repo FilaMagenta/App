@@ -7,6 +7,8 @@ import com.arnyminerz.filamagenta.diagnostics.SentryInitializer
 import com.arnyminerz.filamagenta.states.Action
 import com.arnyminerz.filamagenta.states.createStore
 import com.arnyminerz.filamagenta.storage.SettingsFactoryProvider
+import com.arnyminerz.filamagenta.storage.SettingsKeys
+import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.storage.settingsFactory
 import com.arnyminerz.filamagenta.ui.screen.MainScreen
 import com.arnyminerz.filamagenta.ui.theme.AppTheme
@@ -17,9 +19,11 @@ val store = CoroutineScope(SupervisorJob()).createStore()
 
 fun MainViewController() = ComposeUIViewController {
     LaunchedEffect(Unit) {
-        SentryInitializer().init()
-
         settingsFactory = SettingsFactoryProvider().factory
+
+        if (settings.getBoolean(SettingsKeys.DATA_COLLECTION, true)) {
+            SentryInitializer().init()
+        }
 
         AccountsProvider().provide()
 
