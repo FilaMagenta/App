@@ -15,10 +15,17 @@
     <string name="copy" comment="Copies something to the clipboard">Copia</string>
     <string name="synchronize" comment="A generic string for buttons that synchronize some data with the server.">Sincronitzar</string>
     <string name="server_status" comment="Shown when there's an error, to launch the server status page, and know if something is down.">Estat del Servidor</string>
+    <!-- Generic form strings -->
+    <string name="password_hide">Hide Password</string>
+    <string name="password_show">Show Password</string>
     <!-- Login Screen -->
     <string name="login_title">Iniciar Sessió</string>
-    <string name="login_message">Benvingut/da a l\'aplicació de la Filà Magenta. Per favor, prem el botó de sota, i un navegador s\'obrirà. Inicia sessió A la pàgina web. De la resta ens encarreguem nosaltres.</string>
+    <string name="login_message">Welcome to the Filà Magenta app. Please introduce your DNI and the password you use for logging into the Filà Magenta website.</string>
+    <string name="login_username">DNI</string>
+    <string name="login_password">Password</string>
     <string name="login_action">Iniciar Sessió</string>
+    <string name="login_error_dni">The DNI introduced is not valid.</string>
+    <string name="login_error">DNI or password is not correct.</string>
     <!-- Main Navigation bar -->
     <string name="nav_wallet">Comptes</string>
     <string name="nav_events">Actes</string>
