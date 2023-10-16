@@ -16,16 +16,16 @@
     <string name="synchronize" comment="A generic string for buttons that synchronize some data with the server.">Sincronitzar</string>
     <string name="server_status" comment="Shown when there's an error, to launch the server status page, and know if something is down.">Estat del Servidor</string>
     <!-- Generic form strings -->
-    <string name="password_hide">Hide Password</string>
-    <string name="password_show">Show Password</string>
+    <string name="password_hide">Amagar contrasenya</string>
+    <string name="password_show">Mostrar contrasenya</string>
     <!-- Login Screen -->
     <string name="login_title">Iniciar Sessió</string>
     <string name="login_message">Benvingut/da a l\'aplicació de la Filà Magenta. Per favor, prem el botó de sota, i un navegador s\'obrirà. Inicia sessió A la pàgina web. De la resta ens encarreguem nosaltres.</string>
     <string name="login_username">DNI</string>
-    <string name="login_password">Password</string>
+    <string name="login_password">Contrasenya</string>
     <string name="login_action">Iniciar Sessió</string>
-    <string name="login_error_dni">The DNI introduced is not valid.</string>
-    <string name="login_error">DNI or password is not correct.</string>
+    <string name="login_error_dni">El DNI introduït no és vàlid.</string>
+    <string name="login_error">DNI o contrasenya incorrectes.</string>
     <!-- Main Navigation bar -->
     <string name="nav_wallet">Comptes</string>
     <string name="nav_events">Actes</string>
@@ -78,10 +78,10 @@
     <string name="settings_translations_summary">Tradueix l\'app al teu idioma a Crowdin.</string>
     <string name="settings_source_title">Codi Font</string>
     <string name="settings_source_summary">El codi font de l\'app està disponible a GitHub.</string>
-    <string name="settings_privacy_title">Privacy Policy</string>
-    <string name="settings_privacy_summary">When downloading and using the app, you have accepted the privacy policy available here.</string>
-    <string name="settings_collection_title">Anonymous Data Collection</string>
-    <string name="settings_collection_summary">Whether to collect anonymous crash, error and performance reports about the app. Changes apply after an app restart.</string>
+    <string name="settings_privacy_title">Política de Privadesa</string>
+    <string name="settings_privacy_summary">En descarregar i fer servir l\'app, estàs acceptant la política de privadesa disponible ací.</string>
+    <string name="settings_collection_title">Recol·lecció anònima de dades</string>
+    <string name="settings_collection_summary">Si poden recopilar informes anònims de crashejos, errors i rendiment sobre l\'aplicació. Els canvis s\'apliquen després de reiniciar l\'aplicació.</string>
     <!-- Admin Intro -->
     <string name="intro_admin_welcome_title">Benvingut! Eres un administrador</string>
     <string name="intro_admin_welcome_message">Els administradors tenen més funcions a l\'app, així que és important que conegues com funcionen.</string>
