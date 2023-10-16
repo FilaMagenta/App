@@ -36,7 +36,7 @@ import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsSection
 import com.arnyminerz.filamagenta.utils.Language
 import com.arnyminerz.filamagenta.utils.UriUtils.CROWDIN_PROJECT_URL
 import com.arnyminerz.filamagenta.utils.UriUtils.GITHUB_REPO_URL
-import com.arnyminerz.filamagenta.utils.UriUtils.PRIVACY_POLICY_URL
+import com.arnyminerz.filamagenta.utils.UriUtils.getPrivacyPolicyUrl
 import com.arnyminerz.filamagenta.utils.prefixSystem
 import dev.icerock.moko.resources.compose.stringResource
 import dev.icerock.moko.resources.desc.StringDesc
@@ -68,6 +68,9 @@ fun SettingsPage() {
         val languages = BuildKonfig.Languages.split(",").map { Language(it) }.prefixSystem()
 
         Napier.d("Supported languages: $languages")
+        Napier.d("Selected language: $selectedLanguage")
+
+        val privacyPolicyLanguage = selectedLanguage.takeIf { it != Language.System.langCode } ?: "en"
 
         SettingsList(
             default = Language(selectedLanguage),
@@ -102,7 +105,7 @@ fun SettingsPage() {
             headline = stringResource(MR.strings.settings_privacy_title),
             summary = stringResource(MR.strings.settings_privacy_summary),
             icon = Icons.Rounded.Policy
-        ) { uriHandler.openUri(PRIVACY_POLICY_URL) }
+        ) { uriHandler.openUri(getPrivacyPolicyUrl(privacyPolicyLanguage)) }
 
         SettingsItem(
             headline = stringResource(MR.strings.settings_collection_title),
