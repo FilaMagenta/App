@@ -43,10 +43,13 @@ jobs:
 
       - name: Build AAB
         id: build_aab
-        run: |
-          echo "Building ${{ steps.create_release.outputs.tag_name }}..."
-          yes | $ANDROID_HOME/tools/bin/sdkmanager "build-tools;34.0.0"
-          bash ./gradlew :shared:increaseVersionCode :androidApp:bundleRelease :androidApp:assembleRelease -Pbuildkonfig.flavor=production --stacktrace
+        uses: burrunan/gradle-cache-action@v1
+        with:
+          job-id: build_aab
+          arguments: :shared:increaseVersionCode :androidApp:bundleRelease :androidApp:assembleRelease
+          gradle-version: wrapper
+          properties: |
+            buildkonfig.flavor=production
       - name: Artifact
         id: artifact
         uses: actions/upload-artifact@v3
