@@ -76,6 +76,7 @@ fun MainScreen(
     val isAdmin by viewModel.isAdmin.collectAsState(false)
 
     val error by viewModel.error.collectAsState()
+    val loginError by viewModel.loginError.collectAsState()
     val viewingEvent by viewModel.viewingEvent.collectAsState()
     val editingField by viewModel.editingField.collectAsState()
 
@@ -220,7 +221,9 @@ fun MainScreen(
 
         addingNewAccount -> {
             LoginScreen(
-                onLoginRequested = { showingLoginWebpage = true },
+                isError = loginError,
+                onDismissErrorRequested = { viewModel.loginError.value = false },
+                onLoginRequested = viewModel::login,
                 onBackRequested = {
                     if (accountsList.isNullOrEmpty()) {
                         onApplicationEndRequested()

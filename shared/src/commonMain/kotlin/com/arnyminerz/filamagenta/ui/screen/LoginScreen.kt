@@ -2,10 +2,14 @@ package com.arnyminerz.filamagenta.ui.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material3.Button
@@ -13,30 +17,54 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.ui.logic.BackHandler
+import com.arnyminerz.filamagenta.ui.modifier.autofill
+import com.arnyminerz.filamagenta.ui.reusable.form.FormField
+import com.arnyminerz.filamagenta.utils.isValidDni
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
+import kotlinx.coroutines.Job
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun LoginScreen(
-    onLoginRequested: () -> Unit,
+    isError: Boolean,
+    onDismissErrorRequested: () -> Unit,
+    onLoginRequested: (username: String, password: String) -> Job,
     onBackRequested: () -> Unit
 ) {
-    BackHandler {
-        onBackRequested()
+    var isLoggingIn by remember { mutableStateOf(false) }
+
+    var username by remember { mutableStateOf<String?>(null) }
+    var password by remember { mutableStateOf<String?>(null) }
+
+    val isDniValid = username?.isValidDni == true
+
+    fun login() {
+        if (isDniValid && !isError) {
+            isLoggingIn = true
+            onLoginRequested(username ?: "", password ?: "").invokeOnCompletion {
+                isLoggingIn = false
+            }
+        }
     }
+
+    BackHandler(onBack = onBackRequested)
 
     Scaffold(
         topBar = {
@@ -60,7 +88,11 @@ fun LoginScreen(
         }
     ) { paddingValues ->
         Column(
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .imePadding()
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
@@ -80,12 +112,42 @@ fun LoginScreen(
                     .padding(top = 12.dp, bottom = 8.dp),
                 textAlign = TextAlign.Center
             )
-            Button(
-                onClick = onLoginRequested
+
+            val passwordFocusRequester = remember { FocusRequester() }
+
+            FormField(
+                value = username,
+                onValueChange = { username = it; onDismissErrorRequested() },
+                label = stringResource(MR.strings.login_username),
+                modifier = Modifier.padding(horizontal = 16.dp),
+                enabled = !isLoggingIn,
+                error = stringResource(MR.strings.login_error_dni).takeUnless { isDniValid },
+                allCaps = true,
+                autofillType = AutofillType.Username,
+                nextFocusRequester = passwordFocusRequester
+            )
+            FormField(
+                value = password,
+                onValueChange = { password = it; onDismissErrorRequested() },
+                label = stringResource(MR.strings.login_password),
+                modifier = Modifier.padding(horizontal = 16.dp),
+                enabled = !isLoggingIn,
+                error = stringResource(MR.strings.login_error).takeIf { isError },
+                isPassword = true,
+                autofillType = AutofillType.Password,
+                thisFocusRequester = passwordFocusRequester,
+                onGo = ::login
+            )
+
+            OutlinedButton(
+                onClick = ::login,
+                enabled = isDniValid && !isError,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp, bottom = 48.dp)
             ) {
-                Text(
-                    text = stringResource(MR.strings.login_action)
-                )
+                Text(stringResource(MR.strings.login_action))
             }
         }
     }
