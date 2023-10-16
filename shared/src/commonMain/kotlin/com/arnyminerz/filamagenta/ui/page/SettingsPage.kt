@@ -34,8 +34,10 @@ import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsItem
 import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsList
 import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsSection
 import com.arnyminerz.filamagenta.utils.Language
+import com.arnyminerz.filamagenta.utils.UriUtils.CROWDIN_PROJECT_URL
+import com.arnyminerz.filamagenta.utils.UriUtils.GITHUB_REPO_URL
+import com.arnyminerz.filamagenta.utils.UriUtils.PRIVACY_POLICY_URL
 import com.arnyminerz.filamagenta.utils.prefixSystem
-import com.russhwolf.settings.set
 import dev.icerock.moko.resources.compose.stringResource
 import dev.icerock.moko.resources.desc.StringDesc
 import io.github.aakira.napier.Napier
@@ -90,17 +92,17 @@ fun SettingsPage() {
             headline = stringResource(MR.strings.settings_translations_title),
             summary = stringResource(MR.strings.settings_translations_summary),
             icon = Icons.Rounded.Translate
-        ) { uriHandler.openUri("https://crowdin.com/project/fila-magenta-app") }
+        ) { uriHandler.openUri(CROWDIN_PROJECT_URL) }
         SettingsItem(
             headline = stringResource(MR.strings.settings_source_title),
             summary = stringResource(MR.strings.settings_source_summary),
             icon = Icons.Rounded.Code
-        ) { uriHandler.openUri("https://github.com/FilaMagenta/App") }
+        ) { uriHandler.openUri(GITHUB_REPO_URL) }
         SettingsItem(
             headline = stringResource(MR.strings.settings_privacy_title),
             summary = stringResource(MR.strings.settings_privacy_summary),
             icon = Icons.Rounded.Policy
-        ) { uriHandler.openUri("https://github.com/FilaMagenta/App/blob/master/docs/en/PRIVACY_POLICY.md") }
+        ) { uriHandler.openUri(PRIVACY_POLICY_URL) }
 
         SettingsItem(
             headline = stringResource(MR.strings.settings_collection_title),
