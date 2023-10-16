@@ -51,7 +51,7 @@ fun SettingsPage() {
     var selectedLanguage by settings.getStringState(SettingsKeys.LANGUAGE, Language.System.langCode)
 
     LaunchedEffect(selectedLanguage) {
-        snapshotFlow { selectedLanguage }.collect { StringDesc.localeType = Language(it).localeType }
+        StringDesc.localeType = Language(selectedLanguage).localeType
     }
 
     Column(
