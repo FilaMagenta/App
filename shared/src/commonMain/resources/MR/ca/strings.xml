@@ -20,7 +20,8 @@
     <string name="password_show">Mostrar contrasenya</string>
     <!-- Login Screen -->
     <string name="login_title">Iniciar Sessió</string>
-    <string name="login_message">Benvingut/da a l\'aplicació de la Filà Magenta. Per favor, prem el botó de sota, i un navegador s\'obrirà. Inicia sessió A la pàgina web. De la resta ens encarreguem nosaltres.</string>
+    <string name="login_message">Benvingut/da a l\'aplicació de la Filà Magenta. Per favor, introdueix el teu DNI i la contrasenya que fas servir per a iniciar sessió a la web de la filà.</string>
+    <string name="login_privacy">En iniciar sessió i fer servir l\'app, estàs acceptant la nostra {link}política de privacitat{/link}.</string>
     <string name="login_username">DNI</string>
     <string name="login_password">Contrasenya</string>
     <string name="login_action">Iniciar Sessió</string>
@@ -69,6 +70,9 @@
     <string name="wallet_balance">Saldo</string>
     <string name="wallet_outcome">Eixides</string>
     <!-- Settings -->
+    <string name="settings_section_account">Compte</string>
+    <string name="settings_account_title">Sessió iniciada com a %s</string>
+    <string name="settings_account_summary">Toca per a tancar la sessió</string>
     <string name="settings_section_user_interface">Interfície d\'Usuari</string>
     <string name="settings_language_title">Idioma</string>
     <string name="settings_language_system">Per defecte</string>
