@@ -89,6 +89,12 @@ android {
             enableSplit = false
         }
     }
+
+    // Enable per-app language
+    @Suppress("UnstableApiUsage")
+    androidResources {
+        generateLocaleConfig = true
+    }
 }
 
 dependencies {
