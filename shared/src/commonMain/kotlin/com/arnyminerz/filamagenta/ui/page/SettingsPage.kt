@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Policy
@@ -15,9 +16,9 @@ import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.MR
+import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.getBooleanState
 import com.arnyminerz.filamagenta.storage.getStringState
@@ -33,6 +35,7 @@ import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsItem
 import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsList
 import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsSection
+import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import com.arnyminerz.filamagenta.utils.Language
 import com.arnyminerz.filamagenta.utils.UriUtils.CROWDIN_PROJECT_URL
 import com.arnyminerz.filamagenta.utils.UriUtils.GITHUB_REPO_URL
@@ -43,7 +46,7 @@ import dev.icerock.moko.resources.desc.StringDesc
 import io.github.aakira.napier.Napier
 
 @Composable
-fun SettingsPage() {
+fun SettingsPage(viewModel: MainViewModel) {
     val uriHandler = LocalUriHandler.current
     val clipboardManager = LocalClipboardManager.current
 
@@ -54,6 +57,8 @@ fun SettingsPage() {
         StringDesc.localeType = Language(selectedLanguage).localeType
     }
 
+    val selectedAccount by viewModel.account.collectAsState()
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -61,6 +66,19 @@ fun SettingsPage() {
             .padding(horizontal = 8.dp)
             .verticalScroll(rememberScrollState())
     ) {
+        selectedAccount?.let {  account ->
+            SettingsSection(
+                text = stringResource(MR.strings.settings_section_account)
+            )
+
+            SettingsItem(
+                headline = stringResource(MR.strings.settings_account_title, account.name),
+                summary = stringResource(MR.strings.settings_account_summary),
+                icon = Icons.Outlined.Person
+            ) { accounts.removeAccount(account) }
+        }
+
+
         SettingsSection(
             text = stringResource(MR.strings.settings_section_user_interface)
         )

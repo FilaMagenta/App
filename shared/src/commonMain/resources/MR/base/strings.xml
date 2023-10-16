@@ -78,6 +78,9 @@
     <string name="wallet_outcome">Outcome</string>
 
     <!-- Settings -->
+    <string name="settings_section_account">Account</string>
+    <string name="settings_account_title">Logged in as %s</string>
+    <string name="settings_account_summary">Tap to log out</string>
     <string name="settings_section_user_interface">User Interface</string>
     <string name="settings_language_title">Language</string>
     <string name="settings_language_system">System Default</string>

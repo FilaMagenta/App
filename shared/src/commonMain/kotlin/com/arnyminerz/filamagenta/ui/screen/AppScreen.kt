@@ -122,7 +122,7 @@ fun AppScreen(
             }
             // Settings
             2 -> {
-                SettingsPage()
+                SettingsPage(viewModel)
             }
         }
     }
