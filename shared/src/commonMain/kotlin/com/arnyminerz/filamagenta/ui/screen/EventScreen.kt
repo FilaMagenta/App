@@ -60,6 +60,7 @@ import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.data.qrcode
+import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.image.QRCodeGenerator
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
@@ -171,7 +172,13 @@ fun EventScreen(
                                 visible = !hasValidated
                             ) {
                                 IconButton(
-                                    onClick = { /* TODO - Insert into scanned tickets */ }
+                                    onClick = {
+                                        Cache.insertOrUpdateScannedTicket(
+                                            orderId = ticket.orderId,
+                                            customerId = ticket.customerId,
+                                            eventId = event.id
+                                        )
+                                    }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Rounded.Check,
@@ -184,7 +191,12 @@ fun EventScreen(
                                 visible = hasValidated
                             ) {
                                 IconButton(
-                                    onClick = { /* TODO - Remove from scanned tickets */ }
+                                    onClick = {
+                                        val ticket = scannedTickets.find {
+                                            it.orderId == ticket.orderId && it.customerId == ticket.customerId
+                                        }!!
+                                        Cache.removeScannedTicket(ticket.id)
+                                    }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Rounded.Close,

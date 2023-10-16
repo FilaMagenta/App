@@ -102,6 +102,7 @@ kotlin {
                 implementation(libs.ktor.okhttp)
                 implementation(libs.mlkit.barcode)
                 implementation(libs.qrcode.android)
+                api(libs.sentry.android)
                 implementation(libs.sqldelight.android)
             }
         }
