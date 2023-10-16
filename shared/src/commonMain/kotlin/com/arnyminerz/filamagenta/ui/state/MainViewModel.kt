@@ -41,6 +41,7 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.DefaultJson
+import io.ktor.utils.io.errors.IOException
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.Dispatchers
@@ -202,8 +203,12 @@ class MainViewModel : ViewModel() {
                 .split("&")
                 .associate { it.split("=").let { (k, v) -> k to v } }
             val code = query["code"]
-            // todo - notify the user about this error, even though it should never occur
-            requireNotNull(code) { "Server redirected without a valid code" }
+            if (code == null) {
+                _error.emit(
+                    RuntimeException("Authentication was redirected without a valid code.")
+                )
+                return@launch
+            }
 
             requestToken(code)
         } else {
@@ -367,7 +372,6 @@ class MainViewModel : ViewModel() {
      * Fetches all the transactions from the SQL server, and updates the local cache.
      */
     fun refreshWallet() = viewModelScope.launch(Dispatchers.IO) {
-        // todo - handle IOException
         try {
             _isLoadingWallet.emit(true)
 
@@ -378,6 +382,8 @@ class MainViewModel : ViewModel() {
             Cache.synchronizeTransactions(
                 result.map(List<SqlTunnelEntry>::toAccountTransaction)
             )
+        } catch (e: IOException) {
+            _error.emit(e)
         } finally {
             _isLoadingWallet.emit(false)
         }
