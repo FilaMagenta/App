@@ -52,7 +52,6 @@ kotlin {
                 implementation(compose.material3)
                 implementation(compose.materialIconsExtended)
                 implementation(compose.ui)
-                api(libs.compose.webview)
 
                 // Kotlin libraries
                 api(libs.kotlinx.datetime)
@@ -94,6 +93,7 @@ kotlin {
 
             dependencies {
                 implementation(libs.compose.material3.windowSizeClass)
+                api(libs.androidx.activity.compose)
                 implementation(libs.androidx.camera.camera2)
                 implementation(libs.androidx.camera.lifecycle)
                 implementation(libs.androidx.camera.view)

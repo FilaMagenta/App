@@ -24,6 +24,8 @@ import com.arnyminerz.filamagenta.network.database.SqlServer
 import com.arnyminerz.filamagenta.network.database.SqlTunnelEntry
 import com.arnyminerz.filamagenta.network.database.SqlTunnelException
 import com.arnyminerz.filamagenta.network.database.getLong
+import com.arnyminerz.filamagenta.network.httpClient
+import com.arnyminerz.filamagenta.network.oauth.LoginData
 import com.arnyminerz.filamagenta.network.server.exception.WordpressException
 import com.arnyminerz.filamagenta.network.woo.WooCommerce
 import com.arnyminerz.filamagenta.network.woo.models.Metadata
@@ -35,9 +37,9 @@ import com.arnyminerz.filamagenta.network.woo.utils.set
 import com.arnyminerz.filamagenta.utils.toEpochMillisecondsString
 import com.doublesymmetry.viewmodel.ViewModel
 import io.github.aakira.napier.Napier
-import io.ktor.http.Parameters
-import io.ktor.http.URLBuilder
-import io.ktor.http.URLProtocol
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.DefaultJson
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -141,6 +143,18 @@ class MainViewModel : ViewModel() {
         MutableStateFlow(false)
     )
 
+    val loginError = MutableStateFlow(false)
+
+    /**
+     * Provides the login form target URL.
+     */
+    private val loginUrl: String
+        get() = URLBuilder(
+            protocol = URLProtocol.HTTPS,
+            host = BuildKonfig.ServerHostname,
+            pathSegments = listOf("wp-login.php")
+        ).buildString()
+
     fun getAuthorizeUrl() =
         // First, request the server
         URLBuilder(
@@ -153,6 +167,52 @@ class MainViewModel : ViewModel() {
                 set("response_type", "code")
             }
         ).buildString()
+
+    fun login(username: String, password: String): Job = viewModelScope.launch(Dispatchers.IO) {
+        val loginData = LoginData(
+            BuildKonfig.OAuthClientId,
+            username,
+            password,
+            getAuthorizeUrl()
+        )
+
+        loginError.emit(false)
+
+        Napier.d("Trying to log in with credentials... Username=$username")
+
+        val next = httpClient.submitForm(
+            url = loginUrl,
+            formParameters = parameters {
+                loginData.append(this)
+            }
+        ).let { it.headers[HttpHeaders.Location] }
+
+        if (next == null) {
+            Napier.e("Login credentials are not correct.")
+
+            loginError.emit(true)
+            return@launch
+        }
+
+        val codeLocation = httpClient.get(next).let { it.headers[HttpHeaders.Location] }
+        if (codeLocation?.startsWith("app://filamagenta") == true) {
+            // Redirection complete, extract code
+            val query = Url(codeLocation)
+                .encodedQuery
+                .split("&")
+                .associate { it.split("=").let { (k, v) -> k to v } }
+            val code = query["code"]
+            // todo - notify the user about this error, even though it should never occur
+            requireNotNull(code) { "Server redirected without a valid code" }
+
+            requestToken(code)
+        } else {
+            Napier.e("Authorization failed.")
+
+            loginError.emit(true)
+            return@launch
+        }
+    }
 
     /**
      * Requests the server for a token and refresh token, then adds the account to the account manager.
@@ -307,6 +367,7 @@ class MainViewModel : ViewModel() {
      * Fetches all the transactions from the SQL server, and updates the local cache.
      */
     fun refreshWallet() = viewModelScope.launch(Dispatchers.IO) {
+        // todo - handle IOException
         try {
             _isLoadingWallet.emit(true)
 

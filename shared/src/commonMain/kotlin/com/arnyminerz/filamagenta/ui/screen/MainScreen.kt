@@ -63,8 +63,6 @@ fun MainScreen(
 
     val isRequestingToken by viewModel.isRequestingToken.collectAsState(initial = false)
 
-    var showingLoginWebpage by remember { mutableStateOf(false) }
-
     val accountsList by accounts.getAccountsLive().collectAsState()
 
     var addNewAccountRequested by remember { mutableStateOf(isAddingNewAccount) }
@@ -76,6 +74,7 @@ fun MainScreen(
     val isAdmin by viewModel.isAdmin.collectAsState(false)
 
     val error by viewModel.error.collectAsState()
+    val loginError by viewModel.loginError.collectAsState()
     val viewingEvent by viewModel.viewingEvent.collectAsState()
     val editingField by viewModel.editingField.collectAsState()
 
@@ -170,17 +169,13 @@ fun MainScreen(
     BackHandler {
         if (isLoading) {
             // ignore
-        } else if (showingLoginWebpage || addingNewAccount) {
+        } else if (addingNewAccount) {
             if (accountsList.isNullOrEmpty()) {
                 // If there aren't any accounts, close the app
                 onApplicationEndRequested()
             } else {
-                // If there's at least one account, hide the browser or the account adder
-                if (addNewAccountRequested) {
-                    addNewAccountRequested = false
-                } else {
-                    showingLoginWebpage = false
-                }
+                // If there's at least one account, hide the account adder
+                addNewAccountRequested = false
             }
         } else if (isScanningQr) {
             // If it is scanning, and back is pressed, stop scanning
@@ -200,27 +195,11 @@ fun MainScreen(
             }
         }
 
-        showingLoginWebpage -> {
-            BrowserLoginScreen(
-                authorizeUrl = viewModel.getAuthorizeUrl(),
-                onDismissRequested = {
-                    if (accountsList.isNullOrEmpty()) {
-                        onApplicationEndRequested()
-                    } else {
-                        showingLoginWebpage = false
-                    }
-                },
-                onCodeObtained = { code ->
-                    showingLoginWebpage = false
-
-                    viewModel.requestToken(code)
-                }
-            )
-        }
-
         addingNewAccount -> {
             LoginScreen(
-                onLoginRequested = { showingLoginWebpage = true },
+                isError = loginError,
+                onDismissErrorRequested = { viewModel.loginError.value = false },
+                onLoginRequested = viewModel::login,
                 onBackRequested = {
                     if (accountsList.isNullOrEmpty()) {
                         onApplicationEndRequested()

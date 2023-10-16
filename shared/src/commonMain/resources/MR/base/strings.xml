@@ -17,10 +17,18 @@
     <string name="synchronize" comment="A generic string for buttons that synchronize some data with the server.">Synchronize</string>
     <string name="server_status" comment="Shown when there's an error, to launch the server status page, and know if something is down.">Server Status</string>
 
+    <!-- Generic form strings -->
+    <string name="password_hide">Hide Password</string>
+    <string name="password_show">Show Password</string>
+
     <!-- Login Screen -->
     <string name="login_title">Login</string>
-    <string name="login_message">Welcome to the Filà Magenta app. Please press the button below, and a browser will open. Log in through the website. Then authorize the app, and we will work on the rest for you.</string>
+    <string name="login_message">Welcome to the Filà Magenta app. Please introduce your DNI and the password you use for logging into the Filà Magenta website.</string>
+    <string name="login_username">DNI</string>
+    <string name="login_password">Password</string>
     <string name="login_action">Login</string>
+    <string name="login_error_dni">The DNI introduced is not valid.</string>
+    <string name="login_error">DNI or password is not correct.</string>
 
     <!-- Main Navigation bar -->
     <string name="nav_wallet">Wallet</string>
