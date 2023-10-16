@@ -3,7 +3,7 @@
 Arnau Mora Gras (in name of Filà Magenta), with NIF ES21698565C, reserves the right to recollect the information here
 defined about the app. Always following these main rules:
 - All the information collected is only going to be used to solve problems, and improve the app.
-- Any information collected will be published/shared/sold publicly nor privately.
+- Any information collected will never be published/shared/sold publicly nor privately.
 
 If you don't want your data to be collected, there's a toggle in the application to disable data collection completely.
 Take into account that this is opt-out, which means that if you have been using the app without disabling this,
