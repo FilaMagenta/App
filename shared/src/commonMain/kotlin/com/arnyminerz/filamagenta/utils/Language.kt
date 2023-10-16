@@ -12,7 +12,10 @@ data class Language(val langCode: String) {
         val System = Language(LANG_CODE_SYSTEM)
     }
 
-    val localeType: StringDesc.LocaleType.Custom = StringDesc.LocaleType.Custom(langCode)
+    val localeType: StringDesc.LocaleType = if (langCode == LANG_CODE_SYSTEM)
+        StringDesc.LocaleType.System
+    else
+        StringDesc.LocaleType.Custom(langCode)
 
     val displayName: String
         @Composable

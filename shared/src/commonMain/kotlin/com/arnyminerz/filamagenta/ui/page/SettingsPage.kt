@@ -13,8 +13,10 @@ import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -43,6 +45,11 @@ fun SettingsPage() {
     val clipboardManager = LocalClipboardManager.current
 
     var dataCollection by settings.getBooleanState(SettingsKeys.DATA_COLLECTION, true)
+    var selectedLanguage by settings.getStringState(SettingsKeys.LANGUAGE, Language.System.langCode)
+
+    LaunchedEffect(selectedLanguage) {
+        snapshotFlow { selectedLanguage }.collect { StringDesc.localeType = Language(it).localeType }
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -60,16 +67,13 @@ fun SettingsPage() {
         Napier.d("Supported languages: $languages")
 
         SettingsList(
-            default = settings.getStringOrNull(SettingsKeys.LANGUAGE)?.let { Language(it) } ?: Language.System,
+            default = Language(selectedLanguage),
             options = languages,
             dialogTitle = stringResource(MR.strings.settings_language_title),
             headline = stringResource(MR.strings.settings_language_title),
             toString = { it.displayName },
             icon = Icons.Outlined.Language
-        ) {
-            settings[SettingsKeys.LANGUAGE] = it.langCode
-            StringDesc.localeType = it.localeType
-        }
+        ) { selectedLanguage = it.langCode }
 
 
         SettingsSection(
