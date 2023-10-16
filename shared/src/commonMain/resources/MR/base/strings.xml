@@ -24,6 +24,7 @@
     <!-- Login Screen -->
     <string name="login_title">Login</string>
     <string name="login_message">Welcome to the Filà Magenta app. Please introduce your DNI and the password you use for logging into the Filà Magenta website.</string>
+    <string name="login_privacy">When logging in and using the app, you are accepting our {link}privacy policy{/link}.</string>
     <string name="login_username">DNI</string>
     <string name="login_password">Password</string>
     <string name="login_action">Login</string>

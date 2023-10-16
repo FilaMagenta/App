@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -32,17 +34,32 @@ import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.ParagraphStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.UrlAnnotation
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withAnnotation
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
+import com.arnyminerz.filamagenta.storage.SettingsKeys
+import com.arnyminerz.filamagenta.storage.getStringState
+import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.logic.BackHandler
 import com.arnyminerz.filamagenta.ui.reusable.form.FormField
+import com.arnyminerz.filamagenta.utils.Language
+import com.arnyminerz.filamagenta.utils.UriUtils.getPrivacyPolicyUrl
 import com.arnyminerz.filamagenta.utils.isValidDni
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.Job
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalTextApi::class)
 @Composable
 fun LoginScreen(
     isError: Boolean,
@@ -50,6 +67,11 @@ fun LoginScreen(
     onLoginRequested: (username: String, password: String) -> Job,
     onBackRequested: () -> Unit
 ) {
+    val localUriHandler = LocalUriHandler.current
+
+    val selectedLanguage by settings.getStringState(SettingsKeys.LANGUAGE, Language.System.langCode)
+    val privacyPolicyLanguage = selectedLanguage.takeIf { it != Language.System.langCode } ?: "en"
+
     var isLoggingIn by remember { mutableStateOf(false) }
 
     var username by remember { mutableStateOf<String?>(null) }
@@ -147,9 +169,52 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp, bottom = 48.dp)
+                    .padding(top = 16.dp)
             ) {
                 Text(stringResource(MR.strings.login_action))
+            }
+
+            val text = buildAnnotatedString {
+                val source = stringResource(MR.strings.login_privacy)
+                val (linkStart, linkEnd) = "{link}" to "{/link}"
+                val linkStartPosition = source.indexOf(linkStart)
+                val linkEndPosition = source.indexOf(linkEnd)
+
+                Napier.i("Privacy: $source")
+                pushStyle(SpanStyle(color = MaterialTheme.colorScheme.onBackground))
+                pushStyle(ParagraphStyle(textAlign = TextAlign.Center))
+                append(
+                    source.substring(0, linkStartPosition)
+                )
+                withAnnotation(
+                    UrlAnnotation(getPrivacyPolicyUrl(privacyPolicyLanguage))
+                ) {
+                    withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                        append(source.substring(linkStartPosition + linkStart.length, linkEndPosition))
+                    }
+                }
+                append(
+                    source.substring(minOf(source.length - 1, linkEndPosition + linkEnd.length))
+                )
+                pop()
+                pop()
+            }
+
+            ClickableText(
+                text = text,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 48.dp)
+            ) { position ->
+                text.getUrlAnnotations(position, position).forEach { annotation ->
+                    try {
+                        localUriHandler.openUri(annotation.item.url)
+                    } catch (_: Exception) {
+                        Napier.e("Could not open link: ${annotation.item.url}")
+                    }
+                }
             }
         }
     }
