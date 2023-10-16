@@ -1,8 +1,8 @@
 # Filà Magenta App
 
-Arnau Mora Gras (a nom de Filà Magenta), amb NIF ES21698565C, es reserva el dret de recuperar la informació aquí definit sobre l'aplicació. Sempre seguint aquestes regles principals:
+Arnau Mora Gras (en nom de la Filà Magenta), amb NIF ES21698565C, es reserva el dret de recopilar la informació aquí definida sobre l'aplicació i l'ús que es fa d'aquesta. Sempre seguint aquestes regles principals:
 - Tota la informació recollida només s'utilitzarà per resoldre problemes i millorar l'aplicació.
-- Any information collected will never be published/shared/sold publicly nor privately.
+- Qualsevol informació recollida mai es publicarà/compartirà/vendrà públicament ni privadament.
 
 Si no voleu que es recullin les vostres dades, hi ha un interruptor a l'aplicació per desactivar completament la recollida de dades. Tingueu en compte que per defecte la recol·lecció està activada, el que significa que si heu estat utilitzant l'aplicació sense desactivar-la, encara podrien haver-se recollit algunes dades.
 
