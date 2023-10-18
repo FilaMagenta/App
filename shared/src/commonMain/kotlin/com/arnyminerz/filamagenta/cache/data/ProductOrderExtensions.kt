@@ -4,8 +4,6 @@ import com.arnyminerz.filamagenta.cache.ProductOrder
 import com.arnyminerz.filamagenta.network.woo.models.Metadata
 import com.arnyminerz.filamagenta.network.woo.models.Order
 import io.ktor.serialization.kotlinx.json.DefaultJson
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.serialization.encodeToString
@@ -36,20 +34,7 @@ val ProductOrder.metadata: List<Metadata> get() = DefaultJson.decodeFromString(_
  */
 val ProductOrder.hasBeenValidated: Boolean get() = metadata.find { it.key == "validated" }?.value == "true"
 
-const val OrderQRIndexOrderId = 0
-const val OrderQRIndexEventId = 1
-const val OrderQRIndexOrderNumber = 2
-const val OrderQRIndexCustomerId = 3
-const val OrderQRIndexCustomerName = 4
-const val OrderQRFieldsCount = 5
-
-@ExperimentalEncodingApi
-fun ProductOrder.qrcode(): String {
-    val text = "$id/$eventId/$orderNumber/$customerId/$customerName"
-    return Base64.encode(text.encodeToByteArray())
-}
-
 fun validateProductQr(data: String): Boolean {
     val pieces = data.split('/')
-    return pieces.size == OrderQRFieldsCount
+    return pieces.size == OrderQRFieldsCount && pieces[QRTypeIndex] == QRTypeOrder
 }
