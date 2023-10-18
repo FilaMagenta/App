@@ -30,3 +30,14 @@ gradlew build -Pbuildkonfig.flavor=production
 # Translation
 The project is available on [Crowdin](https://crowdin.com/project/fila-magenta-app) for whoever that wants to translate
 the app into their own language.
+
+# Technical Information
+## Metadata
+All the information is either obtained directly from WooCommerce or appended as metadata in the element in question.
+Here is all the custom metadata set by the app.
+
+### Orders
+#### `validated`
+Stores whether the ticket associated with the order has been validated or not.
+
+Possible values: `true`, `false`.

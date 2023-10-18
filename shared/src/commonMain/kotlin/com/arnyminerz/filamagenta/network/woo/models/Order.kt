@@ -15,6 +15,8 @@ class Order(
 
     @SerialName("date_created")
     val dateCreated: LocalDateTime,
+    @SerialName("date_modified")
+    val dateModified: LocalDateTime,
 
     @SerialName("updated_at")
     val updatedAt: String? = null,

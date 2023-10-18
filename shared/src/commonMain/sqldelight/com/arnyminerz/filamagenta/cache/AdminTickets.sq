@@ -1,10 +1,14 @@
+import kotlin.Boolean;
+
 -- Stores a list of all the tickets available in the server for specific events
 CREATE TABLE AdminTickets (
     orderId INTEGER NOT NULL PRIMARY KEY,
+    lastUpdate INTEGER NOT NULL,
     eventId INTEGER NOT NULL,
     orderNumber TEXT NOT NULL,
     customerId INTEGER NOT NULL,
     customerName TEXT NOT NULL,
+    isValidated INTEGER AS Boolean NOT NULL DEFAULT 0,
     _cache_meta_data TEXT NOT NULL
 );
 
@@ -15,10 +19,13 @@ getByEventId:
 SELECT * FROM AdminTickets WHERE eventId=?;
 
 insert:
-INSERT INTO AdminTickets(orderId, eventId, orderNumber, customerId, customerName, _cache_meta_data) VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO AdminTickets(orderId, lastUpdate, eventId, orderNumber, customerId, customerName, isValidated, _cache_meta_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
-UPDATE AdminTickets SET eventId=?, orderNumber=?, customerId=?, customerName=?, _cache_meta_data=? WHERE orderId=?;
+UPDATE AdminTickets SET eventId=?, lastUpdate=?, orderNumber=?, customerId=?, customerName=?, isValidated=?, _cache_meta_data=? WHERE orderId=?;
+
+updateIsValidated:
+UPDATE AdminTickets SET isValidated=?, lastUpdate=? WHERE orderId=?;
 
 deleteByEventId:
 DELETE FROM AdminTickets WHERE eventId=?;

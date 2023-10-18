@@ -496,8 +496,8 @@ class MainViewModel : ViewModel() {
         val customerName = split[OrderQRIndexCustomerName]
 
         Napier.i("Got valid QR, checking if stored...")
-        val exists = database.adminTicketsQueries.getById(orderId).executeAsOneOrNull() != null
-        if (!exists) {
+        val ticket = database.adminTicketsQueries.getById(orderId).executeAsOneOrNull()
+        if (ticket == null) {
             Napier.i("QR is not stored locally")
             _scanResult.emit(QrCodeScanResult.Invalid)
             return@launch
@@ -505,13 +505,10 @@ class MainViewModel : ViewModel() {
 
         Napier.i("QR is stored, checking if reused...")
 
-        val scannedTicket = database.scannedTicketQueries
-            .find(orderId, customerId, eventId)
-            .executeAsOneOrNull()
-        if (scannedTicket != null) {
+        if (ticket.isValidated) {
             _scanResult.emit(QrCodeScanResult.AlreadyUsed)
         } else {
-            Cache.insertOrUpdateScannedTicket(orderId, customerId, eventId)
+            Cache.updateIsValidated(orderId, true)
 
             _scanResult.emit(QrCodeScanResult.Success(customerName, orderNumber))
         }
@@ -524,11 +521,6 @@ class MainViewModel : ViewModel() {
 
             val orders = WooCommerce.Orders.getOrdersForProduct(eventId.toInt())
             for (order: Order in orders) {
-                val isValidated = order.metadata.find { it.key == "validated" }?.value == "true"
-                if (isValidated) {
-                    Cache.insertOrUpdateScannedTicket(order.id.toLong(), order.customerId.toLong(), eventId)
-                }
-
                 order.toProductOrder().forEach(Cache::insertOrUpdateAdminTicket)
             }
         } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
@@ -553,14 +545,17 @@ class MainViewModel : ViewModel() {
 
             val tickets = database.adminTicketsQueries.getByEventId(eventId).executeAsList()
             for (ticket in tickets) {
-                val scannedTickets = database.scannedTicketQueries.getByOrderId(ticket.orderId).executeAsList()
-                for (scannedTicket in scannedTickets) {
+                // First get the order associated with the event
+                val order = database.productOrderQueries.getById(ticket.orderId).executeAsOneOrNull() ?: continue
+                // Now compare the update time of the order with the one stored at the ticket, they should match
+                if (order.lastUpdate < ticket.lastUpdate) {
+                    // If the ticket was updated after the order, add for the update
                     val existingMeta = DefaultJson.decodeFromString<List<Metadata>>(ticket._cache_meta_data)
                         .set("validated", "true")
 
                     update.add(
                         BatchMetadataUpdate.Entry(
-                            scannedTicket.orderId,
+                            ticket.orderId,
                             existingMeta
                         )
                     )

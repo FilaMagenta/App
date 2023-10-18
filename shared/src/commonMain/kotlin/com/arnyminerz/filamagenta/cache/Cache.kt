@@ -8,11 +8,13 @@ import androidx.compose.runtime.remember
 import app.cash.sqldelight.Query
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import com.arnyminerz.filamagenta.cache.data.hasBeenValidated
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
 
 object Cache {
     val events: Flow<List<Event>> =
@@ -23,13 +25,9 @@ object Cache {
 
     val transactions: Query<AccountTransaction> = database.accountTransactionQueries.getAll()
 
-    val scannedTickets: Query<ScannedTicket> = database.scannedTicketQueries.getAll()
-
     fun ordersForEvent(eventId: Long): Query<ProductOrder> = database.productOrderQueries.getByEventId(eventId)
 
     fun adminTicketsForEvent(eventId: Long) = database.adminTicketsQueries.getByEventId(eventId)
-
-    fun scannedTicketsForEvent(eventId: Long) = database.scannedTicketQueries.getByEventId(eventId)
 
     @Composable
     fun <RowType : Any> Query<RowType>.collectListAsState(): State<List<RowType>> {
@@ -127,10 +125,28 @@ object Cache {
         with(order) {
             if (element == null) {
                 // insert
-                database.productOrderQueries.insert(id, eventId, orderNumber, date, customerId, customerName, _cache_meta_data)
+                database.productOrderQueries.insert(
+                    id,
+                    lastUpdate,
+                    eventId,
+                    orderNumber,
+                    date,
+                    customerId,
+                    customerName,
+                    _cache_meta_data
+                )
             } else {
                 // update
-                database.productOrderQueries.update(eventId, orderNumber, date, customerId, customerName, _cache_meta_data, id)
+                database.productOrderQueries.update(
+                    lastUpdate,
+                    eventId,
+                    orderNumber,
+                    date,
+                    customerId,
+                    customerName,
+                    _cache_meta_data,
+                    id
+                )
             }
         }
     }
@@ -148,26 +164,6 @@ object Cache {
         return new
     }
 
-    /**
-     * Inserts a scanned ticket for order [orderId] and customer [customerId].
-     */
-    fun insertOrUpdateScannedTicket(orderId: Long, customerId: Long, eventId: Long) {
-        val element = database.scannedTicketQueries
-            .getByOrderId(orderId)
-            .executeAsOneOrNull()
-        if (element == null) {
-            // insert
-            database.scannedTicketQueries.insert(null, orderId, customerId, eventId)
-        } else {
-            // update
-            database.scannedTicketQueries.update(orderId, customerId, eventId, element.id)
-        }
-    }
-
-    fun removeScannedTicket(id: Long) {
-        database.scannedTicketQueries.delete(id)
-    }
-
     fun insertOrUpdateAdminTicket(order: ProductOrder) {
         val element = database.adminTicketsQueries
             .getById(order.id)
@@ -175,11 +171,37 @@ object Cache {
         with(order) {
             if (element == null) {
                 // insert
-                database.adminTicketsQueries.insert(id, eventId, orderNumber, customerId, customerName, _cache_meta_data)
+                database.adminTicketsQueries.insert(
+                    id,
+                    lastUpdate,
+                    eventId,
+                    orderNumber,
+                    customerId,
+                    customerName,
+                    hasBeenValidated,
+                    _cache_meta_data
+                )
             } else {
                 // update
-                database.adminTicketsQueries.update(eventId, orderNumber, customerId, customerName, _cache_meta_data, id)
+                database.adminTicketsQueries.update(
+                    eventId,
+                    lastUpdate,
+                    orderNumber,
+                    customerId,
+                    customerName,
+                    hasBeenValidated,
+                    _cache_meta_data,
+                    id
+                )
             }
         }
+    }
+
+    /**
+     * Updates the cached value of whether the ticket for the given order has been validated, as well as updating its
+     * last update time.
+     */
+    fun updateIsValidated(orderId: Long, isValidated: Boolean) {
+        database.adminTicketsQueries.updateIsValidated(isValidated, Clock.System.now().toEpochMilliseconds(), orderId)
     }
 }

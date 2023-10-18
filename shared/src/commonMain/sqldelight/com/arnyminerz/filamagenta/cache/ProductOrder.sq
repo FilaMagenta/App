@@ -2,6 +2,7 @@ import kotlinx.datetime.LocalDateTime;
 
 CREATE TABLE ProductOrder (
     id INTEGER PRIMARY KEY NOT NULL,
+    lastUpdate INTEGER NOT NULL,
     eventId INTEGER NOT NULL,
     orderNumber TEXT NOT NULL,
     date INTEGER AS LocalDateTime NOT NULL,
@@ -21,10 +22,10 @@ getByEventId:
 SELECT * FROM ProductOrder WHERE eventId = ?;
 
 insert:
-INSERT INTO ProductOrder(id, eventId, orderNumber, date, customerId, customerName, _cache_meta_data) VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT INTO ProductOrder(id, lastUpdate, eventId, orderNumber, date, customerId, customerName, _cache_meta_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 update:
-UPDATE ProductOrder SET eventId=?, orderNumber=?, date=?, customerId=?, customerName=?, _cache_meta_data=? WHERE id=?;
+UPDATE ProductOrder SET lastUpdate=?, eventId=?, orderNumber=?, date=?, customerId=?, customerName=?, _cache_meta_data=? WHERE id=?;
 
 retainById:
 DELETE FROM ProductOrder WHERE id NOT IN ?;

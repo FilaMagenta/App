@@ -1,6 +1,7 @@
 package com.arnyminerz.filamagenta.network.woo
 
 import com.arnyminerz.filamagenta.BuildKonfig
+import com.arnyminerz.filamagenta.network.server.exception.ServerException
 import com.arnyminerz.filamagenta.network.server.exception.WordpressException
 import com.arnyminerz.filamagenta.network.woo.models.Customer
 import com.arnyminerz.filamagenta.network.woo.models.Order
@@ -11,6 +12,7 @@ import com.arnyminerz.filamagenta.network.woo.update.MetadataUpdate
 import com.arnyminerz.filamagenta.network.woo.update.WooProductUpdate
 import io.github.aakira.napier.Napier
 import io.ktor.client.HttpClient
+import io.ktor.client.call.NoTransformationFoundException
 import io.ktor.client.call.body
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
@@ -25,6 +27,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
@@ -44,6 +47,11 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 
 object WooCommerce {
+    /**
+     * The range of status codes that indicate a successful response from the server.
+     */
+    private val HTTP_CORRECT = 200..299
+
     private val baseUrl = "https://${BuildKonfig.ServerHostname}/wp-json/wc/v3/"
 
     private val client = HttpClient {
@@ -73,12 +81,26 @@ object WooCommerce {
 
     private suspend fun get(
         vararg pathSegments: Any,
+        parameters: Map<String, Any?>,
         block: HttpRequestBuilder.() -> Unit = {}
     ): HttpResponse {
+        val baseUrl = URLBuilder(baseUrl)
+            .appendPathSegments(pathSegments.map { it.toString() })
+            .build()
         return client.get(
-            URLBuilder(baseUrl)
-                .appendPathSegments(pathSegments.map { it.toString() })
-                .build(),
+            URLBuilder(
+                protocol = baseUrl.protocol,
+                host = baseUrl.host,
+                port = baseUrl.port,
+                pathSegments = baseUrl.pathSegments,
+                parameters = parameters {
+                    for ((k, v) in parameters) {
+                        if (v != null) {
+                            set(k, v.toString())
+                        }
+                    }
+                }
+            ).build(),
             block
         )
     }
@@ -96,6 +118,7 @@ object WooCommerce {
      * @return The list of objects retrieved from the endpoint.
      *
      * @throws WordpressException If the request fails or returns an error status code.
+     * @throws ServerException When there's an error while connecting to the server.
      */
     private suspend fun <T : Any> getList(
         type: TypeInfo,
@@ -109,44 +132,35 @@ object WooCommerce {
 
         Napier.v("Fetching page $page[$perPage] for ${pathSegments.joinToString("/")}")
 
-        val baseUrl = URLBuilder(baseUrl)
-            .appendPathSegments(pathSegments.map { it.toString() })
-            .build()
-        client.get(
-            URLBuilder(
-                protocol = baseUrl.protocol,
-                host = baseUrl.host,
-                port = baseUrl.port,
-                pathSegments = baseUrl.pathSegments,
-                parameters = parameters {
-                    for ((k, v) in parameters) {
-                        if (v != null) {
-                            set(k, v.toString())
-                        }
-                    }
-
+        var response: HttpResponse? = null
+        try {
+            response = get(
+                *pathSegments,
+                parameters = parameters.toMutableMap().apply {
                     set("per_page", perPage.toString())
                     set("page", page.toString())
-                }
-            ).build(),
-            block
-        ).apply {
-            if (status == HttpStatusCode.OK) {
-                val pages = headers["X-WP-TotalPages"]?.toInt() ?: 1
+                },
+                block = block
+            )
+            if (response.status == HttpStatusCode.OK) {
+                val pages = response.headers["X-WP-TotalPages"]?.toInt() ?: 1
                 if (page < pages) {
                     builder.addAll(
                         getList(type, *pathSegments, page = page + 1, perPage = perPage, block = block)
                     )
                 }
                 builder.addAll(
-                    body<List<T>>(type)
+                    response.body<List<T>>(type)
                 )
             } else {
                 throw WordpressException(
                     pathSegments.joinToString("/"),
-                    body()
+                    response.body()
                 )
             }
+        } catch (e: NoTransformationFoundException) {
+            Napier.e("Server didn't return the correct encoding.", e)
+            throw ServerException(response?.status, response?.bodyAsText())
         }
 
         return builder
@@ -164,6 +178,7 @@ object WooCommerce {
      * @return The list of objects retrieved from the endpoint.
      *
      * @throws WordpressException If the request fails or returns an error status code.
+     * @throws ServerException When there's an error while connecting to the server.
      */
     private suspend inline fun <reified T : Any> getList(
         vararg pathSegments: Any,
@@ -194,7 +209,7 @@ object WooCommerce {
         }
     }
 
-    private suspend inline fun <reified T: Any> post(
+    private suspend inline fun <reified T : Any> post(
         body: T,
         vararg pathSegments: Any,
         block: HttpRequestBuilder.() -> Unit = {}
@@ -338,7 +353,7 @@ object WooCommerce {
 
         suspend fun batchUpdateMetadata(data: BatchMetadataUpdate) {
             post(data, "orders", "batch").apply {
-                require(status.value in 200..299) {
+                require(status.value in HTTP_CORRECT) {
                     "Server returned a non-successful status code."
                 }
             }

@@ -60,7 +60,6 @@ import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.data.qrcode
-import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.image.QRCodeGenerator
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
@@ -94,7 +93,6 @@ fun EventScreen(
 
     val orders by Cache.ordersForEvent(event.id).collectListAsState()
     val adminTickets by Cache.adminTicketsForEvent(event.id).collectListAsState()
-    val scannedTickets by Cache.scannedTicketsForEvent(event.id).collectListAsState()
 
     val onEditRequested = viewModel::edit.takeIf { isAdmin == true }
 
@@ -102,13 +100,12 @@ fun EventScreen(
 
     val usersList = adminTickets
         .map { ticket ->
-            (scannedTickets.find {
-                it.orderId == ticket.orderId && it.customerId == ticket.customerId
-            } != null) to ticket
+            ticket.isValidated to ticket
         }
         .sortedWith(
             compareBy({ !it.first }, { it.second.customerName })
         )
+    val scannedTicketsCount = usersList.count { it.first }
 
     Scaffold(
         topBar = {
@@ -124,7 +121,7 @@ fun EventScreen(
                 actions = {
                     if (isAdmin == true && adminTickets.isNotEmpty()) {
                         Text(
-                            text = "${scannedTickets.size} / ${adminTickets.size}",
+                            text = "$scannedTicketsCount / ${adminTickets.size}",
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(MaterialTheme.colorScheme.secondary)
@@ -173,10 +170,9 @@ fun EventScreen(
                             ) {
                                 IconButton(
                                     onClick = {
-                                        Cache.insertOrUpdateScannedTicket(
+                                        Cache.updateIsValidated(
                                             orderId = ticket.orderId,
-                                            customerId = ticket.customerId,
-                                            eventId = event.id
+                                            isValidated = true
                                         )
                                     }
                                 ) {
@@ -192,10 +188,10 @@ fun EventScreen(
                             ) {
                                 IconButton(
                                     onClick = {
-                                        val ticket = scannedTickets.find {
-                                            it.orderId == ticket.orderId && it.customerId == ticket.customerId
-                                        }!!
-                                        Cache.removeScannedTicket(ticket.id)
+                                        Cache.updateIsValidated(
+                                            orderId = ticket.orderId,
+                                            isValidated = false
+                                        )
                                     }
                                 ) {
                                     Icon(
