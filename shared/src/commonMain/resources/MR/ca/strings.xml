@@ -30,6 +30,7 @@
     <!-- Main Navigation bar -->
     <string name="nav_wallet">Comptes</string>
     <string name="nav_events">Actes</string>
+    <string name="nav_profile">Profile</string>
     <string name="nav_settings">Ajustos</string>
     <!-- Event item -->
     <string name="event_info">Informació de l\'esdeveniment</string>
