@@ -101,4 +101,20 @@ expect class Accounts {
      * @param customerId The ID to store.
      */
     fun setCustomerId(account: Account, customerId: Int)
+
+    /**
+     * Retrieves the full name of the given account.
+     *
+     * @param account The account for which to retrieve the full name.
+     * @return The full name of the account, or null if the account does not have a full name.
+     */
+    fun getFullName(account: Account): String?
+
+    /**
+     * Sets the full name of the account.
+     *
+     * @param account the account to update with the full name
+     * @param name the new full name to set
+     */
+    fun setFullName(account: Account, name: String)
 }

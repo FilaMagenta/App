@@ -47,6 +47,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 // Compose Dependencies
+                implementation(compose.animation)
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material3)
@@ -63,6 +64,7 @@ kotlin {
                 api(libs.multiplatform.viewmodel)
                 api(libs.napier)
                 api(libs.sentry.multiplatform)
+                api(libs.libsodium)
 
                 // Moko Resources
                 api(libs.moko.resources)
@@ -179,6 +181,9 @@ buildkonfig {
         buildConfigField(STRING, "Languages", languages.joinToString(","))
 
         buildConfigField(STRING, "ReleaseName", sharedVersionName)
+
+        buildConfigField(STRING, "QrCodeKey", properties.getProperty("encryption.qrcode.key"))
+        buildConfigField(STRING, "QrCodeNonce", properties.getProperty("encryption.qrcode.nonce"))
     }
 
     targetConfigs {

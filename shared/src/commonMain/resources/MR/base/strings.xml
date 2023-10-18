@@ -34,6 +34,7 @@
     <!-- Main Navigation bar -->
     <string name="nav_wallet">Wallet</string>
     <string name="nav_events">Events</string>
+    <string name="nav_profile">Profile</string>
     <string name="nav_settings">Settings</string>
 
     <!-- Event item -->

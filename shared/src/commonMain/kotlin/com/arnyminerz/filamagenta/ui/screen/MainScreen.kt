@@ -42,6 +42,7 @@ import com.arnyminerz.filamagenta.ui.logic.BackHandler
 import com.arnyminerz.filamagenta.ui.screen.model.IntroScreen
 import com.arnyminerz.filamagenta.ui.screen.model.IntroScreenPage
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import com.ionspin.kotlin.crypto.LibsodiumInitializer
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
 import dev.icerock.moko.resources.desc.StringDesc
@@ -86,6 +87,9 @@ fun MainScreen(
     LaunchedEffect(Unit) {
         // Initialize logging library
         Napier.base(DebugAntilog())
+
+        // Initialize libsodium
+        LibsodiumInitializer.initialize()
 
         // Set the locale to display
         StringDesc.localeType = settings.getStringOrNull(SettingsKeys.LANGUAGE)

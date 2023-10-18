@@ -21,6 +21,7 @@ actual class Accounts(private val am: AccountManager) {
         const val UserDataEmail = "email"
         const val UserDataIdSocio = "id_socio"
         const val UserDataCustomerId = "customer_id"
+        const val UserDataFullName = "full_name"
     }
 
     private val accountTypeFilter: (android.accounts.Account) -> Boolean = { it.type == AccountType }
@@ -158,5 +159,25 @@ actual class Accounts(private val am: AccountManager) {
      */
     actual fun getEmail(account: Account): String {
         return am.getUserData(account.androidAccount, UserDataEmail)!!
+    }
+
+    /**
+     * Retrieves the full name of the given account.
+     *
+     * @param account The account for which to retrieve the full name.
+     * @return The full name of the account, or null if the account does not have a full name.
+     */
+    actual fun getFullName(account: Account): String? {
+        return am.getUserData(account.androidAccount, UserDataFullName)
+    }
+
+    /**
+     * Sets the full name of the account.
+     *
+     * @param account the account to update with the full name
+     * @param name the new full name to set
+     */
+    actual fun setFullName(account: Account, name: String) {
+        am.setUserData(account.androidAccount, UserDataFullName, name)
     }
 }

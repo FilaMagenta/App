@@ -1,10 +1,13 @@
 package com.arnyminerz.filamagenta.cache.data
 
+import com.arnyminerz.filamagenta.account.Account
 import com.arnyminerz.filamagenta.cache.ProductOrder
+import com.arnyminerz.filamagenta.cache.data.qr.AccountQRCode
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 const val QRTypeOrder = "ORDER"
+const val QRTypeAccount = "ACCOUNT"
 
 const val QRTypeIndex = 0
 
@@ -19,4 +22,10 @@ const val OrderQRFieldsCount = 6
 fun ProductOrder.qrcode(): String {
     val text = "$QRTypeOrder/$id/$eventId/$orderNumber/$customerId/$customerName"
     return Base64.encode(text.encodeToByteArray())
+}
+
+@ExperimentalEncodingApi
+@ExperimentalUnsignedTypes
+fun Account.qrcode(): AccountQRCode {
+    return AccountQRCode(this)
 }

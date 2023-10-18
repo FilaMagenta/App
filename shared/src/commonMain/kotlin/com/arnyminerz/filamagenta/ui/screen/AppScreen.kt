@@ -11,6 +11,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Wallet
 import androidx.compose.material.icons.rounded.Refresh
@@ -33,6 +34,7 @@ import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarItem
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarScaffold
 import com.arnyminerz.filamagenta.ui.page.EventsPage
+import com.arnyminerz.filamagenta.ui.page.ProfilePage
 import com.arnyminerz.filamagenta.ui.page.SettingsPage
 import com.arnyminerz.filamagenta.ui.page.WalletPage
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
@@ -46,6 +48,10 @@ val appScreenItems = listOf(
     NavigationBarItem(
         icon = Icons.Outlined.CalendarToday,
         label = { stringResource(MR.strings.nav_events) }
+    ),
+    NavigationBarItem(
+        icon = Icons.Outlined.Person,
+        label = { stringResource(MR.strings.nav_profile) }
     ),
     NavigationBarItem(
         icon = Icons.Outlined.Settings,
@@ -113,17 +119,13 @@ fun AppScreen(
     ) { page ->
         when (page) {
             // Wallet
-            0 -> {
-                WalletPage(viewModel)
-            }
+            0 -> WalletPage(viewModel)
             // Events
-            1 -> {
-                EventsPage(viewModel)
-            }
+            1 -> EventsPage(viewModel)
+            // Profile
+            2 -> ProfilePage(viewModel)
             // Settings
-            2 -> {
-                SettingsPage(viewModel)
-            }
+            3 -> SettingsPage(viewModel)
         }
     }
 }

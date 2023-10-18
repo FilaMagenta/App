@@ -26,6 +26,7 @@ import com.arnyminerz.filamagenta.network.database.SqlServer
 import com.arnyminerz.filamagenta.network.database.SqlTunnelEntry
 import com.arnyminerz.filamagenta.network.database.SqlTunnelException
 import com.arnyminerz.filamagenta.network.database.getLong
+import com.arnyminerz.filamagenta.network.database.getString
 import com.arnyminerz.filamagenta.network.httpClient
 import com.arnyminerz.filamagenta.network.oauth.LoginData
 import com.arnyminerz.filamagenta.network.server.exception.WordpressException
@@ -79,6 +80,9 @@ class MainViewModel : ViewModel() {
     private val _isLoadingEvents = MutableStateFlow(false)
     val isLoadingEvents: StateFlow<Boolean> get() = _isLoadingEvents
 
+    private val _isLoadingAccount = MutableStateFlow(false)
+    val isLoadingAccount: StateFlow<Boolean> get() = _isLoadingAccount
+
     private val _isLoadingOrders = MutableStateFlow(false)
     val isLoadingOrders: StateFlow<Boolean> get() = _isLoadingOrders
 
@@ -102,6 +106,10 @@ class MainViewModel : ViewModel() {
 
     private val _error = MutableStateFlow<Throwable?>(null)
     val error: StateFlow<Throwable?> get() = _error
+
+
+    private val _accountFullName = MutableStateFlow<String?>(null)
+    val accountFullName: StateFlow<String?> get() = _accountFullName
 
     /**
      * Whether there's something being loaded in the background.
@@ -129,6 +137,8 @@ class MainViewModel : ViewModel() {
         ::refreshWallet,
         // Events
         ::refreshEvents,
+        // Account
+        ::refreshAccount,
         // Settings
         null
     )
@@ -142,6 +152,8 @@ class MainViewModel : ViewModel() {
         isLoadingWallet,
         // Events
         isLoadingEvents,
+        // Account
+        isLoadingAccount,
         // Settings
         MutableStateFlow(false)
     )
@@ -158,7 +170,7 @@ class MainViewModel : ViewModel() {
             pathSegments = listOf("wp-login.php")
         ).buildString()
 
-    fun getAuthorizeUrl() =
+    private fun getAuthorizeUrl() =
         // First, request the server
         URLBuilder(
             protocol = URLProtocol.HTTPS,
@@ -371,6 +383,48 @@ class MainViewModel : ViewModel() {
     }
 
     /**
+     * This method is used to get the full name of an account.
+     * If the full name is already stored in the database, it is retrieved from there.
+     * Otherwise, a query is made to fetch the full name from the "tbSocios" table and store it in the database for
+     * future use.
+     *
+     * @return The full name of the account.
+     *
+     * @throws IllegalStateException if the full name is null after fetching from the database.
+     * @throws SqlTunnelException if there is an error in the SQLServer query.
+     */
+    private suspend fun getOrFetchFullName(): String {
+        val account = account.value!!
+        val idSocio = getOrFetchIdSocio()
+        var fullName = accounts.getFullName(account)
+        if (fullName == null) {
+            try {
+                Napier.i("Account doesn't have an stored full name. Searching now...")
+                val result = SqlServer.query("SELECT Nombre, Apellidos FROM tbSocios WHERE idSocio=$idSocio;")
+
+                // we only have a query, so fetch that one
+                val entries = result[0]
+                require(entries.isNotEmpty()) { "Could not find user in tbSocios." }
+
+                // There should be one resulting entry, so take that one. We have already checked that there's one
+                val row = entries[0]
+
+                val name = row.getString("Nombre")
+                val surname = row.getString("Apellidos")
+                fullName = "$name $surname"
+                accounts.setFullName(account, fullName)
+
+                Napier.i("Updated full name for $account: $fullName")
+            } catch (e: SqlTunnelException) {
+                Napier.e("SQLServer returned an error.", throwable = e)
+            }
+        }
+        checkNotNull(fullName) { "fullName must not be null." }
+
+        return fullName
+    }
+
+    /**
      * Fetches all the transactions from the SQL server, and updates the local cache.
      */
     fun refreshWallet() = viewModelScope.launch(Dispatchers.IO) {
@@ -574,4 +628,9 @@ class MainViewModel : ViewModel() {
      * Dismisses the current value of [error], if any.
      */
     fun dismissError() = viewModelScope.launch { _error.emit(null) }
+
+    fun refreshAccount() = viewModelScope.launch(Dispatchers.IO) {
+        val name = getOrFetchFullName()
+        _accountFullName.emit(name)
+    }
 }
