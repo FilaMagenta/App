@@ -101,6 +101,7 @@
     <string name="scan_result_reused">Tiquet Reutilitzat!</string>
     <string name="scan_result_invalid">Tiquet Invàlid!</string>
     <string name="scan_result_not_viewing">Not viewing any event!</string>
+    <string name="scan_result_tickets_empty">Ticket list not downloaded!</string>
     <!-- Error Dialog -->
     <string name="error_dialog_title">Error</string>
     <string name="error_dialog_message">El servidor ha retornat un error al realitzar una petició, per favor, comparteix aquesta informació amb un administrador:</string>
