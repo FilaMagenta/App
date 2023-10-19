@@ -11,6 +11,7 @@ function prop {
   echo ANDROID_VERSION_NAME="$(prop 'android.versionName')";
   echo ANDROID_VERSION_CODE="$(prop 'android.versionCode')";
   echo IOS_VERSION_NAME="$(prop 'ios.versionName')"
+  echo IN_APP_UPDATE_PRIORITY="$(python3 scripts/get_latest_version.py)"
 } >> $GITHUB_ENV
 
 #if [ -f "$file" ]

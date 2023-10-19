@@ -20,6 +20,10 @@ concurrency:
 jobs:
   update_release_draft:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [ '3.10' ]
+        jdk: [ 17 ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,9 +35,14 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'adopt'
-          java-version: '17'
+          java-version: ${{ matrix.jdk }}
           java-package: jdk
           cache: 'gradle'
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
 
       - name: Prepare keystore
         run: echo ${{ secrets.KEYSTORE_BASE64 }} | base64 -d > keystore.jks
@@ -68,6 +77,8 @@ jobs:
 
       - name: Get version tag
         id: get_version_tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/load_version.sh
 
       - name: Log version tag
@@ -80,6 +91,7 @@ jobs:
           echo "-- Android --"
           echo "Version Code: $ANDROID_VERSION_CODE"
           echo "Version Name: $ANDROID_VERSION_NAME"
+          echo "IAUP: $IN_APP_UPDATE_PRIORITY"
           echo "-- --- --"
           echo ""
           echo "-- iOS --"
@@ -105,5 +117,5 @@ jobs:
           packageName: com.arnyminerz.filamagenta.android
           releaseFiles: ./androidApp/build/outputs/bundle/release/androidApp-release.aab
           track: internal
-          inAppUpdatePriority: 2
+          inAppUpdatePriority: "${{ env.IN_APP_UPDATE_PRIORITY }}"
           status: completed
