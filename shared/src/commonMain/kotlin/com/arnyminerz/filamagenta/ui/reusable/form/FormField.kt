@@ -1,7 +1,6 @@
 package com.arnyminerz.filamagenta.ui.reusable.form
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -27,7 +26,6 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.ui.modifier.autofill
 import dev.icerock.moko.resources.compose.stringResource
@@ -40,10 +38,12 @@ fun FormField(
     label: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     allCaps: Boolean = false,
     isPassword: Boolean = false,
     error: String? = null,
     autofillType: AutofillType? = null,
+    supportingText: String? = null,
     thisFocusRequester: FocusRequester? = null,
     nextFocusRequester: FocusRequester? = null,
     onGo: (() -> Unit)? = null
@@ -64,7 +64,6 @@ fun FormField(
         onValueChange = ::sendValueChange,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
             .let { mod ->
                 if (thisFocusRequester != null)
                     mod.focusRequester(thisFocusRequester)
@@ -84,6 +83,8 @@ fun FormField(
         label = { Text(label) },
         supportingText = if (value != null && error != null) {
             { Text(error) }
+        } else if (supportingText != null) {
+            { Text(supportingText) }
         } else null,
         isError = value != null && error != null,
         trailingIcon = if (isPassword) {
@@ -107,6 +108,7 @@ fun FormField(
         singleLine = true,
         maxLines = 1,
         enabled = enabled,
+        readOnly = readOnly,
         keyboardOptions = KeyboardOptions(
             capitalization = if (allCaps) KeyboardCapitalization.Characters else KeyboardCapitalization.None,
             keyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Text,
