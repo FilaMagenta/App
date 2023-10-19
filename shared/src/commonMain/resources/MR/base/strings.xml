@@ -120,4 +120,13 @@
     <string name="error_dialog_code">Code: </string>
     <string name="error_dialog_msg">Message: </string>
     <string name="error_dialog_trace">Stacktrace: </string>
+
+    <!-- Profile Page -->
+    <string name="profile_title_personal_data">Personal Data</string>
+    <string name="profile_email">Email</string>
+    <string name="profile_address">Address</string>
+    <string name="profile_postal_code">PC</string>
+    <string name="profile_city">City</string>
+    <string name="profile_birthday">Birthday</string>
+    <string name="profile_warning_email_match">The email stored in the database and the one in the website do not match. Please contact with an administrator to solve the issue.</string>
 </resources>
