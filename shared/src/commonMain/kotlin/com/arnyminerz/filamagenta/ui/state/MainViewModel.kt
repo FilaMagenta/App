@@ -423,6 +423,7 @@ class MainViewModel : ViewModel() {
                     "tbSocios.Apellidos",
                     "tbSocios.Direccion",
                     "tbCodPostales.CodPostal",
+                    "tbCodPostales.Poblacion",
                     "tbSocios.FecNacimiento",
                     "tbSocios.TlfParticular",
                     "tbSocios.TlfMovil",
@@ -446,6 +447,7 @@ class MainViewModel : ViewModel() {
                 val surname = row.getString("Apellidos")!!
                 val address = row.getString("Direccion")!!
                 val postalCode = row.getLong("CodPostal")!!
+                val city = row.getString("Poblacion")!!.uppercase().replace("ALCOY", "ALCOI")
                 val birthday = row.getDate("FecNacimiento")!!
                 val particularPhone = row.getString("TlfParticular")
                 val mobilePhone = row.getString("TlfMovil")
@@ -456,6 +458,7 @@ class MainViewModel : ViewModel() {
                     surname,
                     address,
                     postalCode,
+                    city,
                     birthday,
                     particularPhone,
                     mobilePhone,

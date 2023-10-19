@@ -9,6 +9,7 @@ data class AccountData(
     val surname: String,
     val address: String,
     val postalCode: Long,
+    val city: String,
     val birthday: LocalDate,
     val particularPhone: String?,
     val mobilePhone: String?,
