@@ -23,7 +23,7 @@ moko-graphics = "0.9.0"
 napier = "2.6.1"
 qrcode = "3.3.0"
 sentry = "0.2.1"
-sentry-android = "6.31.0"
+sentry-android = "6.32.0"
 sqldelight = "2.0.0"
 
 [libraries]
