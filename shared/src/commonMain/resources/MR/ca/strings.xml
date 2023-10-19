@@ -15,6 +15,8 @@
     <string name="copy" comment="Copies something to the clipboard">Copia</string>
     <string name="synchronize" comment="A generic string for buttons that synchronize some data with the server.">Sincronitzar</string>
     <string name="server_status" comment="Shown when there's an error, to launch the server status page, and know if something is down.">Estat del Servidor</string>
+    <string name="restart" comment="An action button that restarts the app">Restart</string>
+    <string name="install" comment="Performs an install in the app, usually means installing an update">Install</string>
     <!-- Generic form strings -->
     <string name="password_hide">Amagar contrasenya</string>
     <string name="password_show">Mostrar contrasenya</string>
@@ -118,4 +120,7 @@
     <string name="profile_city">City</string>
     <string name="profile_birthday">Birthday</string>
     <string name="profile_warning_email_match">The email stored in the database and the one in the website do not match. Please contact with an administrator to solve the issue.</string>
+    <!-- Update Available dialog -->
+    <string name="update_available_dialog_title">Update Available</string>
+    <string name="update_available_dialog_message">Restart the app to install the update</string>
 </resources>
