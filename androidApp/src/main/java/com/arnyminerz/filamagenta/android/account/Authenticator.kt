@@ -39,9 +39,9 @@ class Authenticator(private val context: Context) : AbstractAccountAuthenticator
         authTokenType: String,
         options: Bundle?
     ): Bundle {
-        var token = am.peekAuthToken(account, Accounts.TokenType)
-        val refreshToken = am.getUserData(account, Accounts.UserDataRefreshToken)
-        val tokenExpiration: Instant = am.getUserData(account, Accounts.UserDataExpiration)
+        var token = am.peekAuthToken(account, Accounts.TOKEN_TYPE)
+        val refreshToken = am.getUserData(account, Accounts.USER_DATA_REFRESH_TOKEN)
+        val tokenExpiration: Instant = am.getUserData(account, Accounts.USER_DATA_EXPIRATION)
             .toLong()
             .let(Instant::ofEpochMilli)
         val now = Instant.now()

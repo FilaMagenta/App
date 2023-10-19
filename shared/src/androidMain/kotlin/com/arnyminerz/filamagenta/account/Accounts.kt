@@ -12,24 +12,25 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.Instant
 import kotlinx.serialization.encodeToString
 
+@Suppress("TooManyFunctions")
 actual class Accounts(private val am: AccountManager) {
     companion object {
-        const val AccountType = "com.arnyminerz.filamagenta.account"
-        const val TokenType = "com.arnyminerz.filamagenta.account.token"
+        const val ACCOUNT_TYPE = "com.arnyminerz.filamagenta.account"
+        const val TOKEN_TYPE = "com.arnyminerz.filamagenta.account.token"
 
-        const val UserDataExpiration = "token_expiration"
-        const val UserDataRefreshToken = "refresh_token"
-        const val UserDataAdmin = "is_admin"
-        const val UserDataEmail = "email"
-        const val UserDataIdSocio = "id_socio"
-        const val UserDataCustomerId = "customer_id"
-        const val UserDataData = "data"
+        const val USER_DATA_EXPIRATION = "token_expiration"
+        const val USER_DATA_REFRESH_TOKEN = "refresh_token"
+        const val USER_DATA_IS_ADMIN = "is_admin"
+        const val USER_DATA_EMAIL = "email"
+        const val USER_DATA_ID_SOCIO = "id_socio"
+        const val USER_DATA_CUSTOMER_ID = "customer_id"
+        const val USER_DATA_DATA = "data"
     }
 
-    private val accountTypeFilter: (android.accounts.Account) -> Boolean = { it.type == AccountType }
+    private val accountTypeFilter: (android.accounts.Account) -> Boolean = { it.type == ACCOUNT_TYPE }
 
     actual fun getAccounts(): List<Account> {
-        return am.getAccountsByType(AccountType)
+        return am.getAccountsByType(ACCOUNT_TYPE)
             .filter(accountTypeFilter)
             .map { Account(it.name) }
     }
@@ -40,11 +41,11 @@ actual class Accounts(private val am: AccountManager) {
         check(am.addAccountExplicitly(aa, "", Bundle())) {
             "Could not add account. Either account already exists, user is locked, or another error has occurred."
         }
-        am.setAuthToken(aa, TokenType, token.token)
-        am.setUserData(aa, UserDataExpiration, token.expiration.toEpochMilliseconds().toString())
-        am.setUserData(aa, UserDataRefreshToken, token.refreshToken)
-        am.setUserData(aa, UserDataAdmin, isAdmin.toString())
-        am.setUserData(aa, UserDataEmail, email)
+        am.setAuthToken(aa, TOKEN_TYPE, token.token)
+        am.setUserData(aa, USER_DATA_EXPIRATION, token.expiration.toEpochMilliseconds().toString())
+        am.setUserData(aa, USER_DATA_REFRESH_TOKEN, token.refreshToken)
+        am.setUserData(aa, USER_DATA_IS_ADMIN, isAdmin.toString())
+        am.setUserData(aa, USER_DATA_EMAIL, email)
     }
 
     actual fun removeAccount(account: Account) {
@@ -58,8 +59,8 @@ actual class Accounts(private val am: AccountManager) {
     actual fun updateToken(account: Account, token: String, expiration: Instant) {
         /** The equivalent of [account] for Android. */
         val aa = account.androidAccount
-        am.setAuthToken(aa, TokenType, token)
-        am.setUserData(aa, UserDataExpiration, expiration.toEpochMilliseconds().toString())
+        am.setAuthToken(aa, TOKEN_TYPE, token)
+        am.setUserData(aa, USER_DATA_EXPIRATION, expiration.toEpochMilliseconds().toString())
     }
 
     private val accountsLive = MutableStateFlow<List<Account>?>(value = null)
@@ -81,7 +82,7 @@ actual class Accounts(private val am: AccountManager) {
                 accountsUpdatedListener,
                 Handler(looper),
                 true,
-                arrayOf(AccountType)
+                arrayOf(ACCOUNT_TYPE)
             )
         } else {
             am.addOnAccountsUpdatedListener(
@@ -105,7 +106,7 @@ actual class Accounts(private val am: AccountManager) {
      * @return `true` if [account] is an administrator, `false` otherwise.
      */
     actual fun isAdmin(account: Account): Boolean {
-        return am.getUserData(account.androidAccount, UserDataAdmin).toBoolean()
+        return am.getUserData(account.androidAccount, USER_DATA_IS_ADMIN).toBoolean()
     }
 
     /**
@@ -117,7 +118,7 @@ actual class Accounts(private val am: AccountManager) {
      * @return The ID of the user in the SQLServer database, or null if none is stored.
      */
     actual fun getIdSocio(account: Account): Int? {
-        return am.getUserData(account.androidAccount, UserDataIdSocio)?.toIntOrNull()
+        return am.getUserData(account.androidAccount, USER_DATA_ID_SOCIO)?.toIntOrNull()
     }
 
     /**
@@ -128,7 +129,7 @@ actual class Accounts(private val am: AccountManager) {
      * @param idSocio The ID to store.
      */
     actual fun setIdSocio(account: Account, idSocio: Int) {
-        am.setUserData(account.androidAccount, UserDataIdSocio, idSocio.toString())
+        am.setUserData(account.androidAccount, USER_DATA_ID_SOCIO, idSocio.toString())
     }
 
     /**
@@ -140,7 +141,7 @@ actual class Accounts(private val am: AccountManager) {
      * @return The ID of the user in WooCommerce, or null if none is stored.
      */
     actual fun getCustomerId(account: Account): Int? {
-        return am.getUserData(account.androidAccount, UserDataCustomerId)?.toIntOrNull()
+        return am.getUserData(account.androidAccount, USER_DATA_CUSTOMER_ID)?.toIntOrNull()
     }
 
     /**
@@ -151,7 +152,7 @@ actual class Accounts(private val am: AccountManager) {
      * @param customerId The ID to store.
      */
     actual fun setCustomerId(account: Account, customerId: Int) {
-        am.setUserData(account.androidAccount, UserDataCustomerId, customerId.toString())
+        am.setUserData(account.androidAccount, USER_DATA_CUSTOMER_ID, customerId.toString())
     }
 
     /**
@@ -160,7 +161,7 @@ actual class Accounts(private val am: AccountManager) {
      * @return The email stored for the given [account].
      */
     actual fun getEmail(account: Account): String {
-        return am.getUserData(account.androidAccount, UserDataEmail)!!
+        return am.getUserData(account.androidAccount, USER_DATA_EMAIL)!!
     }
 
     /**
@@ -170,7 +171,7 @@ actual class Accounts(private val am: AccountManager) {
      * @return The account data for the specified account, or null if no account data is available.
      */
     actual fun getAccountData(account: Account): AccountData? {
-        val dataString = am.getUserData(account.androidAccount, UserDataData) ?: return null
+        val dataString = am.getUserData(account.androidAccount, USER_DATA_DATA) ?: return null
         return DefaultJson.decodeFromString<AccountData>(dataString)
     }
 
@@ -181,6 +182,6 @@ actual class Accounts(private val am: AccountManager) {
      * @param data The account data to set.
      */
     actual fun setAccountData(account: Account, data: AccountData) {
-        am.setUserData(account.androidAccount, UserDataData, DefaultJson.encodeToString(data))
+        am.setUserData(account.androidAccount, USER_DATA_DATA, DefaultJson.encodeToString(data))
     }
 }
