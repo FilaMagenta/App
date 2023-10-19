@@ -30,6 +30,7 @@ import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
 import com.arnyminerz.filamagenta.ui.reusable.LoadingBox
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import io.github.aakira.napier.Napier
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +42,8 @@ import kotlinx.coroutines.launch
 fun ProfilePage(viewModel: MainViewModel) {
     val viewModelAccount by viewModel.account.collectAsState()
 
-    val accountFullName by viewModel.accountFullName.collectAsState()
+    val loadingAccountData by viewModel.isLoadingAccount.collectAsState(false)
+    val accountData by viewModel.accountData.collectAsState()
 
     viewModelAccount?.let { account ->
         val qr = account.qrcode()
@@ -57,10 +59,13 @@ fun ProfilePage(viewModel: MainViewModel) {
         }
 
         DisposableEffect(account) {
-            val coroutine = if (accountFullName == null) {
+            val coroutine = if (accountData == null && !loadingAccountData) {
                 viewModel.refreshAccount()
             } else {
                 null
+            }
+            coroutine?.invokeOnCompletion {
+                if (it != null) Napier.e("Account refresh failed.", throwable = it)
             }
 
             onDispose { coroutine?.cancel() }
@@ -80,10 +85,10 @@ fun ProfilePage(viewModel: MainViewModel) {
                     .padding(top = 32.dp)
             )
             Text(
-                text = accountFullName ?: "0123456789",
+                text = accountData?.fullName ?: "0123456789",
                 modifier = Modifier
                     .placeholder(
-                        visible = accountFullName == null
+                        visible = accountData == null
                     )
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp)

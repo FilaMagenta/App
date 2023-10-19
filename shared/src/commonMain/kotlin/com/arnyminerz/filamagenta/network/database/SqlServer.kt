@@ -47,7 +47,7 @@ object SqlServer {
         )
 
         for (sql in queries) {
-            Napier.d("SQL :: $sql")
+            Napier.d("SQL :: $sql", tag = "SQL")
         }
 
         httpClient.post(
@@ -57,14 +57,21 @@ object SqlServer {
                 pathSegments = listOf("query")
             ).build()
         ) {
+            Napier.v("Setting request content type...")
             contentType(ContentType.Application.Json)
+            Napier.v("Setting request body...")
             setBody(query)
+            Napier.v("Request completed.")
         }.apply {
+            Napier.v("Processing server response...", tag = "SQL")
             val body = body<SqlTunnelResponse>()
             if (!body.successful || status.value < HTTP_OK_MIN || status.value > HTTP_OK_MAX) {
-                throw SqlTunnelException(status, body.error?.message)
+                SqlTunnelException(status, body.error?.message)
+                    .also { Napier.e("Server returned an exception.", throwable = it, tag = "SQL") }
+                    .also { throw it }
             }
 
+            Napier.v("Request successful, processing results...", tag = "SQL")
             val results = body.results?.takeIf { it.isNotEmpty() } ?: return emptyList()
             // "results" has one list for each query, and that list contains all the columns one after the other
             return results.map { columns ->
@@ -118,10 +125,12 @@ object SqlServer {
      * @see query
      */
     suspend fun select(table: String, vararg parameters: Any): List<List<List<SqlTunnelEntry>>> {
+        Napier.v("Building select request for table $table...", tag = "SQL")
         val columns = parameters.filterIsInstance<String>()
         val query = "SELECT ${columns.joinToString(", ")} FROM $table"
         val queryParameters = parameters.filterIsInstance<SelectParameter>().joinToString(" ") { it.piece }
         val fullSql = "$query $queryParameters;"
+        Napier.v("Performing request...", tag = "SQL")
         return query(fullSql)
     }
 }

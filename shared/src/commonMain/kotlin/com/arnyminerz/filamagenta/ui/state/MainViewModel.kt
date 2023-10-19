@@ -28,6 +28,7 @@ import com.arnyminerz.filamagenta.network.database.SqlServer.SelectParameter.Inn
 import com.arnyminerz.filamagenta.network.database.SqlServer.SelectParameter.Where
 import com.arnyminerz.filamagenta.network.database.SqlTunnelEntry
 import com.arnyminerz.filamagenta.network.database.SqlTunnelException
+import com.arnyminerz.filamagenta.network.database.getDate
 import com.arnyminerz.filamagenta.network.database.getLong
 import com.arnyminerz.filamagenta.network.database.getString
 import com.arnyminerz.filamagenta.network.httpClient
@@ -70,6 +71,8 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.MissingFieldException
 
 @Suppress("TooManyFunctions")
 class MainViewModel : ViewModel() {
@@ -401,10 +404,16 @@ class MainViewModel : ViewModel() {
      * @throws IllegalStateException if data is null after fetching from the database.
      * @throws SqlTunnelException if there is an error in the SQLServer query.
      */
-    private suspend fun getOrFetchAccountData(): AccountData {
+    @OptIn(ExperimentalSerializationApi::class)
+    private suspend fun getOrFetchAccountData(): AccountData? {
         val account = account.value!!
         val idSocio = getOrFetchIdSocio()
-        var data = accounts.getAccountData(account)
+        var data = try {
+            accounts.getAccountData(account)
+        } catch (_: MissingFieldException) {
+            // If data is corrupted, or new fields have been added, ignore the stored one and fetch again
+            null
+        }
         if (data == null) {
             try {
                 Napier.i("Account doesn't have stored account data. Searching now...")
@@ -422,22 +431,47 @@ class MainViewModel : ViewModel() {
                     InnerJoin("tbCodPostales", "tbSocios.idCodPostal", "tbCodPostales.idCodPostal"),
                     Where("idSocio", idSocio)
                 )
+                Napier.v("Retrieved account data from SQL server. Processing result...")
 
                 // we only have a query, so fetch that one
+                Napier.v("Got ${result.size} resulting queries.")
                 val entries = result[0]
                 require(entries.isNotEmpty()) { "Could not find user in tbSocios." }
 
                 // There should be one resulting entry, so take that one. We have already checked that there's one
+                Napier.v("Got ${entries.size} rows in query. Retrieving columns...")
                 val row = entries[0]
 
                 val name = row.getString("Nombre")!!
                 val surname = row.getString("Apellidos")!!
-                data = AccountData(name, surname)
+                val address = row.getString("Direccion")!!
+                val postalCode = row.getLong("CodPostal")!!
+                val birthday = row.getDate("FecNacimiento")!!
+                val particularPhone = row.getString("TlfParticular")
+                val mobilePhone = row.getString("TlfMovil")
+                val workPhone = row.getString("TlfTrabajo")
+                val email = row.getString("eMail")?.takeIf { it.isNotBlank() }
+                data = AccountData(
+                    name,
+                    surname,
+                    address,
+                    postalCode,
+                    birthday,
+                    particularPhone,
+                    mobilePhone,
+                    workPhone,
+                    email
+                )
+                Napier.v("Account data ready, storing in accounts...")
                 accounts.setAccountData(account, data)
 
                 Napier.i("Updated account data for $account: $data")
             } catch (e: SqlTunnelException) {
                 Napier.e("SQLServer returned an error.", throwable = e)
+            } catch (e: Exception) {
+                Napier.e("Could not request account data.", throwable = e)
+                _error.emit(e)
+                return null
             }
         }
         checkNotNull(data) { "data must not be null." }
