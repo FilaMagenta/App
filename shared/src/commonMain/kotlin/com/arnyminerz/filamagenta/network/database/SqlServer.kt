@@ -95,4 +95,33 @@ object SqlServer {
             }
         }
     }
+
+    sealed class SelectParameter(val piece: String) {
+        class InnerJoin(
+            sourceTable: String,
+            modifyColumn: String,
+            sourceColumn: String
+        ): SelectParameter("INNER JOIN $sourceTable ON $modifyColumn=$sourceColumn")
+
+        class Where(
+            column: String,
+            value: Any
+        ): SelectParameter("WHERE $column=${if (value is String) "\"$value\"" else "$value"}")
+    }
+
+    /**
+     * Executes a SQL SELECT statement on the specified table with optional parameters.
+     *
+     * @param table the name of the table to select from
+     * @param parameters the optional parameters to include in the query
+     *
+     * @see query
+     */
+    suspend fun select(table: String, vararg parameters: Any): List<List<List<SqlTunnelEntry>>> {
+        val columns = parameters.filterIsInstance<String>()
+        val query = "SELECT ${columns.joinToString(", ")} FROM $table"
+        val queryParameters = parameters.filterIsInstance<SelectParameter>().joinToString(" ") { it.piece }
+        val fullSql = "$query $queryParameters;"
+        return query(fullSql)
+    }
 }
