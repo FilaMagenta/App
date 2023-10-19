@@ -103,18 +103,18 @@ expect class Accounts {
     fun setCustomerId(account: Account, customerId: Int)
 
     /**
-     * Retrieves the full name of the given account.
+     * Retrieves the account data for the specified account.
      *
-     * @param account The account for which to retrieve the full name.
-     * @return The full name of the account, or null if the account does not have a full name.
+     * @param account The account for which to retrieve the account data.
+     * @return The account data for the specified account, or null if no account data is available.
      */
-    fun getFullName(account: Account): String?
+    fun getAccountData(account: Account): AccountData?
 
     /**
-     * Sets the full name of the account.
+     * Sets the account data for the given account.
      *
-     * @param account the account to update with the full name
-     * @param name the new full name to set
+     * @param account The account for which the data will be set.
+     * @param data The account data to set.
      */
-    fun setFullName(account: Account, name: String)
+    fun setAccountData(account: Account, data: AccountData)
 }

@@ -6,9 +6,11 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import io.ktor.serialization.kotlinx.json.DefaultJson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.Instant
+import kotlinx.serialization.encodeToString
 
 actual class Accounts(private val am: AccountManager) {
     companion object {
@@ -21,7 +23,7 @@ actual class Accounts(private val am: AccountManager) {
         const val UserDataEmail = "email"
         const val UserDataIdSocio = "id_socio"
         const val UserDataCustomerId = "customer_id"
-        const val UserDataFullName = "full_name"
+        const val UserDataData = "data"
     }
 
     private val accountTypeFilter: (android.accounts.Account) -> Boolean = { it.type == AccountType }
@@ -162,22 +164,23 @@ actual class Accounts(private val am: AccountManager) {
     }
 
     /**
-     * Retrieves the full name of the given account.
+     * Retrieves the account data for the specified account.
      *
-     * @param account The account for which to retrieve the full name.
-     * @return The full name of the account, or null if the account does not have a full name.
+     * @param account The account for which to retrieve the account data.
+     * @return The account data for the specified account, or null if no account data is available.
      */
-    actual fun getFullName(account: Account): String? {
-        return am.getUserData(account.androidAccount, UserDataFullName)
+    actual fun getAccountData(account: Account): AccountData? {
+        val dataString = am.getUserData(account.androidAccount, UserDataData) ?: return null
+        return DefaultJson.decodeFromString<AccountData>(dataString)
     }
 
     /**
-     * Sets the full name of the account.
+     * Sets the account data for the given account.
      *
-     * @param account the account to update with the full name
-     * @param name the new full name to set
+     * @param account The account for which the data will be set.
+     * @param data The account data to set.
      */
-    actual fun setFullName(account: Account, name: String) {
-        am.setUserData(account.androidAccount, UserDataFullName, name)
+    actual fun setAccountData(account: Account, data: AccountData) {
+        am.setUserData(account.androidAccount, UserDataData, DefaultJson.encodeToString(data))
     }
 }
