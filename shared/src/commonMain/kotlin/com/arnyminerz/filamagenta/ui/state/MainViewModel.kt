@@ -2,6 +2,7 @@ package com.arnyminerz.filamagenta.ui.state
 
 import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.account.Account
+import com.arnyminerz.filamagenta.account.AccountData
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Event
@@ -23,6 +24,8 @@ import com.arnyminerz.filamagenta.diagnostics.performance.Performance
 import com.arnyminerz.filamagenta.diagnostics.performance.TransactionStatus
 import com.arnyminerz.filamagenta.network.Authorization
 import com.arnyminerz.filamagenta.network.database.SqlServer
+import com.arnyminerz.filamagenta.network.database.SqlServer.SelectParameter.InnerJoin
+import com.arnyminerz.filamagenta.network.database.SqlServer.SelectParameter.Where
 import com.arnyminerz.filamagenta.network.database.SqlTunnelEntry
 import com.arnyminerz.filamagenta.network.database.SqlTunnelException
 import com.arnyminerz.filamagenta.network.database.getLong
@@ -40,9 +43,14 @@ import com.arnyminerz.filamagenta.network.woo.utils.set
 import com.arnyminerz.filamagenta.utils.toEpochMillisecondsString
 import com.doublesymmetry.viewmodel.ViewModel
 import io.github.aakira.napier.Napier
-import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
-import io.ktor.http.*
+import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.get
+import io.ktor.http.HttpHeaders
+import io.ktor.http.Parameters
+import io.ktor.http.URLBuilder
+import io.ktor.http.URLProtocol
+import io.ktor.http.Url
+import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.DefaultJson
 import io.ktor.utils.io.errors.IOException
 import kotlin.io.encoding.Base64
@@ -108,8 +116,8 @@ class MainViewModel : ViewModel() {
     val error: StateFlow<Throwable?> get() = _error
 
 
-    private val _accountFullName = MutableStateFlow<String?>(null)
-    val accountFullName: StateFlow<String?> get() = _accountFullName
+    private val _accountData = MutableStateFlow<AccountData?>(null)
+    val accountData: StateFlow<AccountData?> get() = _accountData
 
     /**
      * Whether there's something being loaded in the background.
@@ -383,24 +391,37 @@ class MainViewModel : ViewModel() {
     }
 
     /**
-     * This method is used to get the full name of an account.
-     * If the full name is already stored in the database, it is retrieved from there.
-     * Otherwise, a query is made to fetch the full name from the "tbSocios" table and store it in the database for
-     * future use.
+     * This method is used to get the data stored for an account.
+     * If it is already stored in the database, it is retrieved from there.
+     * Otherwise, a query is made to fetch all the required info from the "tbSocios" table and store it in the database
+     * for future use.
      *
-     * @return The full name of the account.
+     * @return The data of the account.
      *
-     * @throws IllegalStateException if the full name is null after fetching from the database.
+     * @throws IllegalStateException if data is null after fetching from the database.
      * @throws SqlTunnelException if there is an error in the SQLServer query.
      */
-    private suspend fun getOrFetchFullName(): String {
+    private suspend fun getOrFetchAccountData(): AccountData {
         val account = account.value!!
         val idSocio = getOrFetchIdSocio()
-        var fullName = accounts.getFullName(account)
-        if (fullName == null) {
+        var data = accounts.getAccountData(account)
+        if (data == null) {
             try {
-                Napier.i("Account doesn't have an stored full name. Searching now...")
-                val result = SqlServer.query("SELECT Nombre, Apellidos FROM tbSocios WHERE idSocio=$idSocio;")
+                Napier.i("Account doesn't have stored account data. Searching now...")
+                val result = SqlServer.select(
+                    "tbSocios",
+                    "tbSocios.Nombre",
+                    "tbSocios.Apellidos",
+                    "tbSocios.Direccion",
+                    "tbCodPostales.CodPostal",
+                    "tbSocios.FecNacimiento",
+                    "tbSocios.TlfParticular",
+                    "tbSocios.TlfMovil",
+                    "tbSocios.TlfTrabajo",
+                    "tbSocios.eMail",
+                    InnerJoin("tbCodPostales", "tbSocios.idCodPostal", "tbCodPostales.idCodPostal"),
+                    Where("idSocio", idSocio)
+                )
 
                 // we only have a query, so fetch that one
                 val entries = result[0]
@@ -409,19 +430,19 @@ class MainViewModel : ViewModel() {
                 // There should be one resulting entry, so take that one. We have already checked that there's one
                 val row = entries[0]
 
-                val name = row.getString("Nombre")
-                val surname = row.getString("Apellidos")
-                fullName = "$name $surname"
-                accounts.setFullName(account, fullName)
+                val name = row.getString("Nombre")!!
+                val surname = row.getString("Apellidos")!!
+                data = AccountData(name, surname)
+                accounts.setAccountData(account, data)
 
-                Napier.i("Updated full name for $account: $fullName")
+                Napier.i("Updated account data for $account: $data")
             } catch (e: SqlTunnelException) {
                 Napier.e("SQLServer returned an error.", throwable = e)
             }
         }
-        checkNotNull(fullName) { "fullName must not be null." }
+        checkNotNull(data) { "data must not be null." }
 
-        return fullName
+        return data
     }
 
     /**
@@ -629,8 +650,11 @@ class MainViewModel : ViewModel() {
      */
     fun dismissError() = viewModelScope.launch { _error.emit(null) }
 
+    /**
+     * Requests de cache or SQL server for the current user's account data, and updates [accountData] accordingly.
+     */
     fun refreshAccount() = viewModelScope.launch(Dispatchers.IO) {
-        val name = getOrFetchFullName()
-        _accountFullName.emit(name)
+        val data = getOrFetchAccountData()
+        _accountData.emit(data)
     }
 }
