@@ -33,8 +33,3 @@ val ProductOrder.metadata: List<Metadata> get() = DefaultJson.decodeFromString(_
  * Checks whether the order has been validated or not.
  */
 val ProductOrder.hasBeenValidated: Boolean get() = metadata.find { it.key == "validated" }?.value == "true"
-
-fun validateProductQr(data: String): Boolean {
-    val pieces = data.split('/')
-    return pieces.size == OrderQRFieldsCount && pieces[QRTypeIndex] == QRTypeOrder
-}

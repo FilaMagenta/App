@@ -111,6 +111,7 @@
     <string name="scan_result_success">Ticket Valid!</string>
     <string name="scan_result_reused">Ticket Reused!</string>
     <string name="scan_result_invalid">Ticket Invalid!</string>
+    <string name="scan_result_not_viewing">Not viewing any event!</string>
 
     <!-- Error Dialog -->
     <string name="error_dialog_title">Error</string>

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.NewReleases
 import androidx.compose.material.icons.rounded.Verified
+import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +42,7 @@ fun ScanResultDialog(
                     SoundPlayer.playFromResources("sounds/success.wav")
                 }
 
-                is QrCodeScanResult.Invalid, is QrCodeScanResult.AlreadyUsed -> {
+                is QrCodeScanResult.Invalid, is QrCodeScanResult.AlreadyUsed, is QrCodeScanResult.NotViewingEvent -> {
                     SoundPlayer.playFromResources("sounds/error.wav")
                 }
             }
@@ -58,12 +59,14 @@ fun ScanResultDialog(
                     is QrCodeScanResult.Success -> Icons.Rounded.Verified
                     is QrCodeScanResult.AlreadyUsed -> Icons.Rounded.NewReleases
                     is QrCodeScanResult.Invalid -> Icons.Rounded.ErrorOutline
+                    is QrCodeScanResult.NotViewingEvent -> Icons.Rounded.WarningAmber
                 },
                 contentDescription = null,
                 tint = when (result) {
                     is QrCodeScanResult.Success -> ExtendedColors.Positive.color()
                     is QrCodeScanResult.AlreadyUsed -> ExtendedColors.Warning.color()
                     is QrCodeScanResult.Invalid -> ExtendedColors.Negative.color()
+                    is QrCodeScanResult.NotViewingEvent -> ExtendedColors.Warning.color()
                 },
                 modifier = Modifier.size(128.dp).padding(top = 32.dp)
             )
@@ -73,6 +76,7 @@ fun ScanResultDialog(
                     is QrCodeScanResult.Success -> stringResource(MR.strings.scan_result_success)
                     is QrCodeScanResult.AlreadyUsed -> stringResource(MR.strings.scan_result_reused)
                     is QrCodeScanResult.Invalid -> stringResource(MR.strings.scan_result_invalid)
+                    is QrCodeScanResult.NotViewingEvent -> stringResource(MR.strings.scan_result_not_viewing)
                 },
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(vertical = 24.dp)

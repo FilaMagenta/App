@@ -58,11 +58,15 @@ fun ProfilePage(viewModel: MainViewModel) {
     viewModelAccount?.let { account ->
         val email = accounts.getEmail(account)
 
-        val qr = account.qrcode()
         var qrCode by remember { mutableStateOf<ByteArray?>(null) }
 
         LaunchedEffect(account) {
             CoroutineScope(Dispatchers.IO).launch {
+                // Make sure the fields have been loaded before calling qrcode
+                viewModel.getOrFetchIdSocio()
+                viewModel.getOrFetchCustomerId()
+
+                val qr = account.qrcode()
                 val data = qr.encrypt()
                 qrCode = Cache.imageCache(data) {
                     QRCodeGenerator.generate(data)
@@ -95,16 +99,15 @@ fun ProfilePage(viewModel: MainViewModel) {
                 modifier = Modifier
                     .size(192.dp)
                     .padding(top = 32.dp)
+                    .placeholder(visible = accountData == null)
             )
             Text(
                 text = accountData?.fullName ?: "0123456789",
                 modifier = Modifier
-                    .placeholder(
-                        visible = accountData == null
-                    )
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp)
-                    .padding(top = 8.dp),
+                    .padding(top = 8.dp)
+                    .placeholder(visible = accountData == null),
                 style = MaterialTheme.typography.titleMedium.copy(
                     lineHeight = MaterialTheme.typography.titleMedium.fontSize
                 ),

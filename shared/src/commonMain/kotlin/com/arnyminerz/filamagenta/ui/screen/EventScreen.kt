@@ -79,7 +79,9 @@ import kotlinx.coroutines.launch
 
 private const val BrokenPaperShapeSize = 100f
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalEncodingApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalEncodingApi::class, ExperimentalFoundationApi::class,
+    ExperimentalUnsignedTypes::class
+)
 @Composable
 @Suppress("LongMethod")
 fun EventScreen(
@@ -359,7 +361,7 @@ fun EventScreen(
 
                         LaunchedEffect(order) {
                             CoroutineScope(Dispatchers.IO).launch {
-                                val data = order.qrcode()
+                                val data = order.qrcode().encrypt()
                                 image = Cache.imageCache(data) {
                                     QRCodeGenerator.generate(data)
                                 }

@@ -5,6 +5,8 @@ sealed class QrCodeScanResult {
 
     data object AlreadyUsed: QrCodeScanResult()
 
+    data object NotViewingEvent: QrCodeScanResult()
+
     data class Success(
         val customerName: String,
         val orderNumber: String

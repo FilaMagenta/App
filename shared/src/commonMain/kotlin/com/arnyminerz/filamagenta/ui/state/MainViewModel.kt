@@ -8,16 +8,12 @@ import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.cache.data.EventType
-import com.arnyminerz.filamagenta.cache.data.OrderQRIndexCustomerId
-import com.arnyminerz.filamagenta.cache.data.OrderQRIndexCustomerName
-import com.arnyminerz.filamagenta.cache.data.OrderQRIndexEventId
-import com.arnyminerz.filamagenta.cache.data.OrderQRIndexOrderId
-import com.arnyminerz.filamagenta.cache.data.OrderQRIndexOrderNumber
 import com.arnyminerz.filamagenta.cache.data.extractMetadata
+import com.arnyminerz.filamagenta.cache.data.qr.AccountQRCode
+import com.arnyminerz.filamagenta.cache.data.qr.ProductQRCode
 import com.arnyminerz.filamagenta.cache.data.toAccountTransaction
 import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.cache.data.toProductOrder
-import com.arnyminerz.filamagenta.cache.data.validateProductQr
 import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.data.QrCodeScanResult
 import com.arnyminerz.filamagenta.diagnostics.performance.Performance
@@ -54,7 +50,6 @@ import io.ktor.http.Url
 import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.DefaultJson
 import io.ktor.utils.io.errors.IOException
-import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -364,7 +359,7 @@ class MainViewModel : ViewModel() {
      * @throws NullPointerException If [account] doesn't have a selected account.
      * @throws IllegalStateException If the server doesn't return a valid idSocio for [account].
      */
-    private suspend fun getOrFetchIdSocio(): Int {
+    suspend fun getOrFetchIdSocio(): Int {
         val account = account.value!!
         var idSocio = accounts.getIdSocio(account)
         if (idSocio == null) {
@@ -510,7 +505,7 @@ class MainViewModel : ViewModel() {
      * @throws NullPointerException If [account] doesn't have a selected account.
      * @throws IllegalStateException If the server doesn't return a valid customer id for [account].
      */
-    private suspend fun getOrFetchCustomerId(): Int {
+    suspend fun getOrFetchCustomerId(): Int {
         val account = account.value!!
         var customerId = accounts.getCustomerId(account)
 
@@ -591,38 +586,73 @@ class MainViewModel : ViewModel() {
     /**
      * Validates the data contained in a QR for event assistance.
      */
-    @OptIn(ExperimentalEncodingApi::class)
-    fun validateQr(data: String) = viewModelScope.launch(Dispatchers.IO) {
-        val decoded = Base64.decode(data).decodeToString()
-        if (!validateProductQr(decoded)) {
+    @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class)
+    fun validateQr(source: String) = viewModelScope.launch(Dispatchers.IO) {
+        if (AccountQRCode.validate(source)) {
+            Napier.i("Got an account QR code.")
+            val qrCode = AccountQRCode.decrypt(source)
+
+            Napier.v("Checking if there's an event currently open...")
+            val event = viewingEvent.value
+            if (event == null) {
+                Napier.e("Currently not viewing any events. Ignoring scanned code...")
+                _scanResult.emit(QrCodeScanResult.NotViewingEvent)
+                return@launch
+            }
+
+            Napier.v("Retrieving tickets by event id: ${event.id} and customer id: ${qrCode.customerId}...")
+            val tickets = database.adminTicketsQueries
+                .getByEventIdAndCustomerId(event.id, qrCode.customerId)
+                // Get all the tickets the customer has for the event
+                .executeAsList()
+            Napier.v("There are ${tickets.size} tickets for this event for the customer.")
+            if (tickets.isEmpty()) {
+                Napier.e("Customer doesn't have any tickets for this event.")
+                _scanResult.emit(QrCodeScanResult.Invalid)
+                return@launch
+            }
+
+            val nonValidatedTickets = tickets.filter { !it.isValidated }
+            Napier.v("From those, ${nonValidatedTickets.size} are not validated.")
+            if (nonValidatedTickets.isEmpty()) {
+                Napier.e("There aren't any tickets to validate left. Notifying reused")
+                _scanResult.emit(QrCodeScanResult.AlreadyUsed)
+                return@launch
+            }
+
+            Napier.v("Validating the first non-validated QR code...")
+            val ticket = nonValidatedTickets.first()
+            Cache.updateIsValidated(ticket.orderId, true)
+            _scanResult.emit(
+                QrCodeScanResult.Success(ticket.customerName, ticket.orderNumber)
+            )
+        } else if (ProductQRCode.validate(source)) {
+            Napier.i("Got a product QR code.")
+            val qrCode = ProductQRCode.decrypt(source)
+
+            Napier.i("Got valid QR, checking if stored...")
+            val ticket = database.adminTicketsQueries.getById(qrCode.orderId).executeAsOneOrNull()
+            if (ticket == null) {
+                Napier.i("QR is not stored locally")
+                _scanResult.emit(QrCodeScanResult.Invalid)
+                return@launch
+            }
+
+            Napier.i("QR is stored, checking if reused...")
+
+            if (ticket.isValidated) {
+                _scanResult.emit(QrCodeScanResult.AlreadyUsed)
+            } else {
+                Cache.updateIsValidated(qrCode.orderId, true)
+
+                _scanResult.emit(
+                    QrCodeScanResult.Success(qrCode.customerName, qrCode.orderNumber)
+                )
+            }
+        } else {
             Napier.i("Got invalid QR")
             _scanResult.emit(QrCodeScanResult.Invalid)
             return@launch
-        }
-
-        val split = decoded.split("/")
-        val eventId = split[OrderQRIndexEventId].toLong()
-        val orderId = split[OrderQRIndexOrderId].toLong()
-        val orderNumber = split[OrderQRIndexOrderNumber]
-        val customerId = split[OrderQRIndexCustomerId].toLong()
-        val customerName = split[OrderQRIndexCustomerName]
-
-        Napier.i("Got valid QR, checking if stored...")
-        val ticket = database.adminTicketsQueries.getById(orderId).executeAsOneOrNull()
-        if (ticket == null) {
-            Napier.i("QR is not stored locally")
-            _scanResult.emit(QrCodeScanResult.Invalid)
-            return@launch
-        }
-
-        Napier.i("QR is stored, checking if reused...")
-
-        if (ticket.isValidated) {
-            _scanResult.emit(QrCodeScanResult.AlreadyUsed)
-        } else {
-            Cache.updateIsValidated(orderId, true)
-
-            _scanResult.emit(QrCodeScanResult.Success(customerName, orderNumber))
         }
     }
 
