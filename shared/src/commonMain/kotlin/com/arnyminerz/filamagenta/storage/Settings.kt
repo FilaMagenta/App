@@ -19,6 +19,11 @@ object SettingsKeys {
     const val DATA_COLLECTION = "data_collection"
 
     /**
+     * Stores the currently selected account name.
+     */
+    const val SELECTED_ACCOUNT = "account"
+
+    /**
      * Stores whether the admin information screen has been shown to the user.
      */
     const val SYS_SHOWN_ADMIN = "_shown_admin"

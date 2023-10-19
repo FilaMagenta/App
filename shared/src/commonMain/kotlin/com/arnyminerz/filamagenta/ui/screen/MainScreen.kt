@@ -20,6 +20,7 @@ import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.network.server.exception.WordpressException
 import com.arnyminerz.filamagenta.storage.SettingsKeys
+import com.arnyminerz.filamagenta.storage.SettingsKeys.SELECTED_ACCOUNT
 import com.arnyminerz.filamagenta.storage.SettingsKeys.SYS_VIEWING_EVENT
 import com.arnyminerz.filamagenta.storage.getBooleanState
 import com.arnyminerz.filamagenta.storage.settings
@@ -99,7 +100,14 @@ fun MainScreen(
     LaunchedEffect(accountsList) {
         // todo - eventually an account selector should be added
         if (!accountsList.isNullOrEmpty()) {
-            viewModel.account.emit(accountsList?.first())
+            val accountName = settings.getStringOrNull(SELECTED_ACCOUNT)
+            viewModel.account.emit(
+                if (accountName != null) {
+                    accountsList?.find { it.name == accountName }
+                } else {
+                    accountsList?.first()
+                }
+            )
         }
     }
 
