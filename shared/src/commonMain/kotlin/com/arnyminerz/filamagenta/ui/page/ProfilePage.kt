@@ -1,6 +1,5 @@
 package com.arnyminerz.filamagenta.ui.page
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +28,7 @@ import com.arnyminerz.filamagenta.image.QRCodeGenerator
 import com.arnyminerz.filamagenta.ui.modifier.placeholder.placeholder
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
+import com.arnyminerz.filamagenta.ui.reusable.LoadingBox
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
@@ -96,7 +95,5 @@ fun ProfilePage(viewModel: MainViewModel) {
                 fontWeight = FontWeight.Bold
             )
         }
-    } ?: run {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-    }
+    } ?: LoadingBox()
 }
