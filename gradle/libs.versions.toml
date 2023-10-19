@@ -24,8 +24,8 @@ moko-graphics = "0.9.0"
 napier = "2.6.1"
 play-appUpdate = "2.1.0"
 qrcode = "3.3.0"
-sentry = "0.2.1"
 sentry-android = "6.32.0"
+sentry-android-plugin = "3.14.0"
 sqldelight = "2.0.0"
 
 [libraries]
@@ -63,7 +63,6 @@ napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 play-appUpdate-core = { module = "com.google.android.play:app-update", version.ref = "play-appUpdate" }
 play-appUpdate-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "play-appUpdate" }
 qrcode-android = { module = "io.github.g0dkar:qrcode-kotlin-android", version.ref = "qrcode" }
-sentry-multiplatform = { module = "io.sentry:sentry-kotlin-multiplatform", version.ref = "sentry" }
 sentry-android = { module = "io.sentry:sentry-android", version.ref = "sentry-android" }
 sqldelight-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
@@ -80,4 +79,5 @@ kotlinCocoapods = { id = "org.jetbrains.kotlin.native.cocoapods", version.ref = 
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 mokoResources = { id = "dev.icerock.mobile.multiplatform-resources", version.ref = "moko-resources" }
+sentryAndroid = { id = "io.sentry.android.gradle", version.ref = "sentry-android-plugin" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }

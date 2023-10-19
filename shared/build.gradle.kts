@@ -63,7 +63,6 @@ kotlin {
                 api(libs.multiplatform.settings)
                 api(libs.multiplatform.viewmodel)
                 api(libs.napier)
-                api(libs.sentry.multiplatform)
                 api(libs.libsodium)
 
                 // Moko Resources

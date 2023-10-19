@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.sentryAndroid)
 }
 
 android {
@@ -103,6 +104,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.compose.runtime.livedata)
     implementation(libs.kotlinx.coroutines.android)
+
+    implementation(libs.sentry.android)
 
     implementation(libs.play.appUpdate.core)
     implementation(libs.play.appUpdate.ktx)
