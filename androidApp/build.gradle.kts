@@ -101,7 +101,11 @@ dependencies {
     implementation(projects.shared)
 
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.compose.runtime.livedata)
     implementation(libs.kotlinx.coroutines.android)
+
+    implementation(libs.play.appUpdate.core)
+    implementation(libs.play.appUpdate.ktx)
 
     coreLibraryDesugaring(libs.desugar.jdkLibs)
 }

@@ -10,4 +10,9 @@ actual object PlatformInformation {
      * Checks whether the device has a camera.
      */
     actual fun isCameraSupported(): Boolean = true
+
+    /**
+     * Checks whether the device supports NFC.
+     */
+    actual fun isNfcSupported(): Boolean = false
 }
