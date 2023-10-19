@@ -5,9 +5,11 @@ import com.russhwolf.settings.KeychainSettings
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.int
 import com.russhwolf.settings.set
+import io.ktor.serialization.kotlinx.json.DefaultJson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.datetime.Instant
+import kotlinx.serialization.encodeToString
 
 @OptIn(ExperimentalSettingsImplementation::class)
 actual class Accounts {
@@ -21,6 +23,7 @@ actual class Accounts {
         private val accountEmail = StringIndex("account_%d_email")
         private val accountIdSocio = StringIndex("account_%d_id_socio")
         private val accountCustomerId = StringIndex("account_%d_customer_id")
+        private val accountData = StringIndex("account_%d_data")
     }
 
     private val settings: Settings = KeychainSettings("accounts")
@@ -159,5 +162,31 @@ actual class Accounts {
     actual fun getEmail(account: Account): String {
         val accountId = getAccounts().indexOf(account)
         return settings.getStringOrNull(accountEmail(accountId))!!
+    }
+
+    /**
+     * Retrieves the account data for the specified account.
+     *
+     * @param account The account for which to retrieve the account data.
+     * @return The account data for the specified account, or null if no account data is available.
+     */
+    actual fun getAccountData(account: Account): AccountData? {
+        val accountId = getAccounts().indexOf(account)
+        return settings.getStringOrNull(accountData(accountId))
+            ?.let { DefaultJson.decodeFromString(it) }
+    }
+
+    /**
+     * Sets the account data for the given account.
+     *
+     * @param account The account for which the data will be set.
+     * @param data The account data to set.
+     */
+    actual fun setAccountData(
+        account: Account,
+        data: AccountData
+    ) {
+        val accountId = getAccounts().indexOf(account)
+        settings[accountData(accountId)] = DefaultJson.encodeToString(data)
     }
 }

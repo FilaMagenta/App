@@ -1,12 +1,14 @@
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.interop.UIKitView
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.CValue
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCAction
 import platform.AVFoundation.*
 import platform.AVFoundation.AVCaptureDeviceDiscoverySession.Companion.discoverySessionWithDeviceTypes
@@ -102,6 +104,7 @@ private fun BoxScope.AuthorizedCamera(onQrCodeScanned: (String) -> Unit) {
     }
 }
 
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 @Composable
 private fun RealDeviceCamera(
     camera: AVCaptureDevice,
