@@ -44,6 +44,12 @@ kotlin {
         }
     }
 
+    targets.withType<KotlinNativeTarget> {
+        binaries.all {
+            freeCompilerArgs += "-Xadd-light-debug=enable"
+        }
+    }
+
     @Suppress("UnusedPrivateProperty")
     sourceSets {
         val commonMain by getting {

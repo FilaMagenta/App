@@ -74,18 +74,25 @@ public func onBackGesture() {
     Main_iosKt.onBackGesture()
 }
 
-struct ContentView: View {
-    var body: some View {
+struct ContentView: UIViewControllerRepresentable {
+    /*var body: some View {
         VStack {
             SwipeGestureViewController {
                 onBackGesture()
             }
         }.ignoresSafeArea(.all)
+    }*/
+    
+    func makeUIViewController(context: Context) -> some UIViewController {
+        Main_iosKt.MainViewController()
     }
+    
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
 }
 
 struct ContentView_Previews: PreviewProvider {
 	static var previews: some View {
         ContentView()
+            .ignoresSafeArea(.all, edges: .bottom) // Compose has own keyboard handler
     }
 }
