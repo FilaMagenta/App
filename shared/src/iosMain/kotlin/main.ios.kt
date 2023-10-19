@@ -1,9 +1,9 @@
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.window.ComposeUIViewController
+import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.account.AccountsProvider
 import com.arnyminerz.filamagenta.cache.DriverFactory
 import com.arnyminerz.filamagenta.cache.createDatabase
-import com.arnyminerz.filamagenta.diagnostics.SentryInitializer
 import com.arnyminerz.filamagenta.states.Action
 import com.arnyminerz.filamagenta.states.createStore
 import com.arnyminerz.filamagenta.storage.SettingsFactoryProvider
@@ -21,10 +21,6 @@ fun MainViewController() = ComposeUIViewController {
     LaunchedEffect(Unit) {
         settingsFactory = SettingsFactoryProvider().factory
 
-        if (settings.getBoolean(SettingsKeys.DATA_COLLECTION, true)) {
-            SentryInitializer().init()
-        }
-
         AccountsProvider().provide()
 
         createDatabase(DriverFactory())
@@ -39,4 +35,18 @@ fun MainViewController() = ComposeUIViewController {
 
 fun onBackGesture() {
     store.send(Action.OnBackPressed)
+}
+
+object SentryInformation {
+    val SentryDsn = BuildKonfig.SentryDsn
+
+    val ReleaseName = BuildKonfig.ReleaseName
+
+    val IsProduction = BuildKonfig.IsProduction
+}
+
+fun isDataCollectionEnabled(): Boolean {
+    // Make sure the factory is initialized
+    settingsFactory = SettingsFactoryProvider().factory
+    return settings.getBoolean(SettingsKeys.DATA_COLLECTION, true)
 }

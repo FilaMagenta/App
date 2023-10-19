@@ -3,6 +3,8 @@ import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import java.io.FileFilter
 import java.time.LocalDateTime
 import java.util.Properties
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     alias(libs.plugins.androidLibrary)
