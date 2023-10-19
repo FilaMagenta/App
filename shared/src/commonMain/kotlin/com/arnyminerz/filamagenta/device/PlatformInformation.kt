@@ -10,4 +10,9 @@ expect object PlatformInformation {
      * Checks whether the device has a camera.
      */
     fun isCameraSupported(): Boolean
+
+    /**
+     * Checks whether the device supports NFC.
+     */
+    fun isNfcSupported(): Boolean
 }

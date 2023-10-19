@@ -9,8 +9,6 @@ import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.extractMetadata
-import com.arnyminerz.filamagenta.cache.data.qr.AccountQRCode
-import com.arnyminerz.filamagenta.cache.data.qr.ProductQRCode
 import com.arnyminerz.filamagenta.cache.data.toAccountTransaction
 import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.cache.data.toProductOrder
@@ -18,6 +16,7 @@ import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.data.QrCodeScanResult
 import com.arnyminerz.filamagenta.diagnostics.performance.Performance
 import com.arnyminerz.filamagenta.diagnostics.performance.TransactionStatus
+import com.arnyminerz.filamagenta.image.QRCodeValidator
 import com.arnyminerz.filamagenta.network.Authorization
 import com.arnyminerz.filamagenta.network.database.SqlServer
 import com.arnyminerz.filamagenta.network.database.SqlServer.SelectParameter.InnerJoin
@@ -49,8 +48,8 @@ import io.ktor.http.URLProtocol
 import io.ktor.http.Url
 import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.DefaultJson
+import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.errors.IOException
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
@@ -567,13 +566,15 @@ class MainViewModel : ViewModel() {
 
             Napier.d("Fetching orders for Product#$productId made by Customer#$customerId")
             val orders = WooCommerce.Orders.getOrdersForProductAndCustomer(customerId, productId)
-            Napier.i("Got ${orders.size} for Product#$productId. Updating cache...")
+            Napier.i("Got ${orders.size} orders for Product#$productId and Customer#$customerId. Updating cache...")
 
             orders.flatMap(Order::toProductOrder)
                 .forEach { order ->
                     Napier.d("Inserting Order#${order.id}")
                     Cache.insertOrUpdate(order)
                 }
+        } catch (_: CancellationException) {
+            Napier.w("The orders fetching for Product#$productId was cancelled.")
         } finally {
             _isLoadingOrders.emit(false)
         }
@@ -586,74 +587,8 @@ class MainViewModel : ViewModel() {
     /**
      * Validates the data contained in a QR for event assistance.
      */
-    @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class)
     fun validateQr(source: String) = viewModelScope.launch(Dispatchers.IO) {
-        if (AccountQRCode.validate(source)) {
-            Napier.i("Got an account QR code.")
-            val qrCode = AccountQRCode.decrypt(source)
-
-            Napier.v("Checking if there's an event currently open...")
-            val event = viewingEvent.value
-            if (event == null) {
-                Napier.e("Currently not viewing any events. Ignoring scanned code...")
-                _scanResult.emit(QrCodeScanResult.NotViewingEvent)
-                return@launch
-            }
-
-            Napier.v("Retrieving tickets by event id: ${event.id} and customer id: ${qrCode.customerId}...")
-            val tickets = database.adminTicketsQueries
-                .getByEventIdAndCustomerId(event.id, qrCode.customerId)
-                // Get all the tickets the customer has for the event
-                .executeAsList()
-            Napier.v("There are ${tickets.size} tickets for this event for the customer.")
-            if (tickets.isEmpty()) {
-                Napier.e("Customer doesn't have any tickets for this event.")
-                _scanResult.emit(QrCodeScanResult.Invalid)
-                return@launch
-            }
-
-            val nonValidatedTickets = tickets.filter { !it.isValidated }
-            Napier.v("From those, ${nonValidatedTickets.size} are not validated.")
-            if (nonValidatedTickets.isEmpty()) {
-                Napier.e("There aren't any tickets to validate left. Notifying reused")
-                _scanResult.emit(QrCodeScanResult.AlreadyUsed)
-                return@launch
-            }
-
-            Napier.v("Validating the first non-validated QR code...")
-            val ticket = nonValidatedTickets.first()
-            Cache.updateIsValidated(ticket.orderId, true)
-            _scanResult.emit(
-                QrCodeScanResult.Success(ticket.customerName, ticket.orderNumber)
-            )
-        } else if (ProductQRCode.validate(source)) {
-            Napier.i("Got a product QR code.")
-            val qrCode = ProductQRCode.decrypt(source)
-
-            Napier.i("Got valid QR, checking if stored...")
-            val ticket = database.adminTicketsQueries.getById(qrCode.orderId).executeAsOneOrNull()
-            if (ticket == null) {
-                Napier.i("QR is not stored locally")
-                _scanResult.emit(QrCodeScanResult.Invalid)
-                return@launch
-            }
-
-            Napier.i("QR is stored, checking if reused...")
-
-            if (ticket.isValidated) {
-                _scanResult.emit(QrCodeScanResult.AlreadyUsed)
-            } else {
-                Cache.updateIsValidated(qrCode.orderId, true)
-
-                _scanResult.emit(
-                    QrCodeScanResult.Success(qrCode.customerName, qrCode.orderNumber)
-                )
-            }
-        } else {
-            Napier.i("Got invalid QR")
-            _scanResult.emit(QrCodeScanResult.Invalid)
-            return@launch
-        }
+        QRCodeValidator.validateQRCode(source, _scanResult, viewingEvent.value)
     }
 
     fun downloadTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {

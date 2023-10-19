@@ -68,6 +68,7 @@ fun ProfilePage(viewModel: MainViewModel) {
 
                 val qr = account.qrcode()
                 val data = qr.encrypt()
+                Napier.d("Profile QR: $data")
                 qrCode = Cache.imageCache(data) {
                     QRCodeGenerator.generate(data)
                 }

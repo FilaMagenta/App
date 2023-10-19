@@ -2,10 +2,8 @@ package com.arnyminerz.filamagenta.ui.screen
 
 import QrScannerScreen
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -14,41 +12,54 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.hasTicket
+import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.network.server.exception.WordpressException
 import com.arnyminerz.filamagenta.storage.SettingsKeys
+import com.arnyminerz.filamagenta.storage.SettingsKeys.SYS_VIEWING_EVENT
 import com.arnyminerz.filamagenta.storage.getBooleanState
 import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.dialog.GenericErrorDialog
 import com.arnyminerz.filamagenta.ui.dialog.ScanResultDialog
 import com.arnyminerz.filamagenta.ui.dialog.WordpressErrorDialog
 import com.arnyminerz.filamagenta.ui.logic.BackHandler
+import com.arnyminerz.filamagenta.ui.reusable.LoadingBox
 import com.arnyminerz.filamagenta.ui.screen.model.IntroScreen
 import com.arnyminerz.filamagenta.ui.screen.model.IntroScreenPage
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import com.ionspin.kotlin.crypto.LibsodiumInitializer
+import com.russhwolf.settings.set
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
 import dev.icerock.moko.resources.desc.StringDesc
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 /**
  * The main composable that then renders all the app. Has some useful inputs to control what is displayed when.
+ *
+ * @param nfc If the launch reason is an NFC tag, you can pass the contents here.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     isAddingNewAccount: Boolean = false,
     viewModel: MainViewModel = MainViewModel(),
+    nfc: String? = null,
     onApplicationEndRequested: () -> Unit
 ) {
     val isRequestingToken by viewModel.isRequestingToken.collectAsState(initial = false)
+    val isLoadingOrders by viewModel.isLoadingOrders.collectAsState(initial = false)
 
     val accountsList by accounts.getAccountsLive().collectAsState()
 
@@ -92,6 +103,48 @@ fun MainScreen(
         }
     }
 
+    LaunchedEffect(nfc) {
+        if (nfc == null) return@LaunchedEffect
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val viewingEventId = settings.getLongOrNull(SYS_VIEWING_EVENT)
+            if (viewingEventId != null) {
+                val event = database.eventQueries
+                    .getById(viewingEventId)
+                    .executeAsOneOrNull() ?: return@launch
+                viewModel.viewEvent(event)
+                // wait until the event is selected at most for 5 seconds
+                withTimeout(5_000) {
+                    while (viewingEvent == null) {
+                        delay(1)
+                    }
+                }
+            }
+
+            viewModel.validateQr(nfc)
+        }
+    }
+
+    scanResult?.let { result ->
+        ScanResultDialog(result, viewModel::dismissScanResult)
+    }
+
+    DisposableEffect(viewingEvent) {
+        val event = viewingEvent
+        val storedEvent = settings.getLongOrNull(SYS_VIEWING_EVENT)
+        if (event != null && storedEvent != event.id) {
+            Napier.d("Viewing event ${event.id}")
+            settings[SYS_VIEWING_EVENT] = event.id
+        }
+
+        onDispose {
+            if (storedEvent != null) {
+                Napier.d("Stopped viewing event ${event?.id}")
+                settings.remove(SYS_VIEWING_EVENT)
+            }
+        }
+    }
+
     when {
         error is WordpressException -> WordpressErrorDialog(error as WordpressException) { viewModel.dismissError() }
         error != null -> GenericErrorDialog(error as Throwable) { viewModel.dismissError() }
@@ -122,11 +175,7 @@ fun MainScreen(
     }
 
     when {
-        isLoading -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        }
+        isLoading -> LoadingBox()
 
         addingNewAccount -> {
             LoginScreen(
@@ -163,10 +212,6 @@ fun MainScreen(
         }
 
         isScanningQr -> {
-            scanResult?.let { result ->
-                ScanResultDialog(result, viewModel::dismissScanResult)
-            }
-
             QrScannerScreen(
                 modifier = Modifier.fillMaxSize()
             ) { if (scanResult == null) viewModel.validateQr(it) }
@@ -183,12 +228,14 @@ fun MainScreen(
                 )
             }
 
-            if (event.hasTicket) {
-                DisposableEffect(event) {
-                    val job = viewModel.fetchOrders(event.id.toInt())
-
-                    onDispose { job.cancel() }
+            DisposableEffect(Unit) {
+                val job = if (event.hasTicket && !isLoadingOrders) {
+                    viewModel.fetchOrders(event.id.toInt())
+                } else {
+                    null
                 }
+
+                onDispose { job?.cancel() }
             }
 
             EventScreen(event, viewModel)

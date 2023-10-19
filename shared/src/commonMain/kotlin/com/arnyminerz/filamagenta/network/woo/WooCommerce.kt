@@ -37,6 +37,7 @@ import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.reflect.TypeInfo
 import io.ktor.util.reflect.typeInfo
+import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -161,6 +162,9 @@ object WooCommerce {
         } catch (e: NoTransformationFoundException) {
             Napier.e("Server didn't return the correct encoding.", e)
             throw ServerException(response?.status, response?.bodyAsText())
+        } catch (e: CancellationException) {
+            Napier.e("Request was cancelled", throwable = e)
+            throw e
         }
 
         return builder

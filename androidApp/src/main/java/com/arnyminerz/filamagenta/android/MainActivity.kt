@@ -1,6 +1,7 @@
 package com.arnyminerz.filamagenta.android
 
 import android.content.res.Configuration
+import android.nfc.NfcAdapter
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -14,7 +15,6 @@ import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import com.arnyminerz.filamagenta.ui.theme.AppTheme
 import com.arnyminerz.filamagenta.utils.Language
 import com.russhwolf.settings.SettingsListener
-import com.russhwolf.settings.get
 import com.russhwolf.settings.set
 import io.github.aakira.napier.Napier
 
@@ -45,11 +45,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        Napier.d("Intent action: ${intent.action}", tag = "MainActivity")
+        Napier.d("Intent data: ${intent.data}", tag = "MainActivity")
+
+        val nfcData = if (intent.action == NfcAdapter.ACTION_NDEF_DISCOVERED) {
+            intent.dataString
+        } else {
+            null
+        }
+
         setContent {
             AppTheme {
                 MainScreen(
-                    intent.getBooleanExtra(EXTRA_NEW_ACCOUNT, false),
-                    viewModel
+                    isAddingNewAccount = intent.getBooleanExtra(EXTRA_NEW_ACCOUNT, false),
+                    viewModel = viewModel,
+                    nfc = nfcData
                 ) {
                     finish()
                 }

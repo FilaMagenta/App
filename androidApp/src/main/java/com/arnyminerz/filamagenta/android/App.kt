@@ -12,10 +12,14 @@ import com.arnyminerz.filamagenta.storage.SettingsFactoryProvider
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.storage.settingsFactory
+import io.github.aakira.napier.DebugAntilog
+import io.github.aakira.napier.Napier
 
 class App: Application() {
     override fun onCreate() {
         super.onCreate()
+
+        Napier.base(DebugAntilog())
 
         settingsFactory = SettingsFactoryProvider(this).factory
 
@@ -24,6 +28,7 @@ class App: Application() {
         }
 
         PlatformInformation.hasCameraFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
+        PlatformInformation.hasNfcFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_NFC)
 
         AccountsProvider(this).provide()
 
@@ -38,5 +43,8 @@ class App: Application() {
         super.onTerminate()
 
         accounts.stopWatchingAccounts()
+
+        // Remove all viewing states
+        settings.remove(SettingsKeys.SYS_VIEWING_EVENT)
     }
 }

@@ -21,6 +21,9 @@ SELECT * FROM AdminTickets WHERE eventId=?;
 getByEventIdAndCustomerId:
 SELECT * FROM AdminTickets WHERE eventId=? AND customerId=?;
 
+countByEventId:
+SELECT COUNT(orderId) FROM AdminTickets WHERE eventId=?;
+
 insert:
 INSERT INTO AdminTickets(orderId, lastUpdate, eventId, orderNumber, customerId, customerName, isValidated, _cache_meta_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 

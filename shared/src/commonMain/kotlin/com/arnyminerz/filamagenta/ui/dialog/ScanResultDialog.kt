@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material.icons.rounded.NewReleases
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material.icons.rounded.WarningAmber
@@ -42,7 +43,10 @@ fun ScanResultDialog(
                     SoundPlayer.playFromResources("sounds/success.wav")
                 }
 
-                is QrCodeScanResult.Invalid, is QrCodeScanResult.AlreadyUsed, is QrCodeScanResult.NotViewingEvent -> {
+                is QrCodeScanResult.Invalid,
+                is QrCodeScanResult.AlreadyUsed,
+                is QrCodeScanResult.NotViewingEvent,
+                is QrCodeScanResult.TicketListNotDownloaded -> {
                     SoundPlayer.playFromResources("sounds/error.wav")
                 }
             }
@@ -60,6 +64,7 @@ fun ScanResultDialog(
                     is QrCodeScanResult.AlreadyUsed -> Icons.Rounded.NewReleases
                     is QrCodeScanResult.Invalid -> Icons.Rounded.ErrorOutline
                     is QrCodeScanResult.NotViewingEvent -> Icons.Rounded.WarningAmber
+                    is QrCodeScanResult.TicketListNotDownloaded -> Icons.Rounded.FileDownload
                 },
                 contentDescription = null,
                 tint = when (result) {
@@ -67,6 +72,7 @@ fun ScanResultDialog(
                     is QrCodeScanResult.AlreadyUsed -> ExtendedColors.Warning.color()
                     is QrCodeScanResult.Invalid -> ExtendedColors.Negative.color()
                     is QrCodeScanResult.NotViewingEvent -> ExtendedColors.Warning.color()
+                    is QrCodeScanResult.TicketListNotDownloaded -> ExtendedColors.Warning.color()
                 },
                 modifier = Modifier.size(128.dp).padding(top = 32.dp)
             )
@@ -77,6 +83,7 @@ fun ScanResultDialog(
                     is QrCodeScanResult.AlreadyUsed -> stringResource(MR.strings.scan_result_reused)
                     is QrCodeScanResult.Invalid -> stringResource(MR.strings.scan_result_invalid)
                     is QrCodeScanResult.NotViewingEvent -> stringResource(MR.strings.scan_result_not_viewing)
+                    is QrCodeScanResult.TicketListNotDownloaded -> stringResource(MR.strings.scan_result_tickets_empty)
                 },
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(vertical = 24.dp)

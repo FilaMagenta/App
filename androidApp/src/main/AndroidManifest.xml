@@ -7,8 +7,10 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
 
     <uses-permission android:name="android.permission.CAMERA" />
-
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-feature android:name="android.hardware.nfc" android:required="false" />
 
     <!-- Allows checking whether CustomTabs is supported -->
     <queries>
@@ -32,10 +34,21 @@
             android:configChanges="locale"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
+            <!-- Main Intent filter, for launching from app list -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Launches the application when an NFC tag is scanned -->
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="app" android:host="filamagenta" android:pathPrefix="/account" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.action.TECH_DISCOVERED"
+                android:resource="@xml/nfc_filter" />
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
