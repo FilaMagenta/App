@@ -14,8 +14,6 @@ import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.cache.data.toProductOrder
 import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.data.QrCodeScanResult
-import com.arnyminerz.filamagenta.diagnostics.performance.Performance
-import com.arnyminerz.filamagenta.diagnostics.performance.TransactionStatus
 import com.arnyminerz.filamagenta.image.QRCodeValidator
 import com.arnyminerz.filamagenta.network.Authorization
 import com.arnyminerz.filamagenta.network.database.SqlServer
@@ -592,7 +590,6 @@ class MainViewModel : ViewModel() {
     }
 
     fun downloadTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
-        val transaction = Performance.measure("MainViewModel", "downloadTickets()")
         try {
             _isDownloadingTickets.emit(true)
 
@@ -600,13 +597,8 @@ class MainViewModel : ViewModel() {
             for (order: Order in orders) {
                 order.toProductOrder().forEach(Cache::insertOrUpdateAdminTicket)
             }
-        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
-            transaction.setThrowable(e)
-            transaction.setStatus(TransactionStatus.INTERNAL_ERROR)
-            throw e
         } finally {
             _isDownloadingTickets.emit(false)
-            transaction.finish()
         }
     }
 
