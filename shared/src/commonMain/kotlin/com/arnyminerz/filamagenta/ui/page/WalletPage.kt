@@ -170,7 +170,7 @@ fun TransactionCard(transaction: AccountTransaction, modifier: Modifier = Modifi
                 MaterialTheme.typography.titleMedium.copy(color = textColor)
             ) {
                 if (transaction.units > 1) {
-                    Text("${transaction.units} x")
+                    Text("${transaction.units} x ")
                 }
                 Text(transaction.cost.euros)
                 if (transaction.units > 1) {
