@@ -1,3 +1,4 @@
+import Sentry
 import SwiftUI
 import shared
 
@@ -85,6 +86,13 @@ struct ContentView: UIViewControllerRepresentable {
 
     init() {
         InitializeKt.initialize()
+
+        SentrySDK.start { options in
+            options.dsn = SentryInformation.shared.SentryDsn
+            options.releaseName = SentryInformation.shared.ReleaseName
+            options.environment = SentryInformation.shared.IsProduction ? "prod" : "dev"
+            options.tracesSampleRate = 1.0
+        }
     }
     
     func makeUIViewController(context: Context) -> some UIViewController {

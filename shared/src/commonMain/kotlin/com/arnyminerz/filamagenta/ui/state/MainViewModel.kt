@@ -265,6 +265,35 @@ class MainViewModel : ViewModel() {
         accounts.addAccount(account, token.toAccessToken(), me.userRoles.contains("administrator"), me.userEmail)
     }.invokeOnCompletion { _isRequestingToken.value = false }
 
+    fun updateSelectedAccount() = viewModelScope.launch {
+        val accountsList = accounts.getAccounts()
+
+        if (accountsList.isNotEmpty()) {
+            Napier.v("Checking if there's already a selected account...")
+            val accountName = settings.getStringOrNull(SettingsKeys.SELECTED_ACCOUNT)
+            val newAccount = if (accountName != null) {
+                Napier.v("Selecting account $accountName")
+                accountsList.find { it.name == accountName }
+            } else {
+                Napier.v("There isn't any account selected, choosing the first one...")
+                accountsList.first()
+            }
+            Napier.v("Selecting account ${newAccount?.name}")
+            account.emit(newAccount)
+
+            // Update the diagnostics information
+            if (newAccount != null) {
+                val username = newAccount.name
+                val email = accounts.getEmail(newAccount)
+                Napier.v("Updating diagnostics information...")
+                Diagnostics.updateUserInformation?.invoke(username, email)
+            } else {
+                Napier.v("newAccount is null, removing diagnostics information...")
+                Diagnostics.deleteUserInformation?.invoke()
+            }
+        }
+    }
+
     /**
      * Gets the start date of the current working year.
      * This can be used for fetching events only for the desired date range.

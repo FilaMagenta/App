@@ -4,5 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class SqlTunnelError(
-    val message: String? = null
+    val message: String? = null,
+    val code: String? = null
 )

@@ -1,5 +1,8 @@
 package com.arnyminerz.filamagenta.device
 
+import kotlin.native.concurrent.ThreadLocal
+
+@ThreadLocal
 object Diagnostics {
 
     var updateUserInformation: ((username: String, email: String) -> Unit)? = null

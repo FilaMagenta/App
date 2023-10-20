@@ -34,6 +34,7 @@ import com.arnyminerz.filamagenta.ui.screen.model.IntroScreenPage
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
+import io.github.aakira.napier.Napier
 
 /**
  * The main composable that then renders all the app. Has some useful inputs to control what is displayed when.
@@ -57,7 +58,7 @@ fun MainScreen(
     /** If true, the login screen is shown */
     val addingNewAccount = accountsList?.isEmpty() == true || addNewAccountRequested
 
-    val account by viewModel.account.collectAsState()
+    val account by viewModel.account.collectAsState(null)
     val isAdmin by viewModel.isAdmin.collectAsState(false)
 
     val error by viewModel.error.collectAsState()
@@ -70,25 +71,7 @@ fun MainScreen(
     var shownAdmin by settings.getBooleanState(SettingsKeys.SYS_SHOWN_ADMIN, false)
 
     LaunchedEffect(accountsList) {
-        // todo - eventually an account selector should be added
-        if (!accountsList.isNullOrEmpty()) {
-            val accountName = settings.getStringOrNull(SELECTED_ACCOUNT)
-            val newAccount = if (accountName != null) {
-                accountsList?.find { it.name == accountName }
-            } else {
-                accountsList?.first()
-            }
-            viewModel.account.emit(newAccount)
-
-            // Update the diagnostics information
-            if (newAccount != null) {
-                val username = newAccount.name
-                val email = accounts.getEmail(newAccount)
-                Diagnostics.updateUserInformation?.invoke(username, email)
-            } else {
-                Diagnostics.deleteUserInformation?.invoke()
-            }
-        }
+        viewModel.updateSelectedAccount()
     }
 
     LaunchedEffect(nfc) {
@@ -110,6 +93,16 @@ fun MainScreen(
 
     when {
         isLoading -> {
+            LaunchedEffect(Unit) {
+                Napier.v {
+                    "Showing loading indicator. " +
+                            "isRequestingToken? $isRequestingToken, " +
+                            "accountsList==null? ${accountsList == null}, " +
+                            "addingNewAccount? $addingNewAccount, " +
+                            "account==null? ${account == null}"
+                }
+            }
+
             BackHandler { /* Ignore all back presses */ }
 
             LoadingBox()
