@@ -185,7 +185,7 @@ fun EventScreen(
                 item(key = "admin-scanner", contentType = "admin-panel") {
                     AdminScanner(
                         onDownloadTicketsRequested = { viewModel.downloadTickets(event.id) },
-                        isDownloadingTickets = adminTickets.isNotEmpty(),
+                        isDownloadingTickets = isDownloadingTickets,
                         onStartScannerRequested = viewModel::startScanner,
                         areTicketsDownloaded = adminTickets.isNotEmpty(),
                         onDeleteTicketsRequested = { viewModel.deleteTickets(event.id) },
