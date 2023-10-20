@@ -62,6 +62,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -643,6 +644,30 @@ class MainViewModel : ViewModel() {
         measurements = mapOf("source-length" to source.length)
     ) {
         QRCodeValidator.validateQRCode(source, _scanResult, viewingEvent.value)
+    }
+
+    fun processNfcTag(data: String) = viewModelScope.launchMeasuring(
+        "MainViewModel",
+        "processNfcTag()"
+    ) {
+        _scanResult.emit(QrCodeScanResult.Loading)
+
+        val viewingEventId = settings.getLongOrNull(SettingsKeys.SYS_VIEWING_EVENT)
+        if (viewingEventId != null) {
+            val event = database.eventQueries
+                .getById(viewingEventId)
+                .executeAsOneOrNull() ?: return@launchMeasuring
+            viewEvent(event)
+
+            // wait until the event is selected at most for 5 seconds
+            withTimeout(5_000) {
+                while (viewingEvent.value == null) {
+                    delay(1)
+                }
+            }
+        }
+
+        validateQr(data)
     }
 
     fun downloadTickets(eventId: Long) = viewModelScope.launchMeasuring(

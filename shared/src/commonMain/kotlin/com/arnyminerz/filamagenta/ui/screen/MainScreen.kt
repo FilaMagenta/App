@@ -18,12 +18,10 @@ import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.hasTicket
-import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.device.Diagnostics
 import com.arnyminerz.filamagenta.network.server.exception.WordpressException
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.SettingsKeys.SELECTED_ACCOUNT
-import com.arnyminerz.filamagenta.storage.SettingsKeys.SYS_VIEWING_EVENT
 import com.arnyminerz.filamagenta.storage.getBooleanState
 import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.dialog.GenericErrorDialog
@@ -36,12 +34,6 @@ import com.arnyminerz.filamagenta.ui.screen.model.IntroScreenPage
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 
 /**
  * The main composable that then renders all the app. Has some useful inputs to control what is displayed when.
@@ -102,23 +94,7 @@ fun MainScreen(
     LaunchedEffect(nfc) {
         if (nfc == null) return@LaunchedEffect
 
-        CoroutineScope(Dispatchers.IO).launch {
-            val viewingEventId = settings.getLongOrNull(SYS_VIEWING_EVENT)
-            if (viewingEventId != null) {
-                val event = database.eventQueries
-                    .getById(viewingEventId)
-                    .executeAsOneOrNull() ?: return@launch
-                viewModel.viewEvent(event)
-                // wait until the event is selected at most for 5 seconds
-                withTimeout(5_000) {
-                    while (viewingEvent == null) {
-                        delay(1)
-                    }
-                }
-            }
-
-            viewModel.validateQr(nfc)
-        }
+        viewModel.processNfcTag(nfc)
     }
 
     scanResult?.let { result ->

@@ -1,6 +1,8 @@
 package com.arnyminerz.filamagenta.data
 
 sealed class QrCodeScanResult {
+    data object Loading: QrCodeScanResult()
+
     data object Invalid: QrCodeScanResult()
 
     data object AlreadyUsed: QrCodeScanResult()

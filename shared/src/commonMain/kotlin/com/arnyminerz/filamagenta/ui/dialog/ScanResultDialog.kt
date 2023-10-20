@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.FileDownload
+import androidx.compose.material.icons.rounded.HourglassEmpty
 import androidx.compose.material.icons.rounded.NewReleases
 import androidx.compose.material.icons.rounded.Verified
 import androidx.compose.material.icons.rounded.WarningAmber
@@ -49,6 +50,8 @@ fun ScanResultDialog(
                 is QrCodeScanResult.TicketListNotDownloaded -> {
                     SoundPlayer.playFromResources("sounds/error.wav")
                 }
+
+                is QrCodeScanResult.Loading -> {}
             }
         }
 
@@ -65,6 +68,7 @@ fun ScanResultDialog(
                     is QrCodeScanResult.Invalid -> Icons.Rounded.ErrorOutline
                     is QrCodeScanResult.NotViewingEvent -> Icons.Rounded.WarningAmber
                     is QrCodeScanResult.TicketListNotDownloaded -> Icons.Rounded.FileDownload
+                    is QrCodeScanResult.Loading -> Icons.Rounded.HourglassEmpty
                 },
                 contentDescription = null,
                 tint = when (result) {
@@ -73,6 +77,7 @@ fun ScanResultDialog(
                     is QrCodeScanResult.Invalid -> ExtendedColors.Negative.color()
                     is QrCodeScanResult.NotViewingEvent -> ExtendedColors.Warning.color()
                     is QrCodeScanResult.TicketListNotDownloaded -> ExtendedColors.Warning.color()
+                    is QrCodeScanResult.Loading -> ExtendedColors.Neutral.color()
                 },
                 modifier = Modifier.size(128.dp).padding(top = 32.dp)
             )
@@ -84,6 +89,7 @@ fun ScanResultDialog(
                     is QrCodeScanResult.Invalid -> stringResource(MR.strings.scan_result_invalid)
                     is QrCodeScanResult.NotViewingEvent -> stringResource(MR.strings.scan_result_not_viewing)
                     is QrCodeScanResult.TicketListNotDownloaded -> stringResource(MR.strings.scan_result_tickets_empty)
+                    is QrCodeScanResult.Loading -> stringResource(MR.strings.scan_result_loading)
                 },
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(vertical = 24.dp)
