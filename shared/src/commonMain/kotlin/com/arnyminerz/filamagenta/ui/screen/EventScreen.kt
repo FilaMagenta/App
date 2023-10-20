@@ -1,12 +1,10 @@
 package com.arnyminerz.filamagenta.ui.screen
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,13 +19,10 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronLeft
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -62,6 +57,7 @@ import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.EventInformationRow
 import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
 import com.arnyminerz.filamagenta.ui.reusable.LoadingCard
+import com.arnyminerz.filamagenta.ui.section.event.AdminScanner
 import com.arnyminerz.filamagenta.ui.shape.BrokenPaperShape
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.fontFamilyResource
@@ -74,7 +70,8 @@ import kotlinx.coroutines.launch
 
 private const val BrokenPaperShapeSize = 100f
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalEncodingApi::class, ExperimentalFoundationApi::class,
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalEncodingApi::class, ExperimentalFoundationApi::class,
     ExperimentalUnsignedTypes::class
 )
 @Composable
@@ -103,6 +100,8 @@ fun EventScreen(
             compareBy({ !it.first }, { it.second.customerName })
         )
     val scannedTicketsCount = usersList.count { it.first }
+
+    val hasCamera = PlatformInformation.isCameraSupported()
 
     Scaffold(
         topBar = {
@@ -182,82 +181,17 @@ fun EventScreen(
                 }
             }
 
-            item(key = "admin-scanner", contentType = "admin-panel") {
-                OutlinedCard(
-                    modifier = Modifier
-                        .widthIn(max = 600.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(MR.strings.event_screen_admin_scanner),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
+            if (hasCamera) {
+                item(key = "admin-scanner", contentType = "admin-panel") {
+                    AdminScanner(
+                        onDownloadTicketsRequested = { viewModel.downloadTickets(event.id) },
+                        isDownloadingTickets = adminTickets.isNotEmpty(),
+                        onStartScannerRequested = viewModel::startScanner,
+                        areTicketsDownloaded = adminTickets.isNotEmpty(),
+                        onDeleteTicketsRequested = { viewModel.deleteTickets(event.id) },
+                        onSyncTicketsRequested = { viewModel.syncScannedTickets(event.id) },
+                        isUploadingScannedTickets = isUploadingScannedTickets
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(8.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = { viewModel.downloadTickets(event.id) },
-                            modifier = Modifier.weight(1f).padding(end = 4.dp),
-                            enabled = !isDownloadingTickets
-                        ) {
-                            Text(
-                                text = stringResource(MR.strings.event_screen_admin_scanner_download),
-                                modifier = Modifier.weight(1f).align(Alignment.CenterVertically),
-                                textAlign = TextAlign.Center
-                            )
-                            AnimatedVisibility(isDownloadingTickets) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    strokeWidth = 3.dp
-                                )
-                            }
-                        }
-
-                        val hasCamera = PlatformInformation.isCameraSupported()
-                        OutlinedButton(
-                            onClick = { viewModel.startScanner() },
-                            modifier = Modifier.weight(1f).padding(start = 4.dp),
-                            enabled = adminTickets.isNotEmpty() && hasCamera && !isDownloadingTickets
-                        ) {
-                            Text(
-                                text = stringResource(
-                                    if (hasCamera)
-                                        MR.strings.event_screen_admin_scanner_scan
-                                    else
-                                        MR.strings.event_screen_admin_scanner_scan_not_supported
-                                )
-                            )
-                        }
-                        AnimatedVisibility(
-                            visible = adminTickets.isNotEmpty()
-                        ) {
-                            IconButton(
-                                onClick = { viewModel.deleteTickets(event.id) },
-                                enabled = !isDownloadingTickets
-                            ) {
-                                Icon(Icons.Rounded.Delete, stringResource(MR.strings.delete))
-                            }
-                        }
-                    }
-
-                    Text(
-                        text = stringResource(MR.strings.event_screen_admin_scanner_sync_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
-                    )
-                    Text(
-                        text = stringResource(MR.strings.event_screen_admin_scanner_sync_message),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
-                    )
-                    OutlinedButton(
-                        onClick = { viewModel.syncScannedTickets(event.id) },
-                        modifier = Modifier.padding(8.dp).align(Alignment.End),
-                        enabled = !isUploadingScannedTickets && adminTickets.isNotEmpty()
-                    ) {
-                        Text(stringResource(MR.strings.synchronize))
-                    }
                 }
             }
 
