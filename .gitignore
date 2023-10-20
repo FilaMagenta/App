@@ -9,3 +9,9 @@ captures
 local.properties
 xcuserdata
 keystore.jks
+
+# iOS Build files
+iosApp/iosApp.xcworkspace
+iosApp/Pods
+iosApp/iosApp.xcodeproj/project.xcworkspace
+iosApp/iosApp.xcodeproj/xcuserdata
