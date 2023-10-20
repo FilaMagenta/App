@@ -46,6 +46,7 @@
 	<dict/>
 	<key>CFBundleLocalizations</key><array>
     <string>en</string>
+    <string>ca</string>
     </array>
 </dict>
 </plist>

@@ -1,9 +1,9 @@
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.window.ComposeUIViewController
 import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.account.AccountsProvider
 import com.arnyminerz.filamagenta.cache.DriverFactory
 import com.arnyminerz.filamagenta.cache.createDatabase
+import com.arnyminerz.filamagenta.lifecycle.updateLocale
 import com.arnyminerz.filamagenta.states.Action
 import com.arnyminerz.filamagenta.states.createStore
 import com.arnyminerz.filamagenta.storage.SettingsFactoryProvider
@@ -18,13 +18,13 @@ import kotlinx.coroutines.SupervisorJob
 val store = CoroutineScope(SupervisorJob()).createStore()
 
 fun MainViewController() = ComposeUIViewController {
-    LaunchedEffect(Unit) {
-        settingsFactory = SettingsFactoryProvider().factory
+    settingsFactory = SettingsFactoryProvider().factory
 
-        AccountsProvider().provide()
+    updateLocale()
 
-        createDatabase(DriverFactory())
-    }
+    AccountsProvider().provide()
+
+    createDatabase(DriverFactory())
 
     AppTheme {
         MainScreen {

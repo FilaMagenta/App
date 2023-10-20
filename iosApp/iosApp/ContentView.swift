@@ -82,6 +82,10 @@ struct ContentView: UIViewControllerRepresentable {
             }
         }.ignoresSafeArea(.all)
     }*/
+
+    init() {
+        InitializeKt.initialize()
+    }
     
     func makeUIViewController(context: Context) -> some UIViewController {
         Main_iosKt.MainViewController()
