@@ -176,8 +176,8 @@ fun LoginScreen(
             val text = buildAnnotatedString {
                 val source = stringResource(MR.strings.login_privacy)
                 val (linkStart, linkEnd) = "{link}" to "{/link}"
-                val linkStartPosition = source.indexOf(linkStart)
-                val linkEndPosition = source.indexOf(linkEnd)
+                val linkStartPosition = source.indexOf(linkStart).takeIf { it >= 0 } ?: 0
+                val linkEndPosition = source.indexOf(linkEnd).takeIf { it >= 0 } ?: source.length
 
                 Napier.i("Privacy: $source")
                 pushStyle(SpanStyle(color = MaterialTheme.colorScheme.onBackground))
