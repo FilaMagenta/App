@@ -6,6 +6,7 @@ import com.arnyminerz.filamagenta.account.AccountsProvider
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.DriverFactory
 import com.arnyminerz.filamagenta.cache.createDatabase
+import com.arnyminerz.filamagenta.device.Diagnostics
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.diagnostics.SentryInformation
 import com.arnyminerz.filamagenta.lifecycle.initialize
@@ -13,7 +14,9 @@ import com.arnyminerz.filamagenta.storage.SettingsFactoryProvider
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.storage.settingsFactory
+import io.sentry.Sentry
 import io.sentry.android.core.SentryAndroid
+import io.sentry.protocol.User
 
 class App: Application() {
     override fun onCreate() {
@@ -31,6 +34,13 @@ class App: Application() {
             options.environment = if (SentryInformation.IsProduction) "prod" else "dev"
             options.tracesSampleRate = 1.0
         }
+        Diagnostics.updateUserInformation = { username, email ->
+            val user = User()
+            user.username = username
+            user.email = email
+            Sentry.setUser(user)
+        }
+        Diagnostics.deleteUserInformation = { Sentry.setUser(null) }
 
         PlatformInformation.hasCameraFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
         PlatformInformation.hasNfcFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_NFC)

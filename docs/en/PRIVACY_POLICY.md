@@ -61,5 +61,10 @@ Data collected includes (can be further expanded at any point):
 When installing the app, an anonymous UUIDv4 user id is generated. This is completely random, and only used for relating
 crashes to the same user.
 
-When accepting this terms you are also accepting the [privacy policy of Sentry](https://sentry.io/privacy/), which is
+Once you have logged in, your username will be used for identifying your crash reports; just in case you need support
+from a developer.
+This way the errors can be fixed much faster.
+Your email address, if any, might also be added to the error log message.
+
+When accepting these terms, you are also accepting the [privacy policy of Sentry](https://sentry.io/privacy/), which is
 the platform used for collection.

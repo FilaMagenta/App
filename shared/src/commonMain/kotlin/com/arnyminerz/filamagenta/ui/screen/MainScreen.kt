@@ -19,6 +19,7 @@ import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.database
+import com.arnyminerz.filamagenta.device.Diagnostics
 import com.arnyminerz.filamagenta.network.server.exception.WordpressException
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.SettingsKeys.SELECTED_ACCOUNT
@@ -80,13 +81,21 @@ fun MainScreen(
         // todo - eventually an account selector should be added
         if (!accountsList.isNullOrEmpty()) {
             val accountName = settings.getStringOrNull(SELECTED_ACCOUNT)
-            viewModel.account.emit(
-                if (accountName != null) {
-                    accountsList?.find { it.name == accountName }
-                } else {
-                    accountsList?.first()
-                }
-            )
+            val newAccount = if (accountName != null) {
+                accountsList?.find { it.name == accountName }
+            } else {
+                accountsList?.first()
+            }
+            viewModel.account.emit(newAccount)
+
+            // Update the diagnostics information
+            if (newAccount != null) {
+                val username = newAccount.name
+                val email = accounts.getEmail(newAccount)
+                Diagnostics.updateUserInformation?.invoke(username, email)
+            } else {
+                Diagnostics.deleteUserInformation?.invoke()
+            }
         }
     }
 
