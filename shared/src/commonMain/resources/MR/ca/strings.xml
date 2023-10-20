@@ -68,6 +68,7 @@
     <string name="event_screen_admin_scanner_sync_title">Sincronitza amb el Servidor</string>
     <string name="event_screen_admin_scanner_sync_message">Si has escanejat tiquets nous, assegura\'t de polsar el botó de baix quan tinguis una connexió a Internet activa. Sincronitzarà totes les dades amb el servidor.</string>
     <string name="event_screen_admin_scanner_list">Llista d\'usuaris</string>
+    <string name="event_screen_admin_scanner_nfc_supported">NFC is supported</string>
     <!-- Wallet Screen -->
     <string name="wallet_income">Ingressos</string>
     <string name="wallet_balance">Saldo</string>
