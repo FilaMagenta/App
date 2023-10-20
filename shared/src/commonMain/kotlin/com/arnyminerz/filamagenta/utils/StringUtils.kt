@@ -25,11 +25,13 @@ private const val DniLength = 9
  * Example of valid DNI: `123456789X`
  */
 val String.isValidDni: Boolean
-    get() = if (length != DniLength) {
-        false
-    } else {
-        val letter = get(DniLength - 1)
-        val number = substring(0, DniLength - 1).toInt()
-        val mod = number % DniValidationLetters.length
-        DniValidationLetters[mod] == letter
+    get() {
+        if (length != DniLength) {
+            return false
+        } else {
+            val letter = get(DniLength - 1).uppercaseChar()
+            val number = substring(0, DniLength - 1).toIntOrNull() ?: return false
+            val mod = number % DniValidationLetters.length
+            return DniValidationLetters[mod] == letter
+        }
     }
