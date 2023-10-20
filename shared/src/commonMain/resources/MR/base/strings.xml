@@ -75,6 +75,7 @@
     <string name="event_screen_admin_scanner_sync_title">Sync with Server</string>
     <string name="event_screen_admin_scanner_sync_message">If you have scanned new tickets, make sure to press the button below when you have an Internet connection. It will synchronize everything with the server.</string>
     <string name="event_screen_admin_scanner_list">Users List</string>
+    <string name="event_screen_admin_scanner_nfc_supported">NFC is supported</string>
 
     <!-- Wallet Screen -->
     <string name="wallet_income">Income</string>

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
+import com.arnyminerz.filamagenta.device.PlatformInformation
 import dev.icerock.moko.resources.compose.stringResource
 
 @Composable
@@ -40,11 +42,22 @@ fun AdminScanner(
             .widthIn(max = 600.dp)
             .fillMaxWidth()
     ) {
-        Text(
-            text = stringResource(MR.strings.event_screen_admin_scanner),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(MR.strings.event_screen_admin_scanner),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.weight(1f)
+            )
+            if (PlatformInformation.isNfcSupported()) {
+                Icon(
+                    imageVector = Icons.Outlined.Nfc,
+                    contentDescription = stringResource(MR.strings.event_screen_admin_scanner_nfc_supported)
+                )
+            }
+        }
         Row(
             modifier = Modifier.fillMaxWidth().padding(8.dp)
         ) {
