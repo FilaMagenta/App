@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.accounts
+import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.database
@@ -32,10 +33,8 @@ import com.arnyminerz.filamagenta.ui.reusable.LoadingBox
 import com.arnyminerz.filamagenta.ui.screen.model.IntroScreen
 import com.arnyminerz.filamagenta.ui.screen.model.IntroScreenPage
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
-import com.russhwolf.settings.set
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
-import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -208,28 +207,14 @@ fun MainScreen(
             }
 
             DisposableEffect(Unit) {
-                val job = if (event.hasTicket && !isLoadingOrders) {
+                val ordersForEvent = Cache.ordersForEvent(event.id).executeAsList()
+                val job = if (event.hasTicket && !isLoadingOrders && ordersForEvent.isEmpty()) {
                     viewModel.fetchOrders(event.id.toInt())
                 } else {
                     null
                 }
 
                 onDispose { job?.cancel() }
-            }
-
-            DisposableEffect(Unit) {
-                val storedEvent = settings.getLongOrNull(SYS_VIEWING_EVENT)
-                if (storedEvent != event.id) {
-                    Napier.d("Viewing event ${event.id}")
-                    settings[SYS_VIEWING_EVENT] = event.id
-                }
-
-                onDispose {
-                    if (storedEvent != null) {
-                        Napier.d("Stopped viewing event ${event.id}")
-                        settings.remove(SYS_VIEWING_EVENT)
-                    }
-                }
             }
 
             EventScreen(event, viewModel)

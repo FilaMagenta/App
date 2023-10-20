@@ -14,24 +14,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronLeft
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
@@ -62,13 +57,13 @@ import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.data.qrcode
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.image.QRCodeGenerator
+import com.arnyminerz.filamagenta.ui.dialog.UsersModalBottomSheet
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.EventInformationRow
 import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
 import com.arnyminerz.filamagenta.ui.reusable.LoadingCard
 import com.arnyminerz.filamagenta.ui.shape.BrokenPaperShape
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
-import com.arnyminerz.filamagenta.ui.theme.ExtendedColors
 import dev.icerock.moko.resources.compose.fontFamilyResource
 import dev.icerock.moko.resources.compose.stringResource
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -137,76 +132,10 @@ fun EventScreen(
         }
     ) { paddingValues ->
         if (showingPeopleDialog) {
-            ModalBottomSheet(
+            UsersModalBottomSheet(
+                usersList = usersList,
                 onDismissRequest = { showingPeopleDialog = false }
-            ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
-                ) {
-                    stickyHeader {
-                        Text(
-                            text = stringResource(MR.strings.event_screen_admin_scanner_list),
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)
-                        )
-                    }
-
-                    items(usersList) { (hasValidated, ticket) ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().animateItemPlacement(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = if (hasValidated) Icons.Rounded.Check else Icons.Rounded.Close,
-                                // todo - content description
-                                contentDescription = null,
-                                tint = (if (hasValidated) ExtendedColors.Positive else ExtendedColors.Negative).color()
-                            )
-                            Text(
-                                text = ticket.customerName,
-                                style = MaterialTheme.typography.labelLarge,
-                                modifier = Modifier.weight(1f).padding(start = 4.dp)
-                            )
-                            AnimatedVisibility(
-                                visible = !hasValidated
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        Cache.updateIsValidated(
-                                            orderId = ticket.orderId,
-                                            isValidated = true
-                                        )
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Check,
-                                        // todo - content description
-                                        contentDescription = null
-                                    )
-                                }
-                            }
-                            AnimatedVisibility(
-                                visible = hasValidated
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        Cache.updateIsValidated(
-                                            orderId = ticket.orderId,
-                                            isValidated = false
-                                        )
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.Close,
-                                        // todo - content description
-                                        contentDescription = null
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            )
         }
 
         LazyVerticalGrid(

@@ -34,8 +34,11 @@ import com.arnyminerz.filamagenta.network.woo.update.BatchMetadataUpdate
 import com.arnyminerz.filamagenta.network.woo.update.MetadataUpdate
 import com.arnyminerz.filamagenta.network.woo.utils.ProductMeta
 import com.arnyminerz.filamagenta.network.woo.utils.set
+import com.arnyminerz.filamagenta.storage.SettingsKeys
+import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.utils.toEpochMillisecondsString
 import com.doublesymmetry.viewmodel.ViewModel
+import com.russhwolf.settings.set
 import io.github.aakira.napier.Napier
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
@@ -280,7 +283,12 @@ class MainViewModel : ViewModel() {
      *
      * Use [stopViewingEvent] to stop displaying.
      */
-    fun viewEvent(event: Event) = viewModelScope.launch { _viewingEvent.emit(event) }
+    fun viewEvent(event: Event) = viewModelScope.launch {
+        Napier.d("Viewing event ${event.id}")
+        _viewingEvent.emit(event)
+
+        settings[SettingsKeys.SYS_VIEWING_EVENT] = event.id
+    }
 
     /**
      * Requests the UI to stop displaying the selected event, if any ([viewingEvent]).
@@ -288,6 +296,8 @@ class MainViewModel : ViewModel() {
      * Use [viewEvent] to start displaying an event.
      */
     fun stopViewingEvent() = viewModelScope.launch {
+        Napier.d("Stopped viewing event")
+        settings.remove(SettingsKeys.SYS_VIEWING_EVENT)
 
         _viewingEvent.emit(null)
         _editingField.emit(null)
