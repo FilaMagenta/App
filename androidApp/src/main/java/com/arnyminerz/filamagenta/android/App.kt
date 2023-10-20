@@ -12,6 +12,7 @@ import com.arnyminerz.filamagenta.device.PerformanceMeasurer
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.diagnostics.SentryInformation
 import com.arnyminerz.filamagenta.lifecycle.initialize
+import com.arnyminerz.filamagenta.sound.SoundPlayer
 import com.arnyminerz.filamagenta.storage.SettingsFactoryProvider
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.settings
@@ -99,13 +100,14 @@ class App : Application() {
         PlatformInformation.hasCameraFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
         PlatformInformation.hasNfcFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_NFC)
 
-        AccountsProvider(this).provide()
-
         createDatabase(
             DriverFactory(this)
         )
 
+        AccountsProvider(this).provide()
         accounts.startWatchingAccounts(mainLooper)
+
+        SoundPlayer.setCacheDirectory(cacheDir)
     }
 
     override fun onTerminate() {

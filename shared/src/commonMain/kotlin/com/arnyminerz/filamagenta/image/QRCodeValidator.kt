@@ -69,10 +69,16 @@ object QRCodeValidator {
                 Napier.v("Parsing the given source into an Url: $source")
                 val url = Url(source)
                 val query = url.encodedQuery
-                    .split("&")
-                    .associate {
-                        val pairs = it.split('=')
-                        pairs[0] to pairs[1]
+                    .takeIf { it.isNotBlank() }
+                    ?.split("&")
+                    ?.map { it.split('=') }
+                    ?.filter { it.size >= 2 }
+                    ?.map { list -> list[0] to list.subList(1, list.size).joinToString("=") }
+                    ?.associate { (k, v) -> k to v }
+                    ?: run {
+                        Napier.e("The NFC tag scanned doesn't have a valid query.")
+                        result.emit(QrCodeScanResult.Invalid)
+                        return
                     }
 
                 Napier.v("Checking if the url leads to an account...")
