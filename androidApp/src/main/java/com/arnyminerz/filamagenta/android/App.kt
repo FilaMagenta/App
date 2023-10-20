@@ -24,14 +24,13 @@ class App: Application() {
 
         settingsFactory = SettingsFactoryProvider(this).factory
 
-        if (settings.getBoolean(SettingsKeys.DATA_COLLECTION, true)) {
-            SentryAndroid.init(this) { options ->
-                options.dsn = SentryInformation.SentryDsn
-                options.release = SentryInformation.ReleaseName
-                options.dist = SentryInformation.ReleaseName.substringBefore('-')
-                options.environment = if (SentryInformation.IsProduction) "prod" else "dev"
-                options.tracesSampleRate = 1.0
-            }
+        SentryAndroid.init(this) { options ->
+            options.dsn = SentryInformation.SentryDsn
+            options.isEnabled = settings.getBoolean(SettingsKeys.DATA_COLLECTION, true)
+            options.release = SentryInformation.ReleaseName
+            options.dist = SentryInformation.ReleaseName.substringBefore('-')
+            options.environment = if (SentryInformation.IsProduction) "prod" else "dev"
+            options.tracesSampleRate = 1.0
         }
 
         PlatformInformation.hasCameraFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
