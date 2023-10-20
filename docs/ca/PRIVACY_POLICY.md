@@ -56,4 +56,6 @@ Les dades recollides inclouen (es poden ampliar en qualsevol moment):
 
 En instal·lar l'aplicació, es genera un identificador d'usuari UUIDv4 anònim. Això és completament aleatori i només s'utilitza per relacionar bloquejos del mateix usuari.
 
-En acceptar aquests termes també accepteu la [política de privadesa de Sentry](https://sentry.io/privacy/), que és la plataforma utilitzada per a la recollida de dades.
+Once you have logged in, your username will be used for identifying your crash reports; just in case you need support from a developer. This way the errors can be fixed much faster. Your email address, if any, might also be added to the error log message.
+
+When accepting these terms, you are also accepting the [privacy policy of Sentry](https://sentry.io/privacy/), which is the platform used for collection.
