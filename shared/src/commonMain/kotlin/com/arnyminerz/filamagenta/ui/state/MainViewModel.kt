@@ -14,6 +14,8 @@ import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.cache.data.toProductOrder
 import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.data.QrCodeScanResult
+import com.arnyminerz.filamagenta.device.Diagnostics
+import com.arnyminerz.filamagenta.device.launchMeasuring
 import com.arnyminerz.filamagenta.image.QRCodeValidator
 import com.arnyminerz.filamagenta.network.Authorization
 import com.arnyminerz.filamagenta.network.database.SqlServer
@@ -189,7 +191,10 @@ class MainViewModel : ViewModel() {
             }
         ).buildString()
 
-    fun login(username: String, password: String): Job = viewModelScope.launch(Dispatchers.IO) {
+    fun login(username: String, password: String): Job = viewModelScope.launchMeasuring(
+        "MainViewModel",
+        "login()"
+    ) {
         val loginData = LoginData(
             BuildKonfig.OAuthClientId,
             username,
@@ -212,7 +217,7 @@ class MainViewModel : ViewModel() {
             Napier.e("Login credentials are not correct.")
 
             loginError.emit(true)
-            return@launch
+            return@launchMeasuring
         }
 
         val codeLocation = httpClient.get(next).let { it.headers[HttpHeaders.Location] }
@@ -227,7 +232,7 @@ class MainViewModel : ViewModel() {
                 _error.emit(
                     RuntimeException("Authentication was redirected without a valid code.")
                 )
-                return@launch
+                return@launchMeasuring
             }
 
             requestToken(code)
@@ -235,28 +240,29 @@ class MainViewModel : ViewModel() {
             Napier.e("Authorization failed.")
 
             loginError.emit(true)
-            return@launch
+            return@launchMeasuring
         }
     }
 
     /**
      * Requests the server for a token and refresh token, then adds the account to the account manager.
      */
-    fun requestToken(code: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (_isRequestingToken.value) {
-                println("Tried to request token while another request was in progress.")
-                return@launch
-            }
-            _isRequestingToken.emit(true)
+    private fun requestToken(code: String) = viewModelScope.launchMeasuring(
+        "MainViewModel",
+        "requestToken"
+    ) {
+        if (_isRequestingToken.value) {
+            println("Tried to request token while another request was in progress.")
+            return@launchMeasuring
+        }
+        _isRequestingToken.emit(true)
 
-            val token = Authorization.requestToken(code)
-            val me = Authorization.requestMe(token)
+        val token = Authorization.requestToken(code)
+        val me = Authorization.requestMe(token)
 
-            val account = Account(me.userLogin)
-            accounts.addAccount(account, token.toAccessToken(), me.userRoles.contains("administrator"), me.userEmail)
-        }.invokeOnCompletion { _isRequestingToken.value = false }
-    }
+        val account = Account(me.userLogin)
+        accounts.addAccount(account, token.toAccessToken(), me.userRoles.contains("administrator"), me.userEmail)
+    }.invokeOnCompletion { _isRequestingToken.value = false }
 
     /**
      * Gets the start date of the current working year.
@@ -265,7 +271,7 @@ class MainViewModel : ViewModel() {
      * @return The beginning date of the current working year.
      * Will always be the 1st of August, the thing that changes is the year.
      */
-    fun getWorkingYearStart(): LocalDate {
+    private fun getWorkingYearStart(): LocalDate {
         // Events will only be fetched for this year. Year is considered until August
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         val year = if (now.monthNumber > MONTH_INDEX_AUGUST) {
@@ -366,7 +372,10 @@ class MainViewModel : ViewModel() {
      * @throws NullPointerException If [account] doesn't have a selected account.
      * @throws IllegalStateException If the server doesn't return a valid idSocio for [account].
      */
-    suspend fun getOrFetchIdSocio(): Int {
+    suspend fun getOrFetchIdSocio(): Int = Diagnostics.performance.suspending(
+        "MainViewModel",
+        "getOrFetchIdSocio()"
+    ) {
         val account = account.value!!
         var idSocio = accounts.getIdSocio(account)
         if (idSocio == null) {
@@ -392,7 +401,7 @@ class MainViewModel : ViewModel() {
         }
         checkNotNull(idSocio) { "idSocio must not be null." }
 
-        return idSocio
+        return@suspending idSocio
     }
 
     /**
@@ -407,94 +416,113 @@ class MainViewModel : ViewModel() {
      * @throws SqlTunnelException if there is an error in the SQLServer query.
      */
     @OptIn(ExperimentalSerializationApi::class)
-    private suspend fun getOrFetchAccountData(): AccountData? {
+    private suspend fun getOrFetchAccountData(): AccountData? = Diagnostics.performance.suspending(
+        "MainViewModel",
+        "getOrFetchAccountData()"
+    ) {
         val account = account.value!!
         val idSocio = getOrFetchIdSocio()
+        setMetadata("idSocio", idSocio)
+        setMetadata("account", account.name)
+
         var data = try {
             accounts.getAccountData(account)
         } catch (_: MissingFieldException) {
             // If data is corrupted, or new fields have been added, ignore the stored one and fetch again
             null
         }
-        if (data == null) {
-            try {
-                Napier.i("Account doesn't have stored account data. Searching now...")
-                val result = SqlServer.select(
-                    "tbSocios",
-                    "tbSocios.Nombre",
-                    "tbSocios.Apellidos",
-                    "tbSocios.Direccion",
-                    "tbCodPostales.CodPostal",
-                    "tbCodPostales.Poblacion",
-                    "tbSocios.FecNacimiento",
-                    "tbSocios.TlfParticular",
-                    "tbSocios.TlfMovil",
-                    "tbSocios.TlfTrabajo",
-                    "tbSocios.eMail",
-                    InnerJoin("tbCodPostales", "tbSocios.idCodPostal", "tbCodPostales.idCodPostal"),
-                    Where("idSocio", idSocio)
+        data?.let { return@suspending it }
+
+        try {
+            Napier.i("Account doesn't have stored account data. Searching now...")
+            val result = SqlServer.select(
+                "tbSocios",
+                "tbSocios.Nombre",
+                "tbSocios.Apellidos",
+                "tbSocios.Direccion",
+                "tbCodPostales.CodPostal",
+                "tbCodPostales.Poblacion",
+                "tbSocios.FecNacimiento",
+                "tbSocios.TlfParticular",
+                "tbSocios.TlfMovil",
+                "tbSocios.TlfTrabajo",
+                "tbSocios.eMail",
+                InnerJoin(
+                    sourceTable = "tbCodPostales",
+                    modifyColumn = "tbSocios.idCodPostal",
+                    sourceColumn = "tbCodPostales.idCodPostal"
+                ),
+                Where(
+                    column = "idSocio",
+                    value = idSocio
                 )
-                Napier.v("Retrieved account data from SQL server. Processing result...")
+            )
+            Napier.v("Retrieved account data from SQL server. Processing result...")
 
-                // we only have a query, so fetch that one
-                Napier.v("Got ${result.size} resulting queries.")
-                val entries = result[0]
-                require(entries.isNotEmpty()) { "Could not find user in tbSocios." }
+            // we only have a query, so fetch that one
+            Napier.v("Got ${result.size} resulting queries.")
+            val entries = result[0]
+            require(entries.isNotEmpty()) { "Could not find user in tbSocios." }
 
-                // There should be one resulting entry, so take that one. We have already checked that there's one
-                Napier.v("Got ${entries.size} rows in query. Retrieving columns...")
-                val row = entries[0]
+            // There should be one resulting entry, so take that one. We have already checked that there's one
+            Napier.v("Got ${entries.size} rows in query. Retrieving columns...")
+            val row = entries[0]
 
-                val name = row.getString("Nombre")!!
-                val surname = row.getString("Apellidos")!!
-                val address = row.getString("Direccion")!!
-                val postalCode = row.getLong("CodPostal")!!
-                val city = row.getString("Poblacion")!!.uppercase().replace("ALCOY", "ALCOI")
-                val birthday = row.getDate("FecNacimiento")!!
-                val particularPhone = row.getString("TlfParticular")
-                val mobilePhone = row.getString("TlfMovil")
-                val workPhone = row.getString("TlfTrabajo")
-                val email = row.getString("eMail")?.takeIf { it.isNotBlank() }
-                data = AccountData(
-                    name,
-                    surname,
-                    address,
-                    postalCode,
-                    city,
-                    birthday,
-                    particularPhone,
-                    mobilePhone,
-                    workPhone,
-                    email
-                )
-                Napier.v("Account data ready, storing in accounts...")
-                accounts.setAccountData(account, data)
+            val name = row.getString("Nombre")!!
+            val surname = row.getString("Apellidos")!!
+            val address = row.getString("Direccion")!!
+            val postalCode = row.getLong("CodPostal")!!
+            val city = row.getString("Poblacion")!!
+                .replace("ALCOY", "ALCOI", ignoreCase = true)
+            val birthday = row.getDate("FecNacimiento")!!
+            val particularPhone = row.getString("TlfParticular")
+            val mobilePhone = row.getString("TlfMovil")
+            val workPhone = row.getString("TlfTrabajo")
+            val email = row.getString("eMail")?.takeIf { it.isNotBlank() }
+            data = AccountData(
+                name,
+                surname,
+                address,
+                postalCode,
+                city,
+                birthday,
+                particularPhone,
+                mobilePhone,
+                workPhone,
+                email
+            )
+            Napier.v("Account data ready, storing in accounts...")
+            accounts.setAccountData(account, data)
 
-                Napier.i("Updated account data for $account: $data")
-            } catch (e: SqlTunnelException) {
-                Napier.e("SQLServer returned an error.", throwable = e)
-            } catch (e: Exception) {
-                Napier.e("Could not request account data.", throwable = e)
-                _error.emit(e)
-                return null
-            }
+            Napier.i("Updated account data for $account: $data")
+        } catch (e: SqlTunnelException) {
+            Napier.e("SQLServer returned an error.", throwable = e)
+        } catch (e: Exception) {
+            Napier.e("Could not request account data.", throwable = e)
+            _error.emit(e)
+            return@suspending null
         }
         checkNotNull(data) { "data must not be null." }
 
-        return data
+        data
     }
 
     /**
      * Fetches all the transactions from the SQL server, and updates the local cache.
      */
-    fun refreshWallet() = viewModelScope.launch(Dispatchers.IO) {
+    fun refreshWallet() = viewModelScope.launchMeasuring(
+        "MainViewModel",
+        "getOrFetchCustomerId()"
+    ) {
         try {
             _isLoadingWallet.emit(true)
 
             val idSocio = getOrFetchIdSocio()
 
+            setMetadata("idSocio", idSocio)
+
             Napier.d("Getting transactions list from server...")
-            val result = SqlServer.query("SELECT * FROM tbApuntesSocios WHERE idSocio=$idSocio;")[0]
+            val result = SqlServer.select("tbApuntesSocios", Where("idSocio", idSocio))[0]
             Cache.synchronizeTransactions(
                 result.map(List<SqlTunnelEntry>::toAccountTransaction)
             )
@@ -512,7 +540,10 @@ class MainViewModel : ViewModel() {
      * @throws NullPointerException If [account] doesn't have a selected account.
      * @throws IllegalStateException If the server doesn't return a valid customer id for [account].
      */
-    suspend fun getOrFetchCustomerId(): Int {
+    suspend fun getOrFetchCustomerId(): Int = Diagnostics.performance.suspending(
+        "MainViewModel",
+        "getOrFetchCustomerId()"
+    ) {
         val account = account.value!!
         var customerId = accounts.getCustomerId(account)
 
@@ -533,18 +564,23 @@ class MainViewModel : ViewModel() {
 
         checkNotNull(customerId) { "customerId must not be null." }
 
-        return customerId
+        customerId
     }
 
     /**
      * Fetches all events from the server and updates the local cache.
      */
-    fun refreshEvents() = viewModelScope.launch(Dispatchers.IO) {
+    fun refreshEvents() = viewModelScope.launchMeasuring(
+        "MainViewModel",
+        "refreshEvents()"
+    ) {
         try {
             _isLoadingEvents.emit(true)
 
             // Events will only be fetched for this year. Year is considered until August
             val modifiedAfter = getWorkingYearStart()
+
+            setMetadata("modifiedAfter", modifiedAfter)
 
             Napier.d("Getting products from server after $modifiedAfter...")
 
@@ -561,7 +597,11 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun fetchOrders(productId: Int) = viewModelScope.launch(Dispatchers.IO) {
+    fun fetchOrders(productId: Int) = viewModelScope.launchMeasuring(
+        "MainViewModel",
+        "fetchOrders()",
+        metadata = mapOf("productId" to productId)
+    ) {
         // Wait until another thread finishes loading
         while (_isLoadingOrders.value) {
             delay(1)
@@ -571,6 +611,8 @@ class MainViewModel : ViewModel() {
             _isLoadingOrders.emit(true)
 
             val customerId = getOrFetchCustomerId()
+
+            setMetadata("customerId", customerId)
 
             Napier.d("Fetching orders for Product#$productId made by Customer#$customerId")
             val orders = WooCommerce.Orders.getOrdersForProductAndCustomer(customerId, productId)
@@ -595,15 +637,24 @@ class MainViewModel : ViewModel() {
     /**
      * Validates the data contained in a QR for event assistance.
      */
-    fun validateQr(source: String) = viewModelScope.launch(Dispatchers.IO) {
+    fun validateQr(source: String) = viewModelScope.launchMeasuring(
+        "MainViewModel",
+        "validateQr()",
+        measurements = mapOf("source-length" to source.length)
+    ) {
         QRCodeValidator.validateQRCode(source, _scanResult, viewingEvent.value)
     }
 
-    fun downloadTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
+    fun downloadTickets(eventId: Long) = viewModelScope.launchMeasuring(
+        "MainViewModel",
+        "downloadTickets()",
+        metadata = mapOf("eventId" to eventId)
+    ) {
         try {
             _isDownloadingTickets.emit(true)
 
             val orders = WooCommerce.Orders.getOrdersForProduct(eventId.toInt())
+            setMetadata("orders-size", orders.size)
             for (order: Order in orders) {
                 order.toProductOrder().forEach(Cache::insertOrUpdateAdminTicket)
             }
@@ -612,17 +663,27 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun deleteTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
+    fun deleteTickets(eventId: Long) = viewModelScope.launchMeasuring(
+        "MainViewModel",
+        "deleteTickets()",
+        metadata = mapOf("eventId" to eventId)
+    ) {
         database.adminTicketsQueries.deleteByEventId(eventId)
     }
 
-    fun syncScannedTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
+    fun syncScannedTickets(eventId: Long) = viewModelScope.launchMeasuring(
+        "MainViewModel",
+        "syncScannedTickets",
+        metadata = mapOf("eventId" to eventId)
+    ) {
         try {
             _isUploadingScannedTickets.emit(true)
 
             val update = mutableListOf<BatchMetadataUpdate.Entry>()
 
             val tickets = database.adminTicketsQueries.getByEventId(eventId).executeAsList()
+            setMeasurement("tickets-size", tickets.size)
+
             for (ticket in tickets) {
                 // First get the order associated with the event
                 val order = database.productOrderQueries.getById(ticket.orderId).executeAsOneOrNull() ?: continue
@@ -657,7 +718,7 @@ class MainViewModel : ViewModel() {
     /**
      * Requests de cache or SQL server for the current user's account data, and updates [accountData] accordingly.
      */
-    fun refreshAccount() = viewModelScope.launch(Dispatchers.IO) {
+    fun refreshAccount() = viewModelScope.launchMeasuring("MainViewModel", "refreshAccount()") {
         val data = getOrFetchAccountData()
         _accountData.emit(data)
     }

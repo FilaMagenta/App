@@ -7,6 +7,8 @@ import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.DriverFactory
 import com.arnyminerz.filamagenta.cache.createDatabase
 import com.arnyminerz.filamagenta.device.Diagnostics
+import com.arnyminerz.filamagenta.device.MeasurementScope
+import com.arnyminerz.filamagenta.device.PerformanceMeasurer
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.diagnostics.SentryInformation
 import com.arnyminerz.filamagenta.lifecycle.initialize
@@ -18,7 +20,7 @@ import io.sentry.Sentry
 import io.sentry.android.core.SentryAndroid
 import io.sentry.protocol.User
 
-class App: Application() {
+class App : Application() {
     override fun onCreate() {
         super.onCreate()
 
@@ -41,6 +43,58 @@ class App: Application() {
             Sentry.setUser(user)
         }
         Diagnostics.deleteUserInformation = { Sentry.setUser(null) }
+        Diagnostics.performance = object : PerformanceMeasurer {
+            private inline fun <Result> perform(
+                name: String,
+                operation: String,
+                metadata: Map<String, Any>,
+                measurements: Map<String, Number>,
+                block: MeasurementScope.() -> Result
+            ): Result {
+                val transaction = Sentry.startTransaction(name, operation)
+                for ((key, value) in metadata) {
+                    transaction.setData(key, value)
+                }
+                for ((key, value) in measurements) {
+                    transaction.setMeasurement(key, value)
+                }
+                return try {
+                    block(
+                        object : MeasurementScope {
+                            override fun setMetadata(key: String, value: Any) {
+                                transaction.setData(key, value)
+                            }
+
+                            override fun setMeasurement(key: String, value: Number) {
+                                transaction.setMeasurement(key, value)
+                            }
+                        }
+                    )
+                } finally {
+                    transaction.finish()
+                }
+            }
+
+            override operator fun <Result> invoke(
+                name: String,
+                operation: String,
+                metadata: Map<String, Any>,
+                measurements: Map<String, Number>,
+                block: MeasurementScope.() -> Result
+            ): Result {
+                return perform(name, operation, metadata, measurements) { block() }
+            }
+
+            override suspend fun <Result> suspending(
+                name: String,
+                operation: String,
+                metadata: Map<String, Any>,
+                measurements: Map<String, Number>,
+                block: suspend MeasurementScope.() -> Result
+            ): Result {
+                return perform(name, operation, metadata, measurements) { block() }
+            }
+        }
 
         PlatformInformation.hasCameraFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
         PlatformInformation.hasNfcFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_NFC)
