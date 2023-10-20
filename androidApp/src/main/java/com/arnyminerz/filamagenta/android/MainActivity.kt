@@ -30,6 +30,7 @@ import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.android.play.core.ktx.updatePriority
 import com.russhwolf.settings.SettingsListener
 import com.russhwolf.settings.set
+import dev.icerock.moko.resources.desc.StringDesc
 import io.github.aakira.napier.Napier
 
 class MainActivity : AppCompatActivity() {
@@ -124,7 +125,13 @@ class MainActivity : AppCompatActivity() {
     private fun updateAppLocale() {
         val locales = AppCompatDelegate.getApplicationLocales()
         val language = locales[0]
+
+        // Update the stored value
         settings[SettingsKeys.LANGUAGE] = language?.toLanguageTag() ?: Language.System.langCode
+
+        // Update the UI
+        StringDesc.localeType =
+            language?.toLanguageTag()?.let { StringDesc.LocaleType.Custom(it) } ?: StringDesc.LocaleType.System
     }
 
     private fun checkForUpdates() {

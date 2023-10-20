@@ -32,12 +32,9 @@ import com.arnyminerz.filamagenta.ui.reusable.LoadingBox
 import com.arnyminerz.filamagenta.ui.screen.model.IntroScreen
 import com.arnyminerz.filamagenta.ui.screen.model.IntroScreenPage
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
-import com.ionspin.kotlin.crypto.LibsodiumInitializer
 import com.russhwolf.settings.set
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
-import dev.icerock.moko.resources.desc.StringDesc
-import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -60,7 +57,6 @@ fun MainScreen(
     onApplicationEndRequested: () -> Unit
 ) {
     val isRequestingToken by viewModel.isRequestingToken.collectAsState(initial = false)
-    val isLoadingOrders by viewModel.isLoadingOrders.collectAsState(initial = false)
 
     val accountsList by accounts.getAccountsLive().collectAsState()
 
@@ -75,27 +71,11 @@ fun MainScreen(
     val error by viewModel.error.collectAsState()
     val loginError by viewModel.loginError.collectAsState()
     val viewingEvent by viewModel.viewingEvent.collectAsState()
-    val editingField by viewModel.editingField.collectAsState()
 
     val isScanningQr by viewModel.scanningQr.collectAsState(false)
     val scanResult by viewModel.scanResult.collectAsState(null)
 
     var shownAdmin by settings.getBooleanState(SettingsKeys.SYS_SHOWN_ADMIN, false)
-
-    LaunchedEffect(Unit) {
-        // Initialize logging library
-        Napier.base(DebugAntilog())
-
-        // Initialize libsodium
-        LibsodiumInitializer.initialize()
-
-        // Set the locale to display
-        StringDesc.localeType = settings.getStringOrNull(SettingsKeys.LANGUAGE)
-            ?.let { StringDesc.LocaleType.Custom(it) }
-            ?: StringDesc.LocaleType.System
-    }
-
-    val mainPagerState = rememberPagerState { appScreenItems.size }
 
     LaunchedEffect(accountsList) {
         // todo - eventually an account selector should be added
@@ -137,22 +117,6 @@ fun MainScreen(
         ScanResultDialog(result, viewModel::dismissScanResult)
     }
 
-    DisposableEffect(viewingEvent) {
-        val event = viewingEvent
-        val storedEvent = settings.getLongOrNull(SYS_VIEWING_EVENT)
-        if (event != null && storedEvent != event.id) {
-            Napier.d("Viewing event ${event.id}")
-            settings[SYS_VIEWING_EVENT] = event.id
-        }
-
-        onDispose {
-            if (storedEvent != null) {
-                Napier.d("Stopped viewing event ${event?.id}")
-                settings.remove(SYS_VIEWING_EVENT)
-            }
-        }
-    }
-
     when {
         error is WordpressException -> WordpressErrorDialog(error as WordpressException) { viewModel.dismissError() }
         error != null -> GenericErrorDialog(error as Throwable) { viewModel.dismissError() }
@@ -160,32 +124,24 @@ fun MainScreen(
 
     val isLoading = isRequestingToken || accountsList == null || !addingNewAccount && account == null
 
-    BackHandler {
-        if (isLoading) {
-            // ignore
-        } else if (addingNewAccount) {
-            if (accountsList.isNullOrEmpty()) {
-                // If there aren't any accounts, close the app
-                onApplicationEndRequested()
-            } else {
-                // If there's at least one account, hide the account adder
-                addNewAccountRequested = false
-            }
-        } else if (isScanningQr) {
-            // If it is scanning, and back is pressed, stop scanning
-            viewModel.stopScanner()
-        } else if (viewingEvent != null) {
-            // If there's an event being viewed
-            viewModel.stopViewingEvent()
-        } else {
-            onApplicationEndRequested()
-        }
-    }
-
     when {
-        isLoading -> LoadingBox()
+        isLoading -> {
+            BackHandler { /* Ignore all back presses */ }
+
+            LoadingBox()
+        }
 
         addingNewAccount -> {
+            BackHandler {
+                if (accountsList.isNullOrEmpty()) {
+                    // If there aren't any accounts, close the app
+                    onApplicationEndRequested()
+                } else {
+                    // If there's at least one account, hide the account adder
+                    addNewAccountRequested = false
+                }
+            }
+
             LoginScreen(
                 isError = loginError,
                 onDismissErrorRequested = { viewModel.loginError.value = false },
@@ -201,6 +157,8 @@ fun MainScreen(
         }
 
         isAdmin == true && !shownAdmin -> {
+            BackHandler(onBack = onApplicationEndRequested)
+
             IntroScreen(
                 pages = listOf(
                     IntroScreenPage(
@@ -220,6 +178,11 @@ fun MainScreen(
         }
 
         isScanningQr -> {
+            BackHandler {
+                // If it is scanning, and back is pressed, stop scanning
+                viewModel.stopScanner()
+            }
+
             QrScannerScreen(
                 modifier = Modifier.fillMaxSize()
             ) { if (scanResult == null) viewModel.validateQr(it) }
@@ -227,6 +190,14 @@ fun MainScreen(
 
         viewingEvent != null -> {
             val event = viewingEvent!!
+
+            val isLoadingOrders by viewModel.isLoadingOrders.collectAsState(initial = false)
+            val editingField by viewModel.editingField.collectAsState()
+
+            BackHandler {
+                // If there's an event being viewed
+                viewModel.stopViewingEvent()
+            }
 
             editingField?.let { field ->
                 field.editor.Dialog(
@@ -246,10 +217,29 @@ fun MainScreen(
                 onDispose { job?.cancel() }
             }
 
+            DisposableEffect(Unit) {
+                val storedEvent = settings.getLongOrNull(SYS_VIEWING_EVENT)
+                if (storedEvent != event.id) {
+                    Napier.d("Viewing event ${event.id}")
+                    settings[SYS_VIEWING_EVENT] = event.id
+                }
+
+                onDispose {
+                    if (storedEvent != null) {
+                        Napier.d("Stopped viewing event ${event.id}")
+                        settings.remove(SYS_VIEWING_EVENT)
+                    }
+                }
+            }
+
             EventScreen(event, viewModel)
         }
 
         else -> {
+            val mainPagerState = rememberPagerState { appScreenItems.size }
+
+            BackHandler(onBack = onApplicationEndRequested)
+
             AppScreen(mainPagerState, viewModel)
         }
     }

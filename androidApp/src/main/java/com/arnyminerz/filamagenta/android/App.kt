@@ -8,19 +8,18 @@ import com.arnyminerz.filamagenta.cache.DriverFactory
 import com.arnyminerz.filamagenta.cache.createDatabase
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.diagnostics.SentryInformation
+import com.arnyminerz.filamagenta.lifecycle.initialize
 import com.arnyminerz.filamagenta.storage.SettingsFactoryProvider
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.storage.settingsFactory
-import io.github.aakira.napier.DebugAntilog
-import io.github.aakira.napier.Napier
 import io.sentry.android.core.SentryAndroid
 
 class App: Application() {
     override fun onCreate() {
         super.onCreate()
 
-        Napier.base(DebugAntilog())
+        initialize()
 
         settingsFactory = SettingsFactoryProvider(this).factory
 
