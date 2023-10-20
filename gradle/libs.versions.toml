@@ -64,6 +64,7 @@ play-appUpdate-core = { module = "com.google.android.play:app-update", version.r
 play-appUpdate-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "play-appUpdate" }
 qrcode-android = { module = "io.github.g0dkar:qrcode-kotlin-android", version.ref = "qrcode" }
 sentry-android = { module = "io.sentry:sentry-android", version.ref = "sentry-android" }
+sentry-compose = { module = "io.sentry:sentry-compose-android", version.ref = "sentry-android" }
 sqldelight-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
 sqldelight-primitiveAdapters = { module = "app.cash.sqldelight:primitive-adapters", version.ref = "sqldelight" }

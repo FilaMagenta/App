@@ -106,6 +106,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     implementation(libs.sentry.android)
+    implementation(libs.sentry.compose)
 
     implementation(libs.play.appUpdate.core)
     implementation(libs.play.appUpdate.ktx)

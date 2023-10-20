@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -32,7 +33,9 @@ import com.russhwolf.settings.SettingsListener
 import com.russhwolf.settings.set
 import dev.icerock.moko.resources.desc.StringDesc
 import io.github.aakira.napier.Napier
+import io.sentry.compose.SentryTraced
 
+@OptIn(ExperimentalComposeUiApi::class)
 class MainActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_NEW_ACCOUNT = "new_account"
@@ -88,21 +91,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         setContent {
-            AppTheme {
-                val showAppUpdateDialog by viewModel.showAppUpdateDialog.observeAsState(false)
-                if (showAppUpdateDialog) {
-                    UpdateDialog(
-                        onInstallRequest = { appUpdateManager.completeUpdate() },
-                        onDismissRequest = { viewModel.showAppUpdateDialog.postValue(false) }
+            SentryTraced(tag = "MainActivity") {
+                AppTheme {
+                    val showAppUpdateDialog by viewModel.showAppUpdateDialog.observeAsState(false)
+                    if (showAppUpdateDialog) {
+                        UpdateDialog(
+                            onInstallRequest = { appUpdateManager.completeUpdate() },
+                            onDismissRequest = { viewModel.showAppUpdateDialog.postValue(false) }
+                        )
+                    }
+
+                    MainScreen(
+                        isAddingNewAccount = intent.getBooleanExtra(EXTRA_NEW_ACCOUNT, false),
+                        viewModel = mainViewModel,
+                        nfc = nfcData,
+                        onApplicationEndRequested = ::finish
                     )
                 }
-
-                MainScreen(
-                    isAddingNewAccount = intent.getBooleanExtra(EXTRA_NEW_ACCOUNT, false),
-                    viewModel = mainViewModel,
-                    nfc = nfcData,
-                    onApplicationEndRequested = ::finish
-                )
             }
         }
     }
