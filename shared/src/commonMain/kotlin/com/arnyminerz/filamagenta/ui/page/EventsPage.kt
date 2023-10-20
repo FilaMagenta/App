@@ -1,22 +1,20 @@
 package com.arnyminerz.filamagenta.ui.page
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.data.isComplete
 import com.arnyminerz.filamagenta.ui.list.EventItem
+import com.arnyminerz.filamagenta.ui.reusable.LoadingBox
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -36,25 +34,23 @@ fun EventsPage(viewModel: MainViewModel) {
         onDispose { coroutine?.cancel() }
     }
 
-    events?.let { list ->
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 350.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(
-                items = list
-                    // Just display events without a date to admins
-                    .filter { event -> isAdmin == true || event.isComplete },
-                key = { it.id }
-            ) { event ->
-                EventItem(
-                    event,
-                    modifier = Modifier.animateItemPlacement()
-                ) { viewModel.viewEvent(event) }
+    events
+        // Display incomplete events only to admins
+        ?.filter { event -> isAdmin == true || event.isComplete }
+        ?.let { list ->
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 350.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(
+                    items = list,
+                    key = { it.id }
+                ) { event ->
+                    EventItem(
+                        event = event,
+                        modifier = Modifier.animateItemPlacement()
+                    ) { viewModel.viewEvent(event) }
+                }
             }
-        }
-    } ?: Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
-    ) { CircularProgressIndicator() }
+        } ?: LoadingBox()
 }

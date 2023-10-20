@@ -59,6 +59,11 @@ val appScreenItems = listOf(
     )
 )
 
+private const val PageIndexWallet = 0
+private const val PageIndexEvents = 1
+private const val PageIndexProfile = 2
+private const val PageIndexSettings = 3
+
 /**
  * Once logged in, this is the first screen shown to the user.
  */
@@ -119,13 +124,13 @@ fun AppScreen(
     ) { page ->
         when (page) {
             // Wallet
-            0 -> WalletPage(viewModel)
+            PageIndexWallet -> WalletPage(viewModel)
             // Events
-            1 -> EventsPage(viewModel)
+            PageIndexEvents -> EventsPage(viewModel)
             // Profile
-            2 -> ProfilePage(viewModel)
+            PageIndexProfile -> ProfilePage(viewModel)
             // Settings
-            3 -> SettingsPage(viewModel)
+            PageIndexSettings -> SettingsPage(viewModel)
         }
     }
 }
