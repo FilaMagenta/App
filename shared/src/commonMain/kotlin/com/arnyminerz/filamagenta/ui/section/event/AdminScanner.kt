@@ -1,6 +1,7 @@
 package com.arnyminerz.filamagenta.ui.section.event
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -67,7 +68,6 @@ fun AdminScanner(
 
             IconButton(
                 onClick = onStartScannerRequested,
-                modifier = Modifier.weight(1f).padding(start = 4.dp),
                 enabled = areTicketsDownloaded && !isDownloadingTickets
             ) {
                 Icon(
@@ -87,22 +87,26 @@ fun AdminScanner(
             }
         }
 
-        Text(
-            text = stringResource(MR.strings.event_screen_admin_scanner_sync_title),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
-        )
-        Text(
-            text = stringResource(MR.strings.event_screen_admin_scanner_sync_message),
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
-        )
-        OutlinedButton(
-            onClick = onSyncTicketsRequested,
-            modifier = Modifier.padding(8.dp).align(Alignment.End),
-            enabled = !isUploadingScannedTickets && areTicketsDownloaded
-        ) {
-            Text(stringResource(MR.strings.synchronize))
+        AnimatedVisibility(visible = areTicketsDownloaded) {
+            Column {
+                Text(
+                    text = stringResource(MR.strings.event_screen_admin_scanner_sync_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
+                )
+                Text(
+                    text = stringResource(MR.strings.event_screen_admin_scanner_sync_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                )
+                OutlinedButton(
+                    onClick = onSyncTicketsRequested,
+                    modifier = Modifier.padding(8.dp).align(Alignment.End),
+                    enabled = !isUploadingScannedTickets && areTicketsDownloaded
+                ) {
+                    Text(stringResource(MR.strings.synchronize))
+                }
+            }
         }
     }
 }
