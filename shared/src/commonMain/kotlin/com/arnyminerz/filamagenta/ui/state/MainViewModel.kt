@@ -42,6 +42,7 @@ import com.arnyminerz.filamagenta.utils.toEpochMillisecondsString
 import com.doublesymmetry.viewmodel.ViewModel
 import com.russhwolf.settings.set
 import io.github.aakira.napier.Napier
+import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.http.HttpHeaders
@@ -427,6 +428,10 @@ class MainViewModel : ViewModel() {
                 Napier.i("Updated idSocio for $account: $idSocio")
             } catch (e: SqlTunnelException) {
                 Napier.e("SQLServer returned an error.", throwable = e)
+                _error.emit(e)
+            } catch (e: SocketTimeoutException) {
+                Napier.e("Connection timed out while trying to fetch idSocio from server.")
+                _error.emit(e)
             }
         }
         checkNotNull(idSocio) { "idSocio must not be null." }
