@@ -12,4 +12,17 @@ data class SqlTunnelError(
     val serverName: String? = null,
     val procName: String? = null,
     val lineNumber: Int? = null
-)
+) {
+    override fun toString(): String {
+        return listOfNotNull(
+            message?.let { "Message: $it" },
+            code?.let { "Code: $it" },
+            number?.let { "Number: $it" },
+            state?.let { "State: $it" },
+            `class`?.let { "Class: $it" },
+            serverName?.let { "Server Name: $it" },
+            procName?.let { "Process Name: $it" },
+            lineNumber?.let { "Line Number: $it" }
+        ).joinToString()
+    }
+}

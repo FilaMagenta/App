@@ -66,7 +66,7 @@ object SqlServer {
             Napier.v("Processing server response...", tag = "SQL")
             val body = body<SqlTunnelResponse>()
             if (!body.successful || status.value < HTTP_OK_MIN || status.value > HTTP_OK_MAX) {
-                SqlTunnelException(status, "Message: ${body.error?.message}, code: ${body.error?.code}")
+                SqlTunnelException(status, body.error?.toString())
                     .also { Napier.e("Server returned an exception.", throwable = it, tag = "SQL") }
                     .also { throw it }
             }
