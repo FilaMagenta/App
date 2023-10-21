@@ -403,7 +403,7 @@ class MainViewModel : ViewModel() {
      * @throws NullPointerException If [account] doesn't have a selected account.
      * @throws IllegalStateException If the server doesn't return a valid idSocio for [account].
      */
-    suspend fun getOrFetchIdSocio(): Int = Diagnostics.performance.suspending(
+    suspend fun getOrFetchIdSocio(): Int? = Diagnostics.performance.suspending(
         "MainViewModel",
         "getOrFetchIdSocio()"
     ) {
@@ -429,9 +429,11 @@ class MainViewModel : ViewModel() {
             } catch (e: SqlTunnelException) {
                 Napier.e("SQLServer returned an error.", throwable = e)
                 _error.emit(e)
+                return@suspending null
             } catch (e: SocketTimeoutException) {
                 Napier.e("Connection timed out while trying to fetch idSocio from server.")
                 _error.emit(e)
+                return@suspending null
             }
         }
         checkNotNull(idSocio) { "idSocio must not be null." }
@@ -455,8 +457,8 @@ class MainViewModel : ViewModel() {
         "MainViewModel",
         "getOrFetchAccountData()"
     ) {
-        val account = account.value!!
-        val idSocio = getOrFetchIdSocio()
+        val account = account.value ?: return@suspending null
+        val idSocio = getOrFetchIdSocio() ?: return@suspending null
         setMetadata("idSocio", idSocio)
         setMetadata("account", account.name)
 
@@ -552,7 +554,7 @@ class MainViewModel : ViewModel() {
         try {
             _isLoadingWallet.emit(true)
 
-            val idSocio = getOrFetchIdSocio()
+            val idSocio = getOrFetchIdSocio() ?: return@launchMeasuring
 
             setMetadata("idSocio", idSocio)
 
