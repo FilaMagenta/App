@@ -534,12 +534,12 @@ class MainViewModel : ViewModel() {
             Napier.i("Updated account data for $account: $data")
         } catch (e: SqlTunnelException) {
             Napier.e("SQLServer returned an error.", throwable = e)
+            return@suspending null
         } catch (e: Exception) {
             Napier.e("Could not request account data.", throwable = e)
             _error.emit(e)
             return@suspending null
         }
-        checkNotNull(data) { "data must not be null." }
 
         data
     }
@@ -559,7 +559,7 @@ class MainViewModel : ViewModel() {
             setMetadata("idSocio", idSocio)
 
             Napier.d("Getting transactions list from server...")
-            val result = SqlServer.select("tbApuntesSocios", Where("idSocio", idSocio))[0]
+            val result = SqlServer.select("tbApuntesSocios", "*", Where("idSocio", idSocio))[0]
             Cache.synchronizeTransactions(
                 result.map(List<SqlTunnelEntry>::toAccountTransaction)
             )
