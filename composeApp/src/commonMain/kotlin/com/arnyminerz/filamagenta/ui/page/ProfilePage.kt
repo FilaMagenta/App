@@ -32,7 +32,7 @@ import com.arnyminerz.filamagenta.account.AccountData
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.data.qrcode
-import com.arnyminerz.filamagenta.image.QRCodeGenerator
+import com.arnyminerz.filamagenta.image.generateQRCode
 import com.arnyminerz.filamagenta.ui.modifier.placeholder.placeholder
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
@@ -41,11 +41,11 @@ import com.arnyminerz.filamagenta.ui.reusable.form.FormField
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.stringResource
 import io.github.aakira.napier.Napier
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class)
 @Composable
@@ -70,7 +70,7 @@ fun ProfilePage(viewModel: MainViewModel) {
                 val data = qr.encrypt()
                 Napier.d("Profile QR: $data")
                 qrCode = Cache.imageCache(data) {
-                    QRCodeGenerator.generate(data)
+                    generateQRCode(data)
                 }
             }
         }

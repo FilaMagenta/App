@@ -1,6 +1,5 @@
 package com.arnyminerz.filamagenta.ui.screen
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,7 +50,7 @@ import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.data.qrcode
 import com.arnyminerz.filamagenta.device.PlatformInformation
-import com.arnyminerz.filamagenta.image.QRCodeGenerator
+import com.arnyminerz.filamagenta.image.generateQRCode
 import com.arnyminerz.filamagenta.ui.dialog.UsersModalBottomSheet
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.EventInformationRow
@@ -62,17 +61,16 @@ import com.arnyminerz.filamagenta.ui.shape.BrokenPaperShape
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.fontFamilyResource
 import dev.icerock.moko.resources.compose.stringResource
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 private const val BrokenPaperShapeSize = 100f
 
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalEncodingApi::class, ExperimentalFoundationApi::class,
-    ExperimentalUnsignedTypes::class
+    ExperimentalMaterial3Api::class, ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class
 )
 @Composable
 @Suppress("LongMethod")
@@ -226,7 +224,7 @@ fun EventScreen(
                             CoroutineScope(Dispatchers.IO).launch {
                                 val data = order.qrcode().encrypt()
                                 image = Cache.imageCache(data) {
-                                    QRCodeGenerator.generate(data)
+                                    generateQRCode(data)
                                 }
                             }
                         }
