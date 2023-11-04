@@ -5,8 +5,7 @@ on:
     branches:
       - master
     paths:
-      - 'shared/**'
-      - 'androidApp/**'
+      - 'composeApp/**'
       - 'iosApp/**'
       - '.github/workflows/internal-release.yml'
       - '*.gradle.kts'
@@ -59,7 +58,7 @@ jobs:
         uses: burrunan/gradle-cache-action@v1
         with:
           job-id: build_aab
-          arguments: :shared:increaseVersionCode :androidApp:bundleRelease :androidApp:assembleRelease
+          arguments: :composeApp:increaseVersionCode :composeApp:bundleRelease :composeApp:assembleRelease
           gradle-version: wrapper
           properties: |
             buildkonfig.flavor=production
@@ -69,8 +68,8 @@ jobs:
         with:
           name: Artifact
           path: |
-            ./androidApp/build/outputs/bundle/release/androidApp-release.aab
-            ./androidApp/build/outputs/apk/release/androidApp-release.apk
+            ./composeApp/build/outputs/bundle/release/composeApp-release.aab
+            ./composeApp/build/outputs/apk/release/composeApp-release.apk
 
       - name: Commit version.properties
         id: commit_version
@@ -111,7 +110,7 @@ jobs:
           prerelease: true
           title: "Android Development Build (${{ env.SHARED_VERSION_NAME }}-${{ env.ANDROID_VERSION_NAME }}.${{ env.ANDROID_VERSION_CODE }})"
           files: |
-            ./androidApp/build/outputs/apk/release/androidApp-release.apk
+            ./composeApp/build/outputs/apk/release/composeApp-release.apk
 
       - name: Upload to Play Store
         id: upload_play_store
@@ -119,7 +118,7 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_GOOGLE_CLOUD_JSON }}
           packageName: com.arnyminerz.filamagenta.android
-          releaseFiles: ./androidApp/build/outputs/bundle/release/androidApp-release.aab
+          releaseFiles: ./composeApp/build/outputs/bundle/release/composeApp-release.aab
           track: internal
           inAppUpdatePriority: "${{ env.IN_APP_UPDATE_PRIORITY }}"
           status: completed
