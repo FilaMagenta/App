@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+    <string name="app_name">Filà Magenta</string>
+
+    <!-- The name to display as an identifier for the account type of this app -->
+    <string name="account_label">Filà Magenta</string>
+
+    <!-- Generic Strings -->
+    <string name="back">Back</string>
+    <string name="next">Next</string>
+    <string name="edit">Edit</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="badge_admin">admin</string>
+    <string name="ok">OK</string>
+    <string name="refresh">Refresh</string>
+    <string name="done">Done</string>
+    <string name="delete">Delete</string>
+    <string name="copy" comment="Copies something to the clipboard">Copy</string>
+    <string name="synchronize" comment="A generic string for buttons that synchronize some data with the server.">Synchronize</string>
+    <string name="server_status" comment="Shown when there's an error, to launch the server status page, and know if something is down.">Server Status</string>
+    <string name="restart" comment="An action button that restarts the app">Restart</string>
+    <string name="install" comment="Performs an install in the app, usually means installing an update">Install</string>
+
+    <!-- Generic form strings -->
+    <string name="password_hide">Hide Password</string>
+    <string name="password_show">Show Password</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Login</string>
+    <string name="login_message">Welcome to the Filà Magenta app. Please introduce your DNI and the password you use for logging into the Filà Magenta website.</string>
+    <string name="login_privacy">When logging in and using the app, you are accepting our {link}privacy policy{/link}.</string>
+    <string name="login_username">DNI</string>
+    <string name="login_password">Password</string>
+    <string name="login_action">Login</string>
+    <string name="login_error_dni">The DNI introduced is not valid.</string>
+    <string name="login_error">DNI or password is not correct.</string>
+
+    <!-- Main Navigation bar -->
+    <string name="nav_wallet">Wallet</string>
+    <string name="nav_events">Events</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Event item -->
+    <string name="event_info">Event Information</string>
+    <string name="event_date">Date: %s</string>
+    <string name="event_options_available">Options available</string>
+    <string name="event_warnings">Warnings:</string>
+    <string name="event_warnings_date">Date not set</string>
+    <string name="event_warnings_type">Type not set</string>
+    <string name="event_date_unknown">Unknown</string>
+    <string name="event_type_unknown">Unknown</string>
+    <string name="event_type_breakfast">Breakfast</string>
+    <string name="event_type_lunch">Lunch</string>
+    <string name="event_type_dinner">Dinner</string>
+    <string name="event_type_assembly">Assembly</string>
+    <string name="event_type_workshop">Workshop</string>
+    <string name="event_type_lottery">Lottery</string>
+    <string name="event_field_name">Name</string>
+    <string name="event_field_date">Date</string>
+    <string name="event_field_type">Type</string>
+
+    <string name="event_editor_date">Date</string>
+    <string name="event_editor_time">Time</string>
+
+    <!-- Event Screen -->
+    <string name="event_screen_name">Event Name</string>
+    <string name="event_screen_type">Event Type</string>
+    <string name="event_screen_date">Event Date</string>
+    <string name="event_screen_loading_order">Loading Order...</string>
+    <string name="event_screen_ticket_title">Entry Ticket</string>
+    <string name="event_screen_ticket_subtitle">This is your receipt for accessing the Filà the day of the event. Don\'t lose it.</string>
+    <string name="event_screen_admin_scanner">Ticket Scanner</string>
+    <string name="event_screen_admin_scanner_download">Download Tickets</string>
+    <string name="event_screen_admin_scanner_scan">Launch Scanner</string>
+    <string name="event_screen_admin_scanner_scan_not_supported" comment="Shown when the device doesn't have a camera">Scanner Unsupported</string>
+    <string name="event_screen_admin_scanner_sync_title">Sync with Server</string>
+    <string name="event_screen_admin_scanner_sync_message">If you have scanned new tickets, make sure to press the button below when you have an Internet connection. It will synchronize everything with the server.</string>
+    <string name="event_screen_admin_scanner_list">Users List</string>
+    <string name="event_screen_admin_scanner_nfc_supported">NFC is supported</string>
+
+    <!-- Wallet Screen -->
+    <string name="wallet_income">Income</string>
+    <string name="wallet_balance">Balance</string>
+    <string name="wallet_outcome">Outcome</string>
+
+    <!-- Settings -->
+    <string name="settings_section_account">Account</string>
+    <string name="settings_account_title">Logged in as %s</string>
+    <string name="settings_account_summary">Tap to log out</string>
+    <string name="settings_section_user_interface">User Interface</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_system">System Default</string>
+    <string name="settings_section_application">App Information</string>
+    <string name="settings_release_title">Release</string>
+    <string name="settings_translations_title">Translations</string>
+    <string name="settings_translations_summary">Translate the app into your own language in Crowdin.</string>
+    <string name="settings_source_title">Source Code</string>
+    <string name="settings_source_summary">The Source Code of the app is available at GitHub.</string>
+    <string name="settings_privacy_title">Privacy Policy</string>
+    <string name="settings_privacy_summary">When downloading and using the app, you have accepted the privacy policy available here.</string>
+    <string name="settings_collection_title">Anonymous Data Collection</string>
+    <string name="settings_collection_summary">Whether to collect anonymous crash, error and performance reports about the app. Changes apply after an app restart.</string>
+
+    <!-- Admin Intro -->
+    <string name="intro_admin_welcome_title">Welcome! You are an administrator</string>
+    <string name="intro_admin_welcome_message">Administrators have more features on the app, so it\'s important that you know how all of them work.</string>
+    <string name="intro_admin_scanner_title">QR Code Scanner</string>
+    <string name="intro_admin_scanner_message">As an administrator, you can scan QR codes in the entrance of an event to verify that they are valid, as well as writing down all the people that attends. To make sure there are no problems with Internet connection, the scanned tickets are stored locally until all of them have been processed. For this reason, please, scan tickets with just one device.</string>
+
+    <!-- Barcode Scanner -->
+    <string name="scan_barcode_instruction">Scan QR Code</string>
+    <string name="scan_qr_code">Place the code in the center of the screen</string>
+    <string name="scan_info_title">Scanner Information</string>
+    <string name="scan_info_message">You have launched the scanner. This will allow you to verify people\'s tickets. Please use only one device for scanning, since the server won\'t be updated automatically, and there can be false positives. Once you finish scanning, and leave the screen, the server will be updated with all the scanned tickets.</string>
+    <string name="scan_result_success">Ticket Valid!</string>
+    <string name="scan_result_reused">Ticket Reused!</string>
+    <string name="scan_result_invalid">Ticket Invalid!</string>
+    <string name="scan_result_not_viewing">Not viewing any event!</string>
+    <string name="scan_result_tickets_empty">Ticket list is not downloaded!</string>
+    <string name="scan_result_loading">Loading...</string>
+
+    <!-- Error Dialog -->
+    <string name="error_dialog_title">Error</string>
+    <string name="error_dialog_message">The server has returned an error while making a request, please, share this information with an administrator:</string>
+    <string name="error_dialog_path">Path: </string>
+    <string name="error_dialog_status">Status: </string>
+    <string name="error_dialog_code">Code: </string>
+    <string name="error_dialog_msg">Message: </string>
+    <string name="error_dialog_trace">Stacktrace: </string>
+
+    <!-- Profile Page -->
+    <string name="profile_title_personal_data">Personal Data</string>
+    <string name="profile_email">Email</string>
+    <string name="profile_address">Address</string>
+    <string name="profile_postal_code">PC</string>
+    <string name="profile_city">City</string>
+    <string name="profile_birthday">Birthday</string>
+    <string name="profile_warning_email_match">The email stored in the database and the one in the website do not match. Please contact with an administrator to solve the issue.</string>
+
+    <!-- Update Available dialog -->
+    <string name="update_available_dialog_title">Update Available</string>
+    <string name="update_available_dialog_message">Restart the app to install the update</string>
+</resources>

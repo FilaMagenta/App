@@ -1,17 +1,18 @@
 *.iml
 .gradle
+**/build/
+xcuserdata
+!src/**/build/
+local.properties
 .idea
 .DS_Store
-build
 captures
 .externalNativeBuild
 .cxx
-local.properties
-xcuserdata
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
 keystore.jks
-
-# iOS Build files
-iosApp/iosApp.xcworkspace
-iosApp/Pods
-iosApp/iosApp.xcodeproj/project.xcworkspace
-iosApp/iosApp.xcodeproj/xcuserdata
