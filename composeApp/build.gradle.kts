@@ -46,7 +46,8 @@ kotlin {
 
     targets.withType<KotlinNativeTarget> {
         binaries.all {
-            freeCompilerArgs += "-Xadd-light-debug=enable -Xexpect-actual-classes"
+            freeCompilerArgs += "-Xadd-light-debug=enable"
+            freeCompilerArgs += "-Xexpect-actual-classes"
         }
     }
     
@@ -71,6 +72,7 @@ kotlin {
                 api(libs.multiplatform.viewmodel)
                 api(libs.napier)
                 api(libs.libsodium)
+                implementation(libs.sentry.multiplatform)
 
                 // Moko Resources
                 api(libs.moko.resources)
