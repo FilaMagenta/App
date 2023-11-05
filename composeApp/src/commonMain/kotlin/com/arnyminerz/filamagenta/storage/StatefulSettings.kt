@@ -59,3 +59,13 @@ fun ObservableSettings.getStringState(key: String, defaultValue: String): Mutabl
         ObservableSettings::getString
     ) { k, v -> this[k] = v }
 }
+
+@Composable
+fun ObservableSettings.getLongState(key: String, defaultValue: Long): MutableState<Long> {
+    return getState(
+        key,
+        defaultValue,
+        ObservableSettings::addLongListener,
+        ObservableSettings::getLong
+    ) { k, v -> this[k] = v }
+}

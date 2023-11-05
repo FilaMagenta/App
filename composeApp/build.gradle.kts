@@ -113,6 +113,8 @@ kotlin {
                 implementation(libs.androidx.compose.runtime.livedata)
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
+                implementation(libs.androidx.work.runtime)
+                implementation(libs.androidx.work.ktx)
 
                 implementation(libs.kotlinx.coroutines.android)
                 implementation(libs.ktor.okhttp)

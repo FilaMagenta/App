@@ -7,17 +7,14 @@ androidx-activityCompose = "1.8.0"
 androidx-appCompat = "1.6.1"
 androidx-camera = "1.2.3"
 androidx-compose-runtime = "1.5.4"
-androidx-core-ktx = "1.12.0"
 androidx-lifecycle = "2.6.2"
-androidx-test-junit = "1.1.5"
-androidx-espresso-core = "3.5.1"
+androidx-work = "2.8.1"
 build-konfig = "0.14.0"
 compose = "1.5.4"
 compose-material3 = "1.1.2"
 compose-plugin = "1.5.10"
 compose-compiler = "1.5.3"
 desugar-jdk-libs = "2.0.3"
-junit = "4.13.2"
 kotlin = "1.9.20"
 kotlinx-coroutines = "1.7.3"
 kotlinx-datetime = "0.4.1"
@@ -44,6 +41,8 @@ androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "
 androidx-compose-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "androidx-compose-runtime" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
+androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "androidx-work" }
+androidx-work-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
 compose-material3-windowSizeClass = { module = "androidx.compose.material3:material3-window-size-class", version.ref = "compose-material3" }
 desugar-jdkLibs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

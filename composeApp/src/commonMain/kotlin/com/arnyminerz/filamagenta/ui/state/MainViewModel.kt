@@ -9,7 +9,6 @@ import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.extractMetadata
-import com.arnyminerz.filamagenta.cache.data.toAccountTransaction
 import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.cache.data.toProductOrder
 import com.arnyminerz.filamagenta.cache.database
@@ -19,7 +18,6 @@ import com.arnyminerz.filamagenta.network.Authorization
 import com.arnyminerz.filamagenta.network.database.SqlServer
 import com.arnyminerz.filamagenta.network.database.SqlServer.SelectParameter.InnerJoin
 import com.arnyminerz.filamagenta.network.database.SqlServer.SelectParameter.Where
-import com.arnyminerz.filamagenta.network.database.SqlTunnelEntry
 import com.arnyminerz.filamagenta.network.database.SqlTunnelException
 import com.arnyminerz.filamagenta.network.database.getDate
 import com.arnyminerz.filamagenta.network.database.getLong
@@ -36,6 +34,9 @@ import com.arnyminerz.filamagenta.network.woo.utils.ProductMeta
 import com.arnyminerz.filamagenta.network.woo.utils.set
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.settings
+import com.arnyminerz.filamagenta.sync.EventsSyncHelper
+import com.arnyminerz.filamagenta.sync.WalletSyncHelper
+import com.arnyminerz.filamagenta.sync.utils.AccountUtils
 import com.arnyminerz.filamagenta.utils.toEpochMillisecondsString
 import com.doublesymmetry.viewmodel.ViewModel
 import com.russhwolf.settings.set
@@ -64,20 +65,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.Month
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MissingFieldException
 
 @Suppress("TooManyFunctions")
 class MainViewModel : ViewModel() {
-    companion object {
-        private const val MONTH_INDEX_AUGUST = 8
-    }
 
     private val _isRequestingToken = MutableStateFlow(false)
 
@@ -295,26 +288,6 @@ class MainViewModel : ViewModel() {
     }
 
     /**
-     * Gets the start date of the current working year.
-     * This can be used for fetching events only for the desired date range.
-     *
-     * @return The beginning date of the current working year.
-     * Will always be the 1st of August, the thing that changes is the year.
-     */
-    private fun getWorkingYearStart(): LocalDate {
-        // Events will only be fetched for this year. Year is considered until August
-        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        val year = if (now.monthNumber > MONTH_INDEX_AUGUST) {
-            // If right now is after August, the working year is the current one
-            now.year
-        } else {
-            // If before August, working year is the last one
-            now.year - 1
-        }
-        return LocalDate(year, Month.AUGUST, 1)
-    }
-
-    /**
      * Requests the UI to display the given event.
      *
      * Use [stopViewingEvent] to stop displaying.
@@ -404,37 +377,15 @@ class MainViewModel : ViewModel() {
      */
     suspend fun getOrFetchIdSocio(): Int? {
         val account = account.value!!
-        var idSocio = accounts.getIdSocio(account)
-        if (idSocio == null) {
-            try {
-                Napier.i("Account doesn't have an stored idSocio. Searching now...")
-                val result = SqlServer.query("SELECT idSocio FROM tbSocios WHERE Dni='${account.name}';")
-                check(result.isNotEmpty()) { "SQLServer returned a null or empty list." }
-
-                // we only have a query, so fetch that one
-                val entries = result[0]
-                require(entries.isNotEmpty()) { "Could not find user in tbSocios." }
-
-                // There should be one resulting entry, so take that one. We have already checked that there's one
-                val row = entries[0]
-
-                idSocio = row.getLong("idSocio")!!.toInt()
-                accounts.setIdSocio(account, idSocio)
-
-                Napier.i("Updated idSocio for $account: $idSocio")
-            } catch (e: SqlTunnelException) {
-                Napier.e("SQLServer returned an error.", throwable = e)
-                _error.emit(e)
-                return null
-            } catch (e: SocketTimeoutException) {
-                Napier.e("Connection timed out while trying to fetch idSocio from server.")
-                _error.emit(e)
-                return null
-            }
+        return try {
+            AccountUtils.getOrFetchIdSocio(account)
+        } catch (e: SqlTunnelException) {
+            _error.emit(e)
+            null
+        } catch (e: SocketTimeoutException) {
+            _error.emit(e)
+            null
         }
-        checkNotNull(idSocio) { "idSocio must not be null." }
-
-        return idSocio
     }
 
     /**
@@ -544,13 +495,7 @@ class MainViewModel : ViewModel() {
 
             val idSocio = getOrFetchIdSocio() ?: return@launch
 
-            Napier.d("Getting transactions list from server...")
-            val result = SqlServer.select("tbApuntesSocios", "*", Where("idSocio", idSocio))[0]
-            Cache.synchronizeTransactions(
-                result.map(List<SqlTunnelEntry>::toAccountTransaction)
-            )
-            Napier.d("Updating last sync time...")
-            settings[SettingsKeys.SYS_WALLET_LAST_SYNC] = Clock.System.now().toEpochMilliseconds()
+            WalletSyncHelper.synchronize(idSocio)
         } catch (e: IOException) {
             _error.emit(e)
         } finally {
@@ -596,19 +541,7 @@ class MainViewModel : ViewModel() {
         try {
             _isLoadingEvents.emit(true)
 
-            // Events will only be fetched for this year. Year is considered until August
-            val modifiedAfter = getWorkingYearStart()
-
-            Napier.d("Getting products from server after $modifiedAfter...")
-
-            WooCommerce.Products.getProductsAndVariations(modifiedAfter).also { pairs ->
-                Napier.i("Got ${pairs.size} products from server. Updating cache...")
-                Cache.synchronizeEvents(
-                    pairs.map { (product, variations) -> product.toEvent(variations) }
-                )
-            }
-            Napier.d("Updating last sync time...")
-            settings[SettingsKeys.SYS_EVENTS_LAST_SYNC] = Clock.System.now().toEpochMilliseconds()
+            EventsSyncHelper.synchronize()
         } catch (e: WordpressException) {
             _error.emit(e)
         } finally {

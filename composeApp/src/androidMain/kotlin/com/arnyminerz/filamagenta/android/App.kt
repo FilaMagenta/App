@@ -14,7 +14,12 @@ import com.arnyminerz.filamagenta.storage.SettingsFactoryProvider
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.storage.settingsFactory
+import com.arnyminerz.filamagenta.worker.SyncWorker
+import io.github.aakira.napier.Napier
 import io.sentry.kotlin.multiplatform.Sentry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class App : Application() {
     override fun onCreate() {
@@ -39,6 +44,13 @@ class App : Application() {
         accounts.startWatchingAccounts(mainLooper)
 
         SoundPlayer.setCacheDirectory(cacheDir)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            Napier.i { "Scheduling the synchronization worker..." }
+            SyncWorker.schedule(this@App)
+
+            Napier.i { "Synchronization worker scheduled correctly." }
+        }
     }
 
     override fun onTerminate() {
