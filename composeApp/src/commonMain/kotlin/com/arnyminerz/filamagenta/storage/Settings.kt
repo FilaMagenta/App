@@ -29,13 +29,18 @@ object SettingsKeys {
     const val SYS_SHOWN_ADMIN = "_shown_admin"
 
     /**
-     * Stores whether the scanner information has already been shown to the user.
-     */
-    const val SYS_SHOWN_SCANNER = "_shown_scanner"
-
-    /**
      * Used for recovering the state of an event being visualized when the app restarts, for example, after scanning an
      * NFC tag.
      */
     const val SYS_VIEWING_EVENT = "_viewing_event"
+
+    /**
+     * The time of the last wallet synchronization performed.
+     */
+    const val SYS_WALLET_LAST_SYNC = "_last_wallet_sync"
+
+    /**
+     * The time of the last events synchronization performed.
+     */
+    const val SYS_EVENTS_LAST_SYNC = "_last_events_sync"
 }

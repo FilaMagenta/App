@@ -23,17 +23,37 @@ import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.cache.AccountTransaction
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Cache.collectListAsState
+import com.arnyminerz.filamagenta.storage.SettingsKeys.SYS_WALLET_LAST_SYNC
+import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import com.arnyminerz.filamagenta.ui.theme.ExtendedColors
 import com.arnyminerz.filamagenta.utils.euros
 import dev.icerock.moko.resources.compose.stringResource
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.until
+
+/**
+ * Every how many hours should the wallet be refreshed automatically.
+ */
+private const val SyncWalletEveryHours = 12
 
 @Composable
 fun WalletPage(viewModel: MainViewModel) {
     val transactions by Cache.transactions.collectListAsState()
 
     DisposableEffect(transactions) {
-        val coroutine = if (transactions.isEmpty()) {
+        val lastSync = settings.getLongOrNull(SYS_WALLET_LAST_SYNC)?.let(Instant::fromEpochMilliseconds)
+        val now = Clock.System.now()
+
+        val coroutine = if (
+            // Sync if there aren't any transactions
+            transactions.isEmpty() ||
+            // Or lastSync is null
+            // Or time since last sync is greater than SyncWalletEveryHours
+            lastSync?.let { it.until(now, DateTimeUnit.HOUR) >= SyncWalletEveryHours } != false
+        ) {
             viewModel.refreshWallet()
         } else {
             null
