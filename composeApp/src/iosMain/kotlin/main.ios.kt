@@ -1,8 +1,8 @@
 import androidx.compose.ui.window.ComposeUIViewController
-import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.account.AccountsProvider
 import com.arnyminerz.filamagenta.cache.DriverFactory
 import com.arnyminerz.filamagenta.cache.createDatabase
+import com.arnyminerz.filamagenta.diagnostics.SentryDiagnostics
 import com.arnyminerz.filamagenta.lifecycle.updateLocale
 import com.arnyminerz.filamagenta.states.Action
 import com.arnyminerz.filamagenta.states.createStore
@@ -12,6 +12,7 @@ import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.storage.settingsFactory
 import com.arnyminerz.filamagenta.ui.screen.MainScreen
 import com.arnyminerz.filamagenta.ui.theme.AppTheme
+import io.sentry.kotlin.multiplatform.Sentry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 
@@ -19,6 +20,10 @@ val store = CoroutineScope(SupervisorJob()).createStore()
 
 fun MainViewController() = ComposeUIViewController {
     settingsFactory = SettingsFactoryProvider().factory
+
+    SentryDiagnostics.initialize { configurator ->
+        Sentry.init { configurator(it) }
+    }
 
     updateLocale()
 
@@ -35,14 +40,6 @@ fun MainViewController() = ComposeUIViewController {
 
 fun onBackGesture() {
     store.send(Action.OnBackPressed)
-}
-
-object SentryInformation {
-    val SentryDsn = BuildKonfig.SentryDsn
-
-    val ReleaseName = BuildKonfig.ReleaseName
-
-    val IsProduction = BuildKonfig.IsProduction
 }
 
 fun isDataCollectionEnabled(): Boolean {

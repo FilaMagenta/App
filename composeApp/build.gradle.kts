@@ -1,9 +1,9 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import java.io.FileFilter
 import java.time.LocalDateTime
 import java.util.Properties
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -39,6 +39,7 @@ kotlin {
             export(libs.moko.graphics) // toUIColor here
 
             export(libs.multiplatform.viewmodel)
+            export(libs.sentry.multiplatform)
         }
     }
 
@@ -72,7 +73,7 @@ kotlin {
                 api(libs.multiplatform.viewmodel)
                 api(libs.napier)
                 api(libs.libsodium)
-                implementation(libs.sentry.multiplatform)
+                api(libs.sentry.multiplatform)
 
                 // Moko Resources
                 api(libs.moko.resources)
@@ -121,9 +122,6 @@ kotlin {
 
                 implementation(libs.mlkit.barcode)
                 implementation(libs.qrcode.android)
-
-                implementation(libs.sentry.android)
-                implementation(libs.sentry.compose)
 
                 implementation(libs.sqldelight.android)
             }
@@ -306,6 +304,9 @@ buildkonfig {
 
         buildConfigField(STRING, "QrCodeKey", properties.getProperty("encryption.qrcode.key"))
         buildConfigField(STRING, "QrCodeNonce", properties.getProperty("encryption.qrcode.nonce"))
+
+        buildConfigField(STRING, "SentryDsn", "")
+        buildConfigField(BOOLEAN, "IsProduction", "false")
     }
 
     targetConfigs {

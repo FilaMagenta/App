@@ -14,8 +14,6 @@ import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.cache.data.toProductOrder
 import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.data.QrCodeScanResult
-import com.arnyminerz.filamagenta.device.Diagnostics
-import com.arnyminerz.filamagenta.device.launchMeasuring
 import com.arnyminerz.filamagenta.image.QRCodeValidator
 import com.arnyminerz.filamagenta.network.Authorization
 import com.arnyminerz.filamagenta.network.database.SqlServer
@@ -54,6 +52,8 @@ import io.ktor.http.parameters
 import io.ktor.serialization.kotlinx.json.DefaultJson
 import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.errors.IOException
+import io.sentry.kotlin.multiplatform.Sentry
+import io.sentry.kotlin.multiplatform.protocol.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
@@ -193,10 +193,7 @@ class MainViewModel : ViewModel() {
             }
         ).buildString()
 
-    fun login(username: String, password: String): Job = viewModelScope.launchMeasuring(
-        "MainViewModel",
-        "login()"
-    ) {
+    fun login(username: String, password: String): Job = viewModelScope.launch(Dispatchers.IO) {
         val loginData = LoginData(
             BuildKonfig.OAuthClientId,
             username,
@@ -219,7 +216,7 @@ class MainViewModel : ViewModel() {
             Napier.e("Login credentials are not correct.")
 
             loginError.emit(true)
-            return@launchMeasuring
+            return@launch
         }
 
         val codeLocation = httpClient.get(next).let { it.headers[HttpHeaders.Location] }
@@ -234,7 +231,7 @@ class MainViewModel : ViewModel() {
                 _error.emit(
                     RuntimeException("Authentication was redirected without a valid code.")
                 )
-                return@launchMeasuring
+                return@launch
             }
 
             requestToken(code)
@@ -242,20 +239,17 @@ class MainViewModel : ViewModel() {
             Napier.e("Authorization failed.")
 
             loginError.emit(true)
-            return@launchMeasuring
+            return@launch
         }
     }
 
     /**
      * Requests the server for a token and refresh token, then adds the account to the account manager.
      */
-    private fun requestToken(code: String) = viewModelScope.launchMeasuring(
-        "MainViewModel",
-        "requestToken"
-    ) {
+    private fun requestToken(code: String) = viewModelScope.launch(Dispatchers.IO) {
         if (_isRequestingToken.value) {
             println("Tried to request token while another request was in progress.")
-            return@launchMeasuring
+            return@launch
         }
         _isRequestingToken.emit(true)
 
@@ -287,10 +281,15 @@ class MainViewModel : ViewModel() {
                 val username = newAccount.name
                 val email = accounts.getEmail(newAccount)
                 Napier.v("Updating diagnostics information...")
-                Diagnostics.updateUserInformation?.invoke(username, email)
+                Sentry.setUser(
+                    User().apply {
+                        this.username = username
+                        this.email = email
+                    }
+                )
             } else {
                 Napier.v("newAccount is null, removing diagnostics information...")
-                Diagnostics.deleteUserInformation?.invoke()
+                Sentry.setUser(null)
             }
         }
     }
@@ -403,10 +402,7 @@ class MainViewModel : ViewModel() {
      * @throws NullPointerException If [account] doesn't have a selected account.
      * @throws IllegalStateException If the server doesn't return a valid idSocio for [account].
      */
-    suspend fun getOrFetchIdSocio(): Int? = Diagnostics.performance.suspending(
-        "MainViewModel",
-        "getOrFetchIdSocio()"
-    ) {
+    suspend fun getOrFetchIdSocio(): Int? {
         val account = account.value!!
         var idSocio = accounts.getIdSocio(account)
         if (idSocio == null) {
@@ -429,16 +425,16 @@ class MainViewModel : ViewModel() {
             } catch (e: SqlTunnelException) {
                 Napier.e("SQLServer returned an error.", throwable = e)
                 _error.emit(e)
-                return@suspending null
+                return null
             } catch (e: SocketTimeoutException) {
                 Napier.e("Connection timed out while trying to fetch idSocio from server.")
                 _error.emit(e)
-                return@suspending null
+                return null
             }
         }
         checkNotNull(idSocio) { "idSocio must not be null." }
 
-        return@suspending idSocio
+        return idSocio
     }
 
     /**
@@ -453,14 +449,9 @@ class MainViewModel : ViewModel() {
      * @throws SqlTunnelException if there is an error in the SQLServer query.
      */
     @OptIn(ExperimentalSerializationApi::class)
-    private suspend fun getOrFetchAccountData(): AccountData? = Diagnostics.performance.suspending(
-        "MainViewModel",
-        "getOrFetchAccountData()"
-    ) {
-        val account = account.value ?: return@suspending null
-        val idSocio = getOrFetchIdSocio() ?: return@suspending null
-        setMetadata("idSocio", idSocio)
-        setMetadata("account", account.name)
+    private suspend fun getOrFetchAccountData(): AccountData? {
+        val account = account.value ?: return null
+        val idSocio = getOrFetchIdSocio() ?: return null
 
         var data = try {
             accounts.getAccountData(account)
@@ -468,7 +459,7 @@ class MainViewModel : ViewModel() {
             // If data is corrupted, or new fields have been added, ignore the stored one and fetch again
             null
         }
-        data?.let { return@suspending it }
+        data?.let { return it }
 
         try {
             Napier.i("Account doesn't have stored account data. Searching now...")
@@ -534,29 +525,24 @@ class MainViewModel : ViewModel() {
             Napier.i("Updated account data for $account: $data")
         } catch (e: SqlTunnelException) {
             Napier.e("SQLServer returned an error.", throwable = e)
-            return@suspending null
+            return null
         } catch (e: Exception) {
             Napier.e("Could not request account data.", throwable = e)
             _error.emit(e)
-            return@suspending null
+            return null
         }
 
-        data
+        return data
     }
 
     /**
      * Fetches all the transactions from the SQL server, and updates the local cache.
      */
-    fun refreshWallet() = viewModelScope.launchMeasuring(
-        "MainViewModel",
-        "getOrFetchCustomerId()"
-    ) {
+    fun refreshWallet() = viewModelScope.launch(Dispatchers.IO) {
         try {
             _isLoadingWallet.emit(true)
 
-            val idSocio = getOrFetchIdSocio() ?: return@launchMeasuring
-
-            setMetadata("idSocio", idSocio)
+            val idSocio = getOrFetchIdSocio() ?: return@launch
 
             Napier.d("Getting transactions list from server...")
             val result = SqlServer.select("tbApuntesSocios", "*", Where("idSocio", idSocio))[0]
@@ -577,10 +563,7 @@ class MainViewModel : ViewModel() {
      * @throws NullPointerException If [account] doesn't have a selected account.
      * @throws IllegalStateException If the server doesn't return a valid customer id for [account].
      */
-    suspend fun getOrFetchCustomerId(): Int = Diagnostics.performance.suspending(
-        "MainViewModel",
-        "getOrFetchCustomerId()"
-    ) {
+    suspend fun getOrFetchCustomerId(): Int {
         val account = account.value!!
         var customerId = accounts.getCustomerId(account)
 
@@ -601,23 +584,18 @@ class MainViewModel : ViewModel() {
 
         checkNotNull(customerId) { "customerId must not be null." }
 
-        customerId
+        return customerId
     }
 
     /**
      * Fetches all events from the server and updates the local cache.
      */
-    fun refreshEvents() = viewModelScope.launchMeasuring(
-        "MainViewModel",
-        "refreshEvents()"
-    ) {
+    fun refreshEvents() = viewModelScope.launch(Dispatchers.IO) {
         try {
             _isLoadingEvents.emit(true)
 
             // Events will only be fetched for this year. Year is considered until August
             val modifiedAfter = getWorkingYearStart()
-
-            setMetadata("modifiedAfter", modifiedAfter)
 
             Napier.d("Getting products from server after $modifiedAfter...")
 
@@ -634,11 +612,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun fetchOrders(productId: Int) = viewModelScope.launchMeasuring(
-        "MainViewModel",
-        "fetchOrders()",
-        metadata = mapOf("productId" to productId)
-    ) {
+    fun fetchOrders(productId: Int) = viewModelScope.launch(Dispatchers.IO) {
         // Wait until another thread finishes loading
         while (_isLoadingOrders.value) {
             delay(1)
@@ -648,8 +622,6 @@ class MainViewModel : ViewModel() {
             _isLoadingOrders.emit(true)
 
             val customerId = getOrFetchCustomerId()
-
-            setMetadata("customerId", customerId)
 
             Napier.d("Fetching orders for Product#$productId made by Customer#$customerId")
             val orders = WooCommerce.Orders.getOrdersForProductAndCustomer(customerId, productId)
@@ -674,25 +646,18 @@ class MainViewModel : ViewModel() {
     /**
      * Validates the data contained in a QR for event assistance.
      */
-    fun validateQr(source: String) = viewModelScope.launchMeasuring(
-        "MainViewModel",
-        "validateQr()",
-        measurements = mapOf("source-length" to source.length)
-    ) {
+    fun validateQr(source: String) = viewModelScope.launch(Dispatchers.IO) {
         QRCodeValidator.validateQRCode(source, _scanResult, viewingEvent.value)
     }
 
-    fun processNfcTag(data: String) = viewModelScope.launchMeasuring(
-        "MainViewModel",
-        "processNfcTag()"
-    ) {
+    fun processNfcTag(data: String) = viewModelScope.launch(Dispatchers.IO) {
         _scanResult.emit(QrCodeScanResult.Loading)
 
         val viewingEventId = settings.getLongOrNull(SettingsKeys.SYS_VIEWING_EVENT)
         if (viewingEventId != null) {
             val event = database.eventQueries
                 .getById(viewingEventId)
-                .executeAsOneOrNull() ?: return@launchMeasuring
+                .executeAsOneOrNull() ?: return@launch
             viewEvent(event)
 
             // wait until the event is selected at most for 5 seconds
@@ -706,16 +671,11 @@ class MainViewModel : ViewModel() {
         validateQr(data)
     }
 
-    fun downloadTickets(eventId: Long) = viewModelScope.launchMeasuring(
-        "MainViewModel",
-        "downloadTickets()",
-        metadata = mapOf("eventId" to eventId)
-    ) {
+    fun downloadTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
         try {
             _isDownloadingTickets.emit(true)
 
             val orders = WooCommerce.Orders.getOrdersForProduct(eventId.toInt())
-            setMetadata("orders-size", orders.size)
             for (order: Order in orders) {
                 order.toProductOrder().forEach(Cache::insertOrUpdateAdminTicket)
             }
@@ -724,26 +684,17 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun deleteTickets(eventId: Long) = viewModelScope.launchMeasuring(
-        "MainViewModel",
-        "deleteTickets()",
-        metadata = mapOf("eventId" to eventId)
-    ) {
+    fun deleteTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
         database.adminTicketsQueries.deleteByEventId(eventId)
     }
 
-    fun syncScannedTickets(eventId: Long) = viewModelScope.launchMeasuring(
-        "MainViewModel",
-        "syncScannedTickets",
-        metadata = mapOf("eventId" to eventId)
-    ) {
+    fun syncScannedTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
         try {
             _isUploadingScannedTickets.emit(true)
 
             val update = mutableListOf<BatchMetadataUpdate.Entry>()
 
             val tickets = database.adminTicketsQueries.getByEventId(eventId).executeAsList()
-            setMeasurement("tickets-size", tickets.size)
 
             for (ticket in tickets) {
                 // First get the order associated with the event
@@ -779,7 +730,7 @@ class MainViewModel : ViewModel() {
     /**
      * Requests de cache or SQL server for the current user's account data, and updates [accountData] accordingly.
      */
-    fun refreshAccount() = viewModelScope.launchMeasuring("MainViewModel", "refreshAccount()") {
+    fun refreshAccount() = viewModelScope.launch(Dispatchers.IO) {
         val data = getOrFetchAccountData()
         _accountData.emit(data)
     }
