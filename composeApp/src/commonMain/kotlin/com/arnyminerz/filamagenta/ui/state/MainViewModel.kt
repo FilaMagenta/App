@@ -549,6 +549,8 @@ class MainViewModel : ViewModel() {
             Cache.synchronizeTransactions(
                 result.map(List<SqlTunnelEntry>::toAccountTransaction)
             )
+            Napier.d("Updating last sync time...")
+            settings[SettingsKeys.SYS_WALLET_LAST_SYNC] = Clock.System.now().toEpochMilliseconds()
         } catch (e: IOException) {
             _error.emit(e)
         } finally {
@@ -605,6 +607,8 @@ class MainViewModel : ViewModel() {
                     pairs.map { (product, variations) -> product.toEvent(variations) }
                 )
             }
+            Napier.d("Updating last sync time...")
+            settings[SettingsKeys.SYS_EVENTS_LAST_SYNC] = Clock.System.now().toEpochMilliseconds()
         } catch (e: WordpressException) {
             _error.emit(e)
         } finally {

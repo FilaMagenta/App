@@ -13,9 +13,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.data.isComplete
+import com.arnyminerz.filamagenta.storage.SettingsKeys
+import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.list.EventItem
 import com.arnyminerz.filamagenta.ui.reusable.LoadingBox
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
+import kotlinx.datetime.until
+
+/**
+ * Every how many hours should the events list be refreshed automatically.
+ */
+private const val SyncEventsEveryHours = 12
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -25,7 +36,16 @@ fun EventsPage(viewModel: MainViewModel) {
     val events by Cache.events.collectAsState(null)
 
     DisposableEffect(events) {
-        val coroutine = if (events?.isEmpty() == true) {
+        val lastSync = settings.getLongOrNull(SettingsKeys.SYS_EVENTS_LAST_SYNC)?.let(Instant::fromEpochMilliseconds)
+        val now = Clock.System.now()
+
+        val coroutine = if (
+            // Sync if there aren't any events
+            events?.isEmpty() == true ||
+            // Or lastSync is null
+            // Or time since last sync is greater than SyncWalletEveryHours
+            lastSync?.let { it.until(now, DateTimeUnit.HOUR) >= SyncEventsEveryHours } != false
+        ) {
             viewModel.refreshEvents()
         } else {
             null
