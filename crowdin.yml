@@ -1,7 +1,7 @@
 bundles:
   - 2
 files:
-  - source: /shared/src/commonMain/resources/MR/base/strings.xml
-    translation: /shared/src/commonMain/resources/MR/%two_letters_code%/strings.xml
+  - source: /composeApp/src/commonMain/resources/MR/base/strings.xml
+    translation: /composeApp/src/commonMain/resources/MR/%two_letters_code%/strings.xml
   - source: /docs/en/*.md
     translation: /docs/%two_letters_code%/%original_file_name%
