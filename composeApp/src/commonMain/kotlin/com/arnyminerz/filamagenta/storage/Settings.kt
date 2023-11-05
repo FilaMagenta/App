@@ -43,4 +43,9 @@ object SettingsKeys {
      * The time of the last events synchronization performed.
      */
     const val SYS_EVENTS_LAST_SYNC = "_last_events_sync"
+
+    /**
+     * Only applies for Android. The instant in epoch millis when the sync worker was last run.
+     */
+    const val SYS_WORKER_LAST_SYNC = "_last_worker_sync"
 }

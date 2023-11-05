@@ -17,19 +17,23 @@ import androidx.work.workDataOf
 import com.arnyminerz.filamagenta.account.Account
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.network.database.SqlTunnelException
+import com.arnyminerz.filamagenta.storage.SettingsKeys.SYS_WORKER_LAST_SYNC
+import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.sync.EventsSyncHelper
 import com.arnyminerz.filamagenta.sync.WalletSyncHelper
 import com.arnyminerz.filamagenta.sync.utils.AccountUtils
+import com.russhwolf.settings.set
 import io.github.aakira.napier.Napier
 import io.ktor.client.network.sockets.SocketTimeoutException
 import java.util.concurrent.TimeUnit
+import kotlinx.datetime.Clock
 
 class SyncWorker(appContext: Context, workerParams: WorkerParameters) : CoroutineWorker(appContext, workerParams) {
     companion object {
         /**
          * The sync execution interval in hours.
          */
-        private const val INTERVAL_HOURS = 12L
+        const val INTERVAL_HOURS = 12L
 
         /**
          * The time in seconds to wait between the constraints for the work has been met, and the work is run.
@@ -84,6 +88,15 @@ class SyncWorker(appContext: Context, workerParams: WorkerParameters) : Coroutin
 
             return manager.getWorkInfosForUniqueWorkLiveData(UNIQUE_WORK_NAME).map { it.first() }
         }
+
+        /**
+         * If there's a scheduled worker (use [schedule]), this returns its [WorkInfo], otherwise its value will be
+         * null until something is scheduled.
+         */
+        fun getWorkLiveData(context: Context): LiveData<WorkInfo?> =
+            WorkManager.getInstance(context)
+                .getWorkInfosForUniqueWorkLiveData(UNIQUE_WORK_NAME)
+                .map { it.firstOrNull() }
     }
 
     override suspend fun doWork(): Result {
@@ -114,6 +127,9 @@ class SyncWorker(appContext: Context, workerParams: WorkerParameters) : Coroutin
         // Synchronize the events
         Napier.d("Synchronizing events with server...")
         EventsSyncHelper.synchronize()
+
+        // Update the last sync time
+        settings[SYS_WORKER_LAST_SYNC] = Clock.System.now().toEpochMilliseconds()
 
         return Result.success(
             workDataOf(
