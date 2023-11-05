@@ -102,6 +102,11 @@
     <string name="settings_privacy_summary">When downloading and using the app, you have accepted the privacy policy available here.</string>
     <string name="settings_collection_title">Anonymous Data Collection</string>
     <string name="settings_collection_summary">Whether to collect anonymous crash, error and performance reports about the app. Changes apply after an app restart.</string>
+    <string name="settings_worker_title" comment="Only available on Android. Shown in settings to inform the user about the status of the background synchronization worker.">Sync Worker status</string>
+    <string name="settings_worker_summary" comment="Only available on Android. The first number is replaced with a pre-defined constant that configures how often the sync should be run. The string will be completed with the current status: Either never run before, or run x hours ago.">There\'s a service running in the background that synchronizes the data with the server every %d hours. %s</string>
+    <string name="settings_worker_summary_never" comment="Only available on Android. Shown in settings, inside `settings_worker_summary` to tell the user that the synchronization worker has never been run.">It has never been run yet.</string>
+    <string name="settings_worker_summary_last" comment="Only available on Android. Shown in settings, inside `settings_worker_summary` to tell the user that the synchronization worker ran x hours ago.">Last run %d hours ago.</string>
+    <string name="settings_worker_summary_not_scheduled" comment="Only available on Android. Shown in settings, inside `settings_worker_summary` to tell the user that the synchronization worker is currently not scheduled (this is an error).">Worker not scheduled, please, restart the app.</string>
 
     <!-- Admin Intro -->
     <string name="intro_admin_welcome_title">Welcome! You are an administrator</string>
