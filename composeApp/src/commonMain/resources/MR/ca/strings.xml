@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Filà Magenta</string>
+    <!-- The name to display as an identifier for the account type of this app -->
+    <string name="account_label">Filà Magenta</string>
+    <!-- Generic Strings -->
+    <string name="back">Enrere</string>
+    <string name="next">Següent</string>
+    <string name="edit">Editar</string>
+    <string name="save">Desa</string>
+    <string name="cancel">Cancel·la</string>
+    <string name="badge_admin">admin</string>
+    <string name="ok">OK</string>
+    <string name="refresh">Actualitza</string>
+    <string name="done">Fet</string>
+    <string name="delete">Eliminar</string>
+    <string name="copy" comment="Copies something to the clipboard">Copia</string>
+    <string name="synchronize" comment="A generic string for buttons that synchronize some data with the server.">Sincronitzar</string>
+    <string name="server_status" comment="Shown when there's an error, to launch the server status page, and know if something is down.">Estat del Servidor</string>
+    <string name="restart" comment="An action button that restarts the app">Restart</string>
+    <string name="install" comment="Performs an install in the app, usually means installing an update">Install</string>
+    <!-- Generic form strings -->
+    <string name="password_hide">Amagar contrasenya</string>
+    <string name="password_show">Mostrar contrasenya</string>
+    <!-- Login Screen -->
+    <string name="login_title">Iniciar Sessió</string>
+    <string name="login_message">Benvingut/da a l\'aplicació de la Filà Magenta. Per favor, introdueix el teu DNI i la contrasenya que fas servir per a iniciar sessió a la web de la filà.</string>
+    <string name="login_privacy">En iniciar sessió i fer servir l\'app, estàs acceptant la nostra {link}política de privacitat{/link}.</string>
+    <string name="login_username">DNI</string>
+    <string name="login_password">Contrasenya</string>
+    <string name="login_action">Iniciar Sessió</string>
+    <string name="login_error_dni">El DNI introduït no és vàlid.</string>
+    <string name="login_error">DNI o contrasenya incorrectes.</string>
+    <!-- Main Navigation bar -->
+    <string name="nav_wallet">Comptes</string>
+    <string name="nav_events">Actes</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_settings">Ajustos</string>
+    <!-- Event item -->
+    <string name="event_info">Informació de l\'esdeveniment</string>
+    <string name="event_date">Data: %s</string>
+    <string name="event_options_available">Opcions disponibles</string>
+    <string name="event_warnings">Alertes:</string>
+    <string name="event_warnings_date">Data no establerta</string>
+    <string name="event_warnings_type">Tipus no establert</string>
+    <string name="event_date_unknown">Desconeguda</string>
+    <string name="event_type_unknown">Desconegut</string>
+    <string name="event_type_breakfast">Esmorzar</string>
+    <string name="event_type_lunch">Dinar</string>
+    <string name="event_type_dinner">Sopar</string>
+    <string name="event_type_assembly">Assemblea</string>
+    <string name="event_type_workshop">Taller</string>
+    <string name="event_type_lottery">Loteria</string>
+    <string name="event_field_name">Nom</string>
+    <string name="event_field_date">Data</string>
+    <string name="event_field_type">Tipus</string>
+    <string name="event_editor_date">Data</string>
+    <string name="event_editor_time">Hora</string>
+    <!-- Event Screen -->
+    <string name="event_screen_name">Nom de l\'Esdeveniment</string>
+    <string name="event_screen_type">Tipus d\'Esdeveniment</string>
+    <string name="event_screen_date">Data de l\'Esdeveniment</string>
+    <string name="event_screen_loading_order">Carregant Ordre...</string>
+    <string name="event_screen_ticket_title">Tiquet d\'Entrada</string>
+    <string name="event_screen_ticket_subtitle">Aquest és el teu justificant per accedir a la Filà el dia de l\'esdeveniment. No el pergues.</string>
+    <string name="event_screen_admin_scanner">Escàner de Tiquets</string>
+    <string name="event_screen_admin_scanner_download">Descarregar Tiquets</string>
+    <string name="event_screen_admin_scanner_scan">Iniciar Escàner</string>
+    <string name="event_screen_admin_scanner_scan_not_supported" comment="Shown when the device doesn't have a camera">Escàner no Suportat</string>
+    <string name="event_screen_admin_scanner_sync_title">Sincronitza amb el Servidor</string>
+    <string name="event_screen_admin_scanner_sync_message">Si has escanejat tiquets nous, assegura\'t de polsar el botó de baix quan tinguis una connexió a Internet activa. Sincronitzarà totes les dades amb el servidor.</string>
+    <string name="event_screen_admin_scanner_list">Llista d\'usuaris</string>
+    <string name="event_screen_admin_scanner_nfc_supported">NFC is supported</string>
+    <!-- Wallet Screen -->
+    <string name="wallet_income">Ingressos</string>
+    <string name="wallet_balance">Saldo</string>
+    <string name="wallet_outcome">Eixides</string>
+    <!-- Settings -->
+    <string name="settings_section_account">Compte</string>
+    <string name="settings_account_title">Sessió iniciada com a %s</string>
+    <string name="settings_account_summary">Toca per a tancar la sessió</string>
+    <string name="settings_section_user_interface">Interfície d\'Usuari</string>
+    <string name="settings_language_title">Idioma</string>
+    <string name="settings_language_system">Per defecte</string>
+    <string name="settings_section_application">Informació de l\'App</string>
+    <string name="settings_release_title">Versió</string>
+    <string name="settings_translations_title">Traduccions</string>
+    <string name="settings_translations_summary">Tradueix l\'app al teu idioma a Crowdin.</string>
+    <string name="settings_source_title">Codi Font</string>
+    <string name="settings_source_summary">El codi font de l\'app està disponible a GitHub.</string>
+    <string name="settings_privacy_title">Política de Privadesa</string>
+    <string name="settings_privacy_summary">En descarregar i fer servir l\'app, estàs acceptant la política de privadesa disponible ací.</string>
+    <string name="settings_collection_title">Recol·lecció anònima de dades</string>
+    <string name="settings_collection_summary">Si poden recopilar informes anònims de crashejos, errors i rendiment sobre l\'aplicació. Els canvis s\'apliquen després de reiniciar l\'aplicació.</string>
+    <!-- Admin Intro -->
+    <string name="intro_admin_welcome_title">Benvingut! Eres un administrador</string>
+    <string name="intro_admin_welcome_message">Els administradors tenen més funcions a l\'app, així que és important que conegues com funcionen.</string>
+    <string name="intro_admin_scanner_title">Escàner de codis QR</string>
+    <string name="intro_admin_scanner_message">Com a administrador, pots escanejar els codis QR de tiquets a l\'entrada d\'un esdeveniment per a verificar que són vàlids, a més de mantenir un registre de la gent que acudeix. Per assegurar-se que no hi han problemes amb la connexió a Internet, els tiquets escanejats es desen al dispositiu localment, fins a que vulguis pujar-los al servidor. Per aquest motiu, és important no fer servir més d\'un dispositiu al mateix temps.</string>
+    <!-- Barcode Scanner -->
+    <string name="scan_barcode_instruction">Escanejar codi QR</string>
+    <string name="scan_qr_code">Col·loca el codi al centre de la pantalla</string>
+    <string name="scan_info_title">Informació de l\'Escàner</string>
+    <string name="scan_info_message">Has iniciat l\'escàner, et permet verificar els tiquets de la gent. Per favor, fes servir només un dispositiu per a escanejar, ja que el servidor no serà actualitzat automàticament, el que pot donar lloc a falsos positius. En acabar d\'escanejar, sincronitza les dades amb el servidor.</string>
+    <string name="scan_result_success">Tiquet Vàlid!</string>
+    <string name="scan_result_reused">Tiquet Reutilitzat!</string>
+    <string name="scan_result_invalid">Tiquet Invàlid!</string>
+    <string name="scan_result_not_viewing">Not viewing any event!</string>
+    <string name="scan_result_tickets_empty">Ticket list is not downloaded!</string>
+    <string name="scan_result_loading">Loading...</string>
+    <!-- Error Dialog -->
+    <string name="error_dialog_title">Error</string>
+    <string name="error_dialog_message">El servidor ha retornat un error al realitzar una petició, per favor, comparteix aquesta informació amb un administrador:</string>
+    <string name="error_dialog_path">Camí: </string>
+    <string name="error_dialog_status">Estat: </string>
+    <string name="error_dialog_code">Codi: </string>
+    <string name="error_dialog_msg">Missatge: </string>
+    <string name="error_dialog_trace">Registres: </string>
+    <!-- Profile Page -->
+    <string name="profile_title_personal_data">Personal Data</string>
+    <string name="profile_email">Email</string>
+    <string name="profile_address">Address</string>
+    <string name="profile_postal_code">PC</string>
+    <string name="profile_city">City</string>
+    <string name="profile_birthday">Birthday</string>
+    <string name="profile_warning_email_match">The email stored in the database and the one in the website do not match. Please contact with an administrator to solve the issue.</string>
+    <!-- Update Available dialog -->
+    <string name="update_available_dialog_title">Update Available</string>
+    <string name="update_available_dialog_message">Restart the app to install the update</string>
+</resources>
