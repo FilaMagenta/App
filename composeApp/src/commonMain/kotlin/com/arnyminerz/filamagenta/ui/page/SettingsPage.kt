@@ -32,6 +32,8 @@ import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.getBooleanState
 import com.arnyminerz.filamagenta.storage.getStringState
 import com.arnyminerz.filamagenta.storage.settings
+import com.arnyminerz.filamagenta.ui.platform.PlatformSettings
+import com.arnyminerz.filamagenta.ui.platform.platformSpecificSettings
 import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsItem
 import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsList
 import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsSection
@@ -66,7 +68,7 @@ fun SettingsPage(viewModel: MainViewModel) {
             .padding(horizontal = 8.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        selectedAccount?.let {  account ->
+        selectedAccount?.let { account ->
             SettingsSection(
                 text = stringResource(MR.strings.settings_section_account)
             )
@@ -76,6 +78,8 @@ fun SettingsPage(viewModel: MainViewModel) {
                 summary = stringResource(MR.strings.settings_account_summary),
                 icon = Icons.Outlined.Person
             ) { accounts.removeAccount(account) }
+
+            platformSpecificSettings[PlatformSettings.SECTION_ACCOUNT]?.invoke()
         }
 
 
@@ -98,6 +102,8 @@ fun SettingsPage(viewModel: MainViewModel) {
             toString = { it.displayName },
             icon = Icons.Outlined.Language
         ) { selectedLanguage = it.langCode }
+
+        platformSpecificSettings[PlatformSettings.SECTION_UI]?.invoke()
 
 
         SettingsSection(
@@ -137,5 +143,7 @@ fun SettingsPage(viewModel: MainViewModel) {
                 )
             }
         ) { dataCollection = !dataCollection }
+
+        platformSpecificSettings[PlatformSettings.SECTION_INFO]?.invoke()
     }
 }
