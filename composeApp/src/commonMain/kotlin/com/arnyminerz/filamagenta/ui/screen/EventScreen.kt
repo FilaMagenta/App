@@ -50,6 +50,7 @@ import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.data.qrcode
 import com.arnyminerz.filamagenta.device.PlatformInformation
+import com.arnyminerz.filamagenta.image.QRCodeGenerator
 import com.arnyminerz.filamagenta.ui.dialog.UsersModalBottomSheet
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.EventInformationRow
@@ -65,7 +66,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
-import qrcode.QRCode
 
 private const val BrokenPaperShapeSize = 100f
 
@@ -78,6 +78,8 @@ fun EventScreen(
     event: Event,
     viewModel: MainViewModel
 ) {
+    val density = LocalDensity.current
+
     val isAdmin by viewModel.isAdmin.collectAsState(false)
     val loadingOrders by viewModel.isLoadingOrders.collectAsState(false)
     val isDownloadingTickets by viewModel.isDownloadingTickets.collectAsState(false)
@@ -223,9 +225,7 @@ fun EventScreen(
                         LaunchedEffect(order) {
                             CoroutineScope(Dispatchers.IO).launch {
                                 val data = order.qrcode().encrypt()
-                                image = QRCode.ofSquares()
-                                    .build(data)
-                                    .render()
+                                image = QRCodeGenerator.generate(data, density, 192.dp)
                             }
                         }
 

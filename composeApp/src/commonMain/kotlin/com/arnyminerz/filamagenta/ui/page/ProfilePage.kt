@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
@@ -31,6 +32,7 @@ import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.AccountData
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.data.qrcode
+import com.arnyminerz.filamagenta.image.QRCodeGenerator
 import com.arnyminerz.filamagenta.ui.modifier.placeholder.placeholder
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
@@ -44,11 +46,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
-import qrcode.QRCode
 
 @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class)
 @Composable
 fun ProfilePage(viewModel: MainViewModel) {
+    val density = LocalDensity.current
+
     val viewModelAccount by viewModel.account.collectAsState()
 
     val loadingAccountData by viewModel.isLoadingAccount.collectAsState(false)
@@ -68,9 +71,7 @@ fun ProfilePage(viewModel: MainViewModel) {
                 val qr = account.qrcode()
                 val data = qr.encrypt()
                 Napier.d("Profile QR: $data")
-                qrCode = QRCode.ofSquares()
-                    .build(data)
-                    .render()
+                qrCode = QRCodeGenerator.generate(data, density, 192.dp)
             }
         }
 
