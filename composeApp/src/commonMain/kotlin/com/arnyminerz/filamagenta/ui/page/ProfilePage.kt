@@ -30,9 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.AccountData
 import com.arnyminerz.filamagenta.account.accounts
-import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.data.qrcode
-import com.arnyminerz.filamagenta.image.generateQRCode
 import com.arnyminerz.filamagenta.ui.modifier.placeholder.placeholder
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
@@ -46,6 +44,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
+import qrcode.QRCode
 
 @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class)
 @Composable
@@ -69,9 +68,9 @@ fun ProfilePage(viewModel: MainViewModel) {
                 val qr = account.qrcode()
                 val data = qr.encrypt()
                 Napier.d("Profile QR: $data")
-                qrCode = Cache.imageCache(data) {
-                    generateQRCode(data)
-                }
+                qrCode = QRCode.ofSquares()
+                    .build(data)
+                    .render()
             }
         }
 
