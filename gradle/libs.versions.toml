@@ -29,7 +29,7 @@ moko-graphics = "0.9.0"
 napier = "2.6.1"
 play-appUpdate = "2.1.0"
 qrcode = "4.0.6"
-sentry-multiplatform = "0.2.1"
+sentry-multiplatform = "0.3.0"
 sqldelight = "2.0.0"
 
 [libraries]
