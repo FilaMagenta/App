@@ -74,6 +74,7 @@ kotlin {
                 api(libs.napier)
                 api(libs.libsodium)
                 api(libs.sentry.multiplatform)
+                api(libs.qrcode.kotlin)
 
                 // Moko Resources
                 api(libs.moko.resources)
@@ -123,7 +124,6 @@ kotlin {
                 implementation(libs.play.appUpdate.ktx)
 
                 implementation(libs.mlkit.barcode)
-                implementation(libs.qrcode.android)
 
                 implementation(libs.sqldelight.android)
             }

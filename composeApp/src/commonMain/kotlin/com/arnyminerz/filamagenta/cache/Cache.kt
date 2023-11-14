@@ -151,19 +151,6 @@ object Cache {
         }
     }
 
-    suspend fun imageCache(key: String, ignoreCache: Boolean = false, block: suspend () -> ByteArray): ByteArray {
-        if (!ignoreCache) {
-            val cached = database.imageCacheQueries.getByKey(key).executeAsOneOrNull()
-            if (cached != null) return cached.data_
-        } else {
-            database.imageCacheQueries.remove(key)
-        }
-
-        val new = block()
-        database.imageCacheQueries.insert(key, new)
-        return new
-    }
-
     fun insertOrUpdateAdminTicket(order: ProductOrder) {
         val element = database.adminTicketsQueries
             .getById(order.id)

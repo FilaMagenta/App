@@ -46,7 +46,6 @@ object AccountUtils {
                 throw e
             }
         }
-        checkNotNull(idSocio) { "idSocio must not be null." }
 
         return idSocio
     }

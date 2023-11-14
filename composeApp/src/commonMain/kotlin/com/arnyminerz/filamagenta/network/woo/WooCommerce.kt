@@ -41,8 +41,8 @@ import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
@@ -249,22 +249,22 @@ object WooCommerce {
             )
         }
 
-        suspend fun getProductsAndVariations(modifiedAfter: LocalDate? = null): Map<Product, List<Variation>> {
+        suspend fun getProductsAndVariations(
+            modifiedAfter: LocalDate? = null
+        ): Map<Product, List<Variation>> = coroutineScope {
             val products = getProducts(modifiedAfter)
             val variationsCache = mutableMapOf<Int, Variation>()
             val result = mutableMapOf<Product, List<Variation>>()
 
-            val jobs = mutableListOf<Job>()
-
-            for (product in products) {
+            val jobs = products.map { product ->
                 if (product.variations.isEmpty()) {
                     Napier.d("Product#${product.id} doesn't have any variations.")
-                    jobs += coroutineScope.launch {
+                    coroutineScope.launch {
                         result[product] = emptyList()
                     }
                 } else {
                     Napier.d("Product#${product.id} has ${product.variations.size} variations.")
-                    jobs += coroutineScope.launch {
+                    coroutineScope.launch {
                         if (product.variations.all { variationsCache.containsKey(it) }) {
                             // All the variations are cached, load from there
                             Napier.v("Variations for Product#${product.id} are available in cache.")
@@ -289,7 +289,7 @@ object WooCommerce {
                 Napier.d("Progress: $index / ${products.size}")
             }
 
-            return result
+            result
         }
 
         /**

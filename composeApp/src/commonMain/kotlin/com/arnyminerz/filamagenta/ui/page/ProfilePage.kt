@@ -16,9 +16,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -30,11 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.AccountData
 import com.arnyminerz.filamagenta.account.accounts
-import com.arnyminerz.filamagenta.cache.Cache
-import com.arnyminerz.filamagenta.cache.data.qrcode
-import com.arnyminerz.filamagenta.image.generateQRCode
 import com.arnyminerz.filamagenta.ui.modifier.placeholder.placeholder
-import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
 import com.arnyminerz.filamagenta.ui.reusable.LoadingBox
 import com.arnyminerz.filamagenta.ui.reusable.form.FormField
@@ -42,10 +35,6 @@ import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.stringResource
 import io.github.aakira.napier.Napier
 import kotlin.io.encoding.ExperimentalEncodingApi
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class)
 @Composable
@@ -54,26 +43,10 @@ fun ProfilePage(viewModel: MainViewModel) {
 
     val loadingAccountData by viewModel.isLoadingAccount.collectAsState(false)
     val accountData by viewModel.accountData.collectAsState()
+    val qrCode by viewModel.profileQrCode.collectAsState()
 
     viewModelAccount?.let { account ->
         val email = accounts.getEmail(account)
-
-        var qrCode by remember { mutableStateOf<ByteArray?>(null) }
-
-        LaunchedEffect(account) {
-            CoroutineScope(Dispatchers.IO).launch {
-                // Make sure the fields have been loaded before calling qrcode
-                viewModel.getOrFetchIdSocio()
-                viewModel.getOrFetchCustomerId()
-
-                val qr = account.qrcode()
-                val data = qr.encrypt()
-                Napier.d("Profile QR: $data")
-                qrCode = Cache.imageCache(data) {
-                    generateQRCode(data)
-                }
-            }
-        }
 
         DisposableEffect(account) {
             val coroutine = if (accountData == null && !loadingAccountData) {
@@ -88,6 +61,12 @@ fun ProfilePage(viewModel: MainViewModel) {
             onDispose { coroutine?.cancel() }
         }
 
+        LaunchedEffect(accountData) {
+            if (accountData != null) {
+                viewModel.loadProfileQRCode()
+            }
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -95,7 +74,7 @@ fun ProfilePage(viewModel: MainViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             ImageLoader(
-                image = qrCode?.toImageBitmap(),
+                image = qrCode,
                 contentDescription = account.name,
                 modifier = Modifier
                     .size(192.dp)

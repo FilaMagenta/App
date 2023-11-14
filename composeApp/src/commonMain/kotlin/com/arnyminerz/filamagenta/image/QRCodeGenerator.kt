@@ -1,8 +1,20 @@
 package com.arnyminerz.filamagenta.image
 
-expect suspend fun generateQRCode(
-    content: String,
-    cellSize: Int = 25,
-    darkColor: Int = 0xFF000000.toInt(),
-    brightColor: Int = 0xFFFFFFFF.toInt()
-): ByteArray
+import qrcode.QRCode
+import qrcode.color.Colors
+
+object QRCodeGenerator {
+    fun generate(
+        data: String,
+        size: Int = 25,
+        foregroundColor: Int = Colors.BLACK,
+        backgroundColor: Int = Colors.WHITE
+    ): ByteArray {
+        return QRCode.ofSquares()
+            .withBackgroundColor(backgroundColor)
+            .withColor(foregroundColor)
+            .withSize(size)
+            .build(data)
+            .renderToBytes()
+    }
+}
