@@ -239,7 +239,7 @@ class MainViewModel : ViewModel() {
 
             requestToken(code)
         } else {
-            Napier.e("Authorization failed.")
+            Napier.e("Authorization failed. Location: $codeLocation. Next: $next")
 
             loginError.emit(true)
             return@launch
@@ -281,6 +281,8 @@ class MainViewModel : ViewModel() {
 
             // Update the diagnostics information
             if (newAccount != null) {
+                getOrFetchAccountData() // make sure the data is available
+
                 val username = newAccount.name
                 val email = accounts.getEmail(newAccount)
                 Napier.v("Updating diagnostics information...")
