@@ -544,6 +544,8 @@ class MainViewModel : ViewModel() {
             EventsSyncHelper.synchronize()
         } catch (e: WordpressException) {
             _error.emit(e)
+        } catch (_: CancellationException) {
+            // Ignore errors with cancellations
         } finally {
             _isLoadingEvents.emit(false)
         }

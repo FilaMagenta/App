@@ -18,6 +18,8 @@ import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.list.EventItem
 import com.arnyminerz.filamagenta.ui.reusable.LoadingBox
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -51,7 +53,9 @@ fun EventsPage(viewModel: MainViewModel) {
             null
         }
 
-        onDispose { coroutine?.cancel() }
+        onDispose {
+            runBlocking { coroutine?.cancelAndJoin() }
+        }
     }
 
     events
