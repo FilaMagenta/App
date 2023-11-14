@@ -179,7 +179,6 @@ fun LoginScreen(
                 val linkStartPosition = source.indexOf(linkStart).takeIf { it >= 0 } ?: 0
                 val linkEndPosition = source.indexOf(linkEnd).takeIf { it >= 0 } ?: source.length
 
-                Napier.i("Privacy: $source")
                 pushStyle(SpanStyle(color = MaterialTheme.colorScheme.onBackground))
                 pushStyle(ParagraphStyle(textAlign = TextAlign.Center))
                 append(
