@@ -44,6 +44,9 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
+      - name: Prepare Gradle secure file
+        run: echo '${{ secrets.LOCAL_PROPERTIES }}' >> local.properties
+
       - name: Build
         run: ./gradlew --no-daemon composeApp:assembleDebug
 
