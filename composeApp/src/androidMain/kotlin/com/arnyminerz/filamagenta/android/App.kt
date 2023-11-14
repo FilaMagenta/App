@@ -16,7 +16,6 @@ import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.storage.settingsFactory
 import com.arnyminerz.filamagenta.worker.SyncWorker
 import io.github.aakira.napier.Napier
-import io.sentry.kotlin.multiplatform.Sentry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,9 +28,7 @@ class App : Application() {
 
         settingsFactory = SettingsFactoryProvider(this).factory
 
-        SentryDiagnostics.initialize { configurator ->
-            Sentry.init(this) { configurator(it) }
-        }
+        SentryDiagnostics.initialize()
 
         PlatformInformation.hasCameraFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
         PlatformInformation.hasNfcFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_NFC)

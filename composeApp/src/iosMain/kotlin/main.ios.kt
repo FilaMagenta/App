@@ -12,7 +12,6 @@ import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.storage.settingsFactory
 import com.arnyminerz.filamagenta.ui.screen.MainScreen
 import com.arnyminerz.filamagenta.ui.theme.AppTheme
-import io.sentry.kotlin.multiplatform.Sentry
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 
@@ -21,9 +20,7 @@ val store = CoroutineScope(SupervisorJob()).createStore()
 fun MainViewController() = ComposeUIViewController {
     settingsFactory = SettingsFactoryProvider().factory
 
-    SentryDiagnostics.initialize { configurator ->
-        Sentry.init { configurator(it) }
-    }
+    SentryDiagnostics.initialize()
 
     updateLocale()
 
