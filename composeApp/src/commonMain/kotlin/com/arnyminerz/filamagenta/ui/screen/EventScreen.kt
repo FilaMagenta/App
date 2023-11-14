@@ -78,8 +78,6 @@ fun EventScreen(
     event: Event,
     viewModel: MainViewModel
 ) {
-    val density = LocalDensity.current
-
     val isAdmin by viewModel.isAdmin.collectAsState(false)
     val loadingOrders by viewModel.isLoadingOrders.collectAsState(false)
     val isDownloadingTickets by viewModel.isDownloadingTickets.collectAsState(false)
