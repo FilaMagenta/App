@@ -19,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
@@ -40,8 +39,6 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class)
 @Composable
 fun ProfilePage(viewModel: MainViewModel) {
-    val density = LocalDensity.current
-
     val viewModelAccount by viewModel.account.collectAsState()
 
     val loadingAccountData by viewModel.isLoadingAccount.collectAsState(false)
@@ -66,7 +63,7 @@ fun ProfilePage(viewModel: MainViewModel) {
 
         LaunchedEffect(accountData) {
             if (accountData != null) {
-                viewModel.loadProfileQRCode(density)
+                viewModel.loadProfileQRCode()
             }
         }
 

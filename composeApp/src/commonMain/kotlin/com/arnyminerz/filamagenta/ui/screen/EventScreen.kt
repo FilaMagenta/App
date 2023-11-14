@@ -61,11 +61,11 @@ import com.arnyminerz.filamagenta.ui.shape.BrokenPaperShape
 import com.arnyminerz.filamagenta.ui.state.MainViewModel
 import dev.icerock.moko.resources.compose.fontFamilyResource
 import dev.icerock.moko.resources.compose.stringResource
-import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 private const val BrokenPaperShapeSize = 100f
 
@@ -225,7 +225,7 @@ fun EventScreen(
                         LaunchedEffect(order) {
                             CoroutineScope(Dispatchers.IO).launch {
                                 val data = order.qrcode().encrypt()
-                                image = QRCodeGenerator.generate(data, density, 192.dp)
+                                image = QRCodeGenerator.generate(data)
                             }
                         }
 

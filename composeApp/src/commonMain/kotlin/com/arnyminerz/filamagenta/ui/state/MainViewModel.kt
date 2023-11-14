@@ -1,8 +1,6 @@
 package com.arnyminerz.filamagenta.ui.state
 
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.account.Account
 import com.arnyminerz.filamagenta.account.AccountData
@@ -689,13 +687,11 @@ class MainViewModel : ViewModel() {
     /**
      * Loads the QR code for the current [account], and stores it into [profileQrCode].
      *
-     * @param density It's used for calculating the optimal QR code size for the current screen size.
-     *
      * @return A [Job] that can be observed to know when the load has been completed
      */
     @ExperimentalEncodingApi
     @ExperimentalUnsignedTypes
-    fun loadProfileQRCode(density: Density) = viewModelScope.launch(Dispatchers.IO) {
+    fun loadProfileQRCode() = viewModelScope.launch(Dispatchers.IO) {
         // Make sure the fields have been loaded before calling qrcode
         getOrFetchIdSocio()
         getOrFetchCustomerId()
@@ -703,8 +699,8 @@ class MainViewModel : ViewModel() {
         val qr = account.value!!.qrcode()
         val data = qr.encrypt()
         Napier.d("Profile QR: $data")
-        _profileQrCode.emit(
-            QRCodeGenerator.generate(data, density, 192.dp).toImageBitmap()
-        )
+        val image = QRCodeGenerator.generate(data).toImageBitmap()
+        Napier.d("Generated QR code image.")
+        _profileQrCode.emit(image)
     }
 }
