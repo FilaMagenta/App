@@ -1,5 +1,8 @@
 package com.arnyminerz.filamagenta.ui.state
 
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.account.Account
 import com.arnyminerz.filamagenta.account.AccountData
@@ -9,10 +12,12 @@ import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.extractMetadata
+import com.arnyminerz.filamagenta.cache.data.qrcode
 import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.cache.data.toProductOrder
 import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.data.QrCodeScanResult
+import com.arnyminerz.filamagenta.image.QRCodeGenerator
 import com.arnyminerz.filamagenta.image.QRCodeValidator
 import com.arnyminerz.filamagenta.network.Authorization
 import com.arnyminerz.filamagenta.network.database.SqlServer
@@ -37,6 +42,7 @@ import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.sync.EventsSyncHelper
 import com.arnyminerz.filamagenta.sync.WalletSyncHelper
 import com.arnyminerz.filamagenta.sync.utils.AccountUtils
+import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.utils.toEpochMillisecondsString
 import com.doublesymmetry.viewmodel.ViewModel
 import com.russhwolf.settings.set
@@ -68,6 +74,7 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MissingFieldException
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Suppress("TooManyFunctions")
 class MainViewModel : ViewModel() {
@@ -113,6 +120,9 @@ class MainViewModel : ViewModel() {
 
     private val _accountData = MutableStateFlow<AccountData?>(null)
     val accountData: StateFlow<AccountData?> get() = _accountData
+
+    private val _profileQrCode = MutableStateFlow<ImageBitmap?>(null)
+    val profileQrCode: StateFlow<ImageBitmap?> get() = _profileQrCode
 
     /**
      * Whether there's something being loaded in the background.
@@ -672,5 +682,20 @@ class MainViewModel : ViewModel() {
     fun refreshAccount() = viewModelScope.launch(Dispatchers.IO) {
         val data = getOrFetchAccountData()
         _accountData.emit(data)
+    }
+
+    @ExperimentalEncodingApi
+    @ExperimentalUnsignedTypes
+    fun loadProfileQRCode(density: Density) = viewModelScope.launch(Dispatchers.IO) {
+        // Make sure the fields have been loaded before calling qrcode
+        getOrFetchIdSocio()
+        getOrFetchCustomerId()
+
+        val qr = account.value!!.qrcode()
+        val data = qr.encrypt()
+        Napier.d("Profile QR: $data")
+        _profileQrCode.emit(
+            QRCodeGenerator.generate(data, density, 192.dp).toImageBitmap()
+        )
     }
 }
