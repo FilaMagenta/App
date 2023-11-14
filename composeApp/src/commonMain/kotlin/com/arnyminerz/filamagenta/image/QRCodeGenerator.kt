@@ -27,6 +27,6 @@ object QRCodeGenerator {
             .withColor(foregroundColor)
             .withSize(size)
             .build(data)
-            .render()
+            .renderToBytes()
     }
 }
