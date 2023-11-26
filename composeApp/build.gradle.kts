@@ -69,7 +69,7 @@ kotlin {
                 implementation(libs.kotlinx.serialization)
 
                 // Multiplatform libraries
-                implementation(libs.blueFalcon.base)
+                implementation(libs.blueFalcon)
                 api(libs.multiplatform.settings)
                 api(libs.multiplatform.viewmodel)
                 api(libs.napier)
@@ -125,7 +125,6 @@ kotlin {
                 implementation(libs.play.appUpdate.ktx)
 
                 implementation(libs.mlkit.barcode)
-                implementation(libs.blueFalcon.android)
 
                 implementation(libs.sqldelight.android)
             }
