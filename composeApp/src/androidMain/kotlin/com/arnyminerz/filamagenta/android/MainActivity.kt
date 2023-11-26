@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.nfc.NfcAdapter
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -32,6 +33,12 @@ import com.russhwolf.settings.SettingsListener
 import com.russhwolf.settings.set
 import dev.icerock.moko.resources.desc.StringDesc
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -41,6 +48,13 @@ class MainActivity : AppCompatActivity() {
          * From which app update priority the update should be forced.
          */
         const val APP_UPDATE_PRIORITY_MAJOR = 4
+
+        /**
+         * Holds an instance of the activity class that is automatically disposed when the activity
+         * is destroyed.
+         */
+        var instance: MainActivity? = null
+            private set
     }
 
     private val viewModel by viewModels<Model>()
@@ -60,8 +74,16 @@ class MainActivity : AppCompatActivity() {
 
     private val appUpdateManager by lazy { AppUpdateManagerFactory.create(this) }
 
+    private val permissionResultFlow = MutableStateFlow<Map<String, Boolean>?>(null)
+
+    private val requestPermissionLauncher = registerForActivityResult(RequestMultiplePermissions()) {
+        permissionResultFlow.value = it
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        instance = this
 
         updateAppLocale()
 
@@ -111,6 +133,12 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         checkForUpdates()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        instance = null
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -168,6 +196,27 @@ class MainActivity : AppCompatActivity() {
                     appUpdateManager.unregisterListener(listener)
                 }
             }
+        }
+    }
+
+    suspend fun requestPermissions(permissions: List<String>) = suspendCancellableCoroutine { cont ->
+        permissionResultFlow.value = null
+
+        Napier.d { "Launching permission request for $permissions..." }
+        requestPermissionLauncher.launch(permissions.toTypedArray())
+
+        try {
+            runBlocking {
+                Napier.d("Collecting permission result...")
+                permissionResultFlow.collect {
+                    if (it != null) {
+                        Napier.d("Permission request complete. Result: $it")
+                        cont.resume(it)
+                        cancel()
+                    }
+                }
+            }
+        } catch (_: CancellationException) {
         }
     }
 
