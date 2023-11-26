@@ -15,4 +15,9 @@ expect object PlatformInformation {
      * Checks whether the device supports NFC.
      */
     fun isNfcSupported(): Boolean
+
+    /**
+     * Checks whether the device supports BLE.
+     */
+    fun isBLESupported(): Boolean
 }

@@ -15,4 +15,9 @@ actual object PlatformInformation {
      * Checks whether the device supports NFC.
      */
     actual fun isNfcSupported(): Boolean = false
+
+    /**
+     * Checks whether the device supports BLE.
+     */
+    actual fun isBLESupported(): Boolean = true
 }
