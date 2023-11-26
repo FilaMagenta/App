@@ -1,9 +1,9 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import java.io.FileFilter
 import java.time.LocalDateTime
 import java.util.Properties
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -69,6 +69,7 @@ kotlin {
                 implementation(libs.kotlinx.serialization)
 
                 // Multiplatform libraries
+                implementation(libs.blueFalcon.base)
                 api(libs.multiplatform.settings)
                 api(libs.multiplatform.viewmodel)
                 api(libs.napier)
@@ -124,6 +125,8 @@ kotlin {
                 implementation(libs.play.appUpdate.ktx)
 
                 implementation(libs.mlkit.barcode)
+                implementation(libs.qrcode.android)
+                implementation(libs.blueFalcon.android)
 
                 implementation(libs.sqldelight.android)
             }
