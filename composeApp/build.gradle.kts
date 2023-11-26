@@ -125,7 +125,6 @@ kotlin {
                 implementation(libs.play.appUpdate.ktx)
 
                 implementation(libs.mlkit.barcode)
-                implementation(libs.qrcode.android)
                 implementation(libs.blueFalcon.android)
 
                 implementation(libs.sqldelight.android)
