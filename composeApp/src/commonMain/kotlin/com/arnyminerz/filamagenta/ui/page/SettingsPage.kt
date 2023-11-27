@@ -37,7 +37,7 @@ import com.arnyminerz.filamagenta.ui.platform.platformSpecificSettings
 import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsItem
 import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsList
 import com.arnyminerz.filamagenta.ui.reusable.settings.SettingsSection
-import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import com.arnyminerz.filamagenta.ui.state.MainScreenModel
 import com.arnyminerz.filamagenta.utils.Language
 import com.arnyminerz.filamagenta.utils.UriUtils.CROWDIN_PROJECT_URL
 import com.arnyminerz.filamagenta.utils.UriUtils.GITHUB_REPO_URL
@@ -48,7 +48,7 @@ import dev.icerock.moko.resources.desc.StringDesc
 import io.github.aakira.napier.Napier
 
 @Composable
-fun SettingsPage(viewModel: MainViewModel) {
+fun SettingsPage(viewModel: MainScreenModel) {
     val uriHandler = LocalUriHandler.current
     val clipboardManager = LocalClipboardManager.current
 

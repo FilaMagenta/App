@@ -27,6 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -40,7 +41,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cafe.adriel.voyager.core.model.rememberScreenModel
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.arnyminerz.filamagenta.MR
+import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Cache.collectListAsState
 import com.arnyminerz.filamagenta.cache.Event
@@ -51,6 +57,9 @@ import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.data.qrcode
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.image.QRCodeGenerator
+import com.arnyminerz.filamagenta.storage.SettingsKeys
+import com.arnyminerz.filamagenta.storage.getStringState
+import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.dialog.UsersModalBottomSheet
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.EventInformationRow
@@ -58,7 +67,7 @@ import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
 import com.arnyminerz.filamagenta.ui.reusable.LoadingCard
 import com.arnyminerz.filamagenta.ui.section.event.AdminScanner
 import com.arnyminerz.filamagenta.ui.shape.BrokenPaperShape
-import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import com.arnyminerz.filamagenta.ui.state.EventScreenModel
 import dev.icerock.moko.resources.compose.fontFamilyResource
 import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.coroutines.CoroutineScope
@@ -67,223 +76,256 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-private const val BrokenPaperShapeSize = 100f
-
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class
+    ExperimentalEncodingApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalUnsignedTypes::class,
 )
-@Composable
-@Suppress("LongMethod")
-fun EventScreen(
-    event: Event,
-    viewModel: MainViewModel
-) {
-    val isAdmin by viewModel.isAdmin.collectAsState(false)
-    val loadingOrders by viewModel.isLoadingOrders.collectAsState(false)
-    val isDownloadingTickets by viewModel.isDownloadingTickets.collectAsState(false)
-    val isUploadingScannedTickets by viewModel.isUploadingScannedTickets.collectAsState(false)
+class EventScreen(private val event: Event) : Screen {
+    companion object {
+        private const val BrokenPaperShapeSize = 100f
+    }
 
-    val orders by Cache.ordersForEvent(event.id).collectListAsState()
-    val adminTickets by Cache.adminTicketsForEvent(event.id).collectListAsState()
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val screenModel = rememberScreenModel { EventScreenModel(event) }
 
-    val onEditRequested = viewModel::edit.takeIf { isAdmin == true }
+        val event by screenModel.event.collectAsState()
 
-    var showingPeopleDialog by remember { mutableStateOf(false) }
+        val accountsList by accounts.getAccountsLive().collectAsState()
+        val selectedAccount by settings.getStringState(SettingsKeys.SELECTED_ACCOUNT, "")
+        val isAdmin = accountsList?.find { it.name == selectedAccount }?.let { accounts.isAdmin(it) }
 
-    val usersList = adminTickets
-        .map { ticket ->
-            ticket.isValidated to ticket
-        }
-        .sortedWith(
-            compareBy({ !it.first }, { it.second.customerName })
-        )
-    val scannedTicketsCount = usersList.count { it.first }
+        val loadingOrders by screenModel.isLoadingOrders.collectAsState(false)
+        val isDownloadingTickets by screenModel.isDownloadingTickets.collectAsState(false)
+        val isUploadingScannedTickets by screenModel.isUploadingScannedTickets.collectAsState(false)
+        val isLoadingOrders by screenModel.isLoadingOrders.collectAsState(initial = false)
+        val editingField by screenModel.editingField.collectAsState()
 
-    val hasCamera = PlatformInformation.isCameraSupported()
+        val orders by Cache.ordersForEvent(event.id).collectListAsState()
+        val adminTickets by Cache.adminTicketsForEvent(event.id).collectListAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(event.cleanName) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = viewModel::stopViewingEvent
-                    ) {
-                        Icon(Icons.Rounded.ChevronLeft, stringResource(MR.strings.back))
-                    }
-                },
-                actions = {
-                    if (isAdmin == true && adminTickets.isNotEmpty()) {
-                        Text(
-                            text = "$scannedTicketsCount / ${adminTickets.size}",
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.secondary)
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                                .clickable { showingPeopleDialog = true },
-                            color = MaterialTheme.colorScheme.onSecondary
-                        )
-                    }
-                }
+        val onEditRequested = screenModel::edit.takeIf { isAdmin == true }
+
+        var showingPeopleDialog by remember { mutableStateOf(false) }
+
+        val usersList = adminTickets
+            .map { ticket ->
+                ticket.isValidated to ticket
+            }
+            .sortedWith(
+                compareBy({ !it.first }, { it.second.customerName })
             )
+        val scannedTicketsCount = usersList.count { it.first }
+
+        val hasCamera = PlatformInformation.isCameraSupported()
+
+        DisposableEffect(Unit) {
+            val ordersForEvent = Cache.ordersForEvent(event.id).executeAsList()
+            val job = if (event.hasTicket && !isLoadingOrders && ordersForEvent.isEmpty()) {
+                screenModel.fetchOrders(event.id.toInt())
+            } else {
+                null
+            }
+
+            onDispose { job?.cancel() }
         }
-    ) { paddingValues ->
-        if (showingPeopleDialog) {
-            UsersModalBottomSheet(
-                usersList = usersList,
-                onDismissRequest = { showingPeopleDialog = false }
+
+        editingField?.let { field ->
+            field.editor.Dialog(
+                title = event.cleanName + " - " + stringResource(field.displayName),
+                onSubmit = { screenModel.performUpdate(event, field) },
+                onDismissRequest = screenModel::cancelEdit
             )
         }
 
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 500.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item(key = "event-information", contentType = "information") {
-                OutlinedCard(
-                    modifier = Modifier
-                        .widthIn(max = 600.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(MR.strings.event_info),
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
-                    )
-
-                    EventInformationRow(
-                        headline = stringResource(MR.strings.event_screen_name),
-                        text = event.cleanName,
-                        onEdit = onEditRequested?.let { { it(EventField.Name) } }
-                    )
-
-                    EventInformationRow(
-                        headline = stringResource(MR.strings.event_screen_type),
-                        text = stringResource((event.type ?: EventType.Unknown).label),
-                        onEdit = onEditRequested?.let { { it(EventField.Type) } }
-                    )
-
-                    EventInformationRow(
-                        headline = stringResource(MR.strings.event_screen_date),
-                        text = event.date?.toString()?.replace('T', ' ')
-                            ?: stringResource(MR.strings.event_date_unknown),
-                        onEdit = onEditRequested?.let { { it(EventField.Date) } }
-                    )
-
-                    Spacer(Modifier.height(8.dp))
-                }
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(event.cleanName) },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = { navigator.pop() }
+                        ) {
+                            Icon(Icons.Rounded.ChevronLeft, stringResource(MR.strings.back))
+                        }
+                    },
+                    actions = {
+                        if (isAdmin == true && adminTickets.isNotEmpty()) {
+                            Text(
+                                text = "$scannedTicketsCount / ${adminTickets.size}",
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.secondary)
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    .clickable { showingPeopleDialog = true },
+                                color = MaterialTheme.colorScheme.onSecondary
+                            )
+                        }
+                    }
+                )
             }
-
-            if (hasCamera) {
-                item(key = "admin-scanner", contentType = "admin-panel") {
-                    AdminScanner(
-                        onDownloadTicketsRequested = { viewModel.downloadTickets(event.id) },
-                        isDownloadingTickets = isDownloadingTickets,
-                        onStartScannerRequested = viewModel::startScanner,
-                        areTicketsDownloaded = adminTickets.isNotEmpty(),
-                        onDeleteTicketsRequested = { viewModel.deleteTickets(event.id) },
-                        onSyncTicketsRequested = { viewModel.syncScannedTickets(event.id) },
-                        isUploadingScannedTickets = isUploadingScannedTickets
-                    )
-                }
-            }
-
-            item(key = "order-loading-indicator", contentType = "loading-indicator") {
-                LoadingCard(
-                    visible = loadingOrders && orders.isEmpty(),
-                    modifier = Modifier.padding(top = 12.dp),
-                    label = stringResource(MR.strings.event_screen_loading_order)
+        ) { paddingValues ->
+            if (showingPeopleDialog) {
+                UsersModalBottomSheet(
+                    usersList = usersList,
+                    onDismissRequest = { showingPeopleDialog = false }
                 )
             }
 
-            if (event.hasTicket && orders.isNotEmpty()) {
-                val moreThanOne = orders.size > 1
-                itemsIndexed(
-                    items = orders,
-                    span = { _, _ -> GridItemSpan(maxLineSpan) },
-                    key = { _, order -> "order-${order.id}" }
-                ) { index, order ->
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 500.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item(key = "event-information", contentType = "information") {
                     OutlinedCard(
-                        shape = BrokenPaperShape(BrokenPaperShapeSize),
                         modifier = Modifier
-                            .widthIn(max = 350.dp)
+                            .widthIn(max = 600.dp)
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp)
                     ) {
-                        val brokenPaperPadding =
-                            with(LocalDensity.current) { (BrokenPaperShapeSize / 2).toDp() }
+                        Text(
+                            text = stringResource(MR.strings.event_info),
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                                .padding(top = 8.dp)
+                        )
 
-                        var image by remember { mutableStateOf<ByteArray?>(null) }
+                        EventInformationRow(
+                            headline = stringResource(MR.strings.event_screen_name),
+                            text = event.cleanName,
+                            onEdit = onEditRequested?.let { { it(EventField.Name) } }
+                        )
 
-                        LaunchedEffect(order) {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                val data = order.qrcode().encrypt()
-                                image = QRCodeGenerator.generate(data)
-                            }
-                        }
+                        EventInformationRow(
+                            headline = stringResource(MR.strings.event_screen_type),
+                            text = stringResource((event.type ?: EventType.Unknown).label),
+                            onEdit = onEditRequested?.let { { it(EventField.Type) } }
+                        )
 
-                        Column(
+                        EventInformationRow(
+                            headline = stringResource(MR.strings.event_screen_date),
+                            text = event.date?.toString()?.replace('T', ' ')
+                                ?: stringResource(MR.strings.event_date_unknown),
+                            onEdit = onEditRequested?.let { { it(EventField.Date) } }
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+                    }
+                }
+
+                if (hasCamera) {
+                    item(key = "admin-scanner", contentType = "admin-panel") {
+                        AdminScanner(
+                            onDownloadTicketsRequested = { screenModel.downloadTickets(event.id) },
+                            isDownloadingTickets = isDownloadingTickets,
+                            onStartScannerRequested = screenModel::startScanner,
+                            areTicketsDownloaded = adminTickets.isNotEmpty(),
+                            onDeleteTicketsRequested = { screenModel.deleteTickets(event.id) },
+                            onSyncTicketsRequested = { screenModel.syncScannedTickets(event.id) },
+                            isUploadingScannedTickets = isUploadingScannedTickets
+                        )
+                    }
+                }
+
+                item(key = "order-loading-indicator", contentType = "loading-indicator") {
+                    LoadingCard(
+                        visible = loadingOrders && orders.isEmpty(),
+                        modifier = Modifier.padding(top = 12.dp),
+                        label = stringResource(MR.strings.event_screen_loading_order)
+                    )
+                }
+
+                if (event.hasTicket && orders.isNotEmpty()) {
+                    val moreThanOne = orders.size > 1
+                    itemsIndexed(
+                        items = orders,
+                        span = { _, _ -> GridItemSpan(maxLineSpan) },
+                        key = { _, order -> "order-${order.id}" }
+                    ) { index, order ->
+                        OutlinedCard(
+                            shape = BrokenPaperShape(BrokenPaperShapeSize),
                             modifier = Modifier
+                                .widthIn(max = 350.dp)
                                 .fillMaxWidth()
-                                .padding(vertical = brokenPaperPadding)
-                                .padding(top = 4.dp, bottom = 24.dp)
+                                .padding(vertical = 8.dp)
                         ) {
-                            Text(
-                                text = stringResource(MR.strings.event_screen_ticket_title),
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                                textAlign = TextAlign.Center,
-                                fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
-                                fontSize = 28.sp
-                            )
-                            Text(
-                                text = stringResource(MR.strings.event_screen_ticket_subtitle),
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                                textAlign = TextAlign.Center,
-                                fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
-                                fontSize = 22.sp
-                            )
+                            val brokenPaperPadding =
+                                with(LocalDensity.current) { (BrokenPaperShapeSize / 2).toDp() }
 
-                            Text(
-                                text = "- ${event.cleanName} -",
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp).padding(top = 8.dp),
-                                textAlign = TextAlign.Center,
-                                fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
-                                fontSize = 22.sp
-                            )
-                            Text(
-                                text = order.customerName + if (moreThanOne) " - $index" else "",
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                                textAlign = TextAlign.Center,
-                                fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
-                                fontSize = 22.sp
-                            )
+                            var image by remember { mutableStateOf<ByteArray?>(null) }
 
-                            ImageLoader(
-                                image = image?.toImageBitmap(),
-                                contentDescription = order.orderNumber,
+                            LaunchedEffect(order) {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    val data = order.qrcode().encrypt()
+                                    image = QRCodeGenerator.generate(data)
+                                }
+                            }
+
+                            Column(
                                 modifier = Modifier
-                                    .size(256.dp)
-                                    .align(Alignment.CenterHorizontally)
-                                    .padding(top = 24.dp)
-                            )
-                            Text(
-                                text = "#${order.orderNumber}",
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center,
-                                fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
-                                fontSize = 18.sp
-                            )
+                                    .fillMaxWidth()
+                                    .padding(vertical = brokenPaperPadding)
+                                    .padding(top = 4.dp, bottom = 24.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(MR.strings.event_screen_ticket_title),
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                                    textAlign = TextAlign.Center,
+                                    fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
+                                    fontSize = 28.sp
+                                )
+                                Text(
+                                    text = stringResource(MR.strings.event_screen_ticket_subtitle),
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                                    textAlign = TextAlign.Center,
+                                    fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
+                                    fontSize = 22.sp
+                                )
+
+                                Text(
+                                    text = "- ${event.cleanName} -",
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
+                                        .padding(top = 8.dp),
+                                    textAlign = TextAlign.Center,
+                                    fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
+                                    fontSize = 22.sp
+                                )
+                                Text(
+                                    text = order.customerName + if (moreThanOne) " - $index" else "",
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                                    textAlign = TextAlign.Center,
+                                    fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
+                                    fontSize = 22.sp
+                                )
+
+                                ImageLoader(
+                                    image = image?.toImageBitmap(),
+                                    contentDescription = order.orderNumber,
+                                    modifier = Modifier
+                                        .size(256.dp)
+                                        .align(Alignment.CenterHorizontally)
+                                        .padding(top = 24.dp)
+                                )
+                                Text(
+                                    text = "#${order.orderNumber}",
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                    fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
+                                    fontSize = 18.sp
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            item(key = "final-spacer", contentType = "spacer") { Spacer(Modifier.height(12.dp)) }
+                item(key = "final-spacer", contentType = "spacer") { Spacer(Modifier.height(12.dp)) }
+            }
         }
     }
 }

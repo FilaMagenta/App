@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.Navigator
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarItem
 import com.arnyminerz.filamagenta.ui.navigation.NavigationBarScaffold
@@ -37,7 +38,7 @@ import com.arnyminerz.filamagenta.ui.page.EventsPage
 import com.arnyminerz.filamagenta.ui.page.ProfilePage
 import com.arnyminerz.filamagenta.ui.page.SettingsPage
 import com.arnyminerz.filamagenta.ui.page.WalletPage
-import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import com.arnyminerz.filamagenta.ui.state.MainScreenModel
 import dev.icerock.moko.resources.compose.stringResource
 
 val appScreenItems = listOf(
@@ -71,7 +72,8 @@ private const val PageIndexSettings = 3
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 fun AppScreen(
     state: PagerState,
-    viewModel: MainViewModel
+    navigator: Navigator,
+    viewModel: MainScreenModel
 ) {
     val isAdmin by viewModel.isAdmin.collectAsState(false)
     val isLoading by viewModel.isPageLoading[state.currentPage].collectAsState(false)
@@ -126,7 +128,7 @@ fun AppScreen(
             // Wallet
             PageIndexWallet -> WalletPage(viewModel)
             // Events
-            PageIndexEvents -> EventsPage(viewModel)
+            PageIndexEvents -> EventsPage(viewModel, navigator)
             // Profile
             PageIndexProfile -> ProfilePage(viewModel)
             // Settings

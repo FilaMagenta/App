@@ -27,8 +27,15 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.arnyminerz.filamagenta.MR
+import com.arnyminerz.filamagenta.storage.SettingsKeys
+import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.logic.BackHandler
+import com.russhwolf.settings.set
+import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.coroutines.launch
 
@@ -71,55 +78,73 @@ data class IntroScreenPage(
     }
 }
 
-@Composable
 @OptIn(ExperimentalFoundationApi::class)
-fun IntroScreen(pages: List<IntroScreenPage>, onFinish: () -> Unit, onCancel: () -> Unit) {
-    val scope = rememberCoroutineScope()
-    val pagerState = rememberPagerState { pages.size }
+object IntroScreen: Screen {
+    private val pages = listOf(
+        IntroScreenPage(
+            title = { stringResource(MR.strings.intro_admin_welcome_title) },
+            message = { stringResource(MR.strings.intro_admin_welcome_message) },
+            image = { painterResource(MR.images.undraw_welcoming) }
+        ),
+        IntroScreenPage(
+            title = { stringResource(MR.strings.intro_admin_scanner_title) },
+            message = { stringResource(MR.strings.intro_admin_scanner_message) },
+            image = { painterResource(MR.images.undraw_security) }
+        )
+    )
 
-    BackHandler {
-        if (pagerState.currentPage == 0) {
-            onCancel()
-        } else {
-            scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+
+        val scope = rememberCoroutineScope()
+        val pagerState = rememberPagerState { pages.size }
+
+        BackHandler {
+            if (pagerState.currentPage == 0) {
+                navigator.pop()
+            } else {
+                scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
+            }
         }
-    }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    val page = pagerState.currentPage
-                    val nextPage = page + 1
+        Scaffold(
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        val page = pagerState.currentPage
+                        val nextPage = page + 1
 
-                    if (nextPage >= pages.size) {
-                        onFinish()
-                    } else {
-                        scope.launch { pagerState.animateScrollToPage(nextPage) }
+                        if (nextPage >= pages.size) {
+                            settings[SettingsKeys.SYS_SHOWN_ADMIN] = true
+                            navigator.pop()
+                        } else {
+                            scope.launch { pagerState.animateScrollToPage(nextPage) }
+                        }
                     }
-                }
-            ) {
-                AnimatedContent(pagerState.currentPage) { page ->
-                    if (page + 1 >= pages.size) {
-                        Icon(Icons.Rounded.Check, stringResource(MR.strings.done))
-                    } else {
-                        Icon(Icons.Rounded.ChevronRight, stringResource(MR.strings.next))
+                ) {
+                    AnimatedContent(pagerState.currentPage) { page ->
+                        if (page + 1 >= pages.size) {
+                            Icon(Icons.Rounded.Check, stringResource(MR.strings.done))
+                        } else {
+                            Icon(Icons.Rounded.ChevronRight, stringResource(MR.strings.next))
+                        }
                     }
                 }
             }
-        }
-    ) { paddingValues ->
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) { page ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                pages[page].Content()
+        ) { paddingValues ->
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) { page ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    pages[page].Content()
+                }
             }
         }
     }

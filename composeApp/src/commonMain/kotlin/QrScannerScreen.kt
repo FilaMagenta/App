@@ -1,5 +1,5 @@
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import cafe.adriel.voyager.core.screen.Screen
 
-@Composable
-expect fun QrScannerScreen(modifier: Modifier, onQrCodeScanned: (String) -> Unit)
+expect class QrScannerScreen: Screen {
+    val onQrCodeScanned: (String) -> Unit
+}
