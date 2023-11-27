@@ -82,7 +82,7 @@ object WooCommerce {
 
     private suspend fun get(
         vararg pathSegments: Any,
-        parameters: Map<String, Any?>,
+        parameters: Map<String, Any?> = emptyMap(),
         block: HttpRequestBuilder.() -> Unit = {}
     ): HttpResponse {
         val baseUrl = URLBuilder(baseUrl)
@@ -338,7 +338,7 @@ object WooCommerce {
          * Fetches all the orders made by the customer with id [customerId], for the product with id [productId].
          */
         suspend fun getOrdersForProductAndCustomer(customerId: Int, productId: Int): List<Order> {
-            return getList<Order>(
+            return getList(
                 "orders",
                 parameters = mapOf("customer" to customerId, "product" to productId)
             )
@@ -348,7 +348,7 @@ object WooCommerce {
          * Fetches all the orders made for a given product.
          */
         suspend fun getOrdersForProduct(productId: Int): List<Order> {
-            return getList<Order>(
+            return getList(
                 "orders",
                 parameters = mapOf("product" to productId),
                 perPage = 100
