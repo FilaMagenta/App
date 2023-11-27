@@ -1,6 +1,5 @@
 package com.arnyminerz.filamagenta.ui.section.event
 
-import AdvertisementDataRetrievalKeys
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -11,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bluetooth
+import androidx.compose.material.icons.outlined.BluetoothDisabled
 import androidx.compose.material.icons.outlined.BluetoothSearching
 import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material.icons.outlined.SettingsBluetooth
@@ -38,10 +38,6 @@ import com.arnyminerz.filamagenta.bluetooth.BluetoothPermissions
 import com.arnyminerz.filamagenta.bluetooth.bluetoothContext
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import dev.bluefalcon.BlueFalcon
-import dev.bluefalcon.BlueFalconDelegate
-import dev.bluefalcon.BluetoothCharacteristic
-import dev.bluefalcon.BluetoothCharacteristicDescriptor
-import dev.bluefalcon.BluetoothPeripheral
 import dev.icerock.moko.resources.compose.stringResource
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
@@ -79,6 +75,7 @@ fun AdminScanner(
                 val blueFalcon = BlueFalcon(bluetoothContext, null) // BLEServiceUUID
                 var isScanning by remember { mutableStateOf(false) }
                 var arePermissionsGranted by remember { mutableStateOf(BluetoothPermissions.arePermissionGranted()) }
+                var isBtEnabled by remember { mutableStateOf(BluetoothPermissions.isBluetoothEnabled()) }
 
                 LaunchedEffect(Unit) {
                     blueFalcon.peripherals.collect { peripherals ->
@@ -87,65 +84,13 @@ fun AdminScanner(
                                 peripherals.joinToString("\n- ") { "${it.uuid} :: ${it.name}" }
                         }
                     }
-
-                    blueFalcon.delegates.add(
-                        object : BlueFalconDelegate {
-                            override fun didCharacteristcValueChanged(
-                                bluetoothPeripheral: BluetoothPeripheral,
-                                bluetoothCharacteristic: BluetoothCharacteristic
-                            ) {
-                            }
-
-                            override fun didConnect(bluetoothPeripheral: BluetoothPeripheral) {
-                            }
-
-                            override fun didDisconnect(bluetoothPeripheral: BluetoothPeripheral) {
-                            }
-
-                            override fun didDiscoverCharacteristics(bluetoothPeripheral: BluetoothPeripheral) {
-                            }
-
-                            override fun didDiscoverDevice(
-                                bluetoothPeripheral: BluetoothPeripheral,
-                                advertisementData: Map<AdvertisementDataRetrievalKeys, Any>
-                            ) {
-                                Napier.i { "Discovered new BLE device: ${bluetoothPeripheral.name}" }
-                            }
-
-                            override fun didDiscoverServices(bluetoothPeripheral: BluetoothPeripheral) {
-                            }
-
-                            override fun didReadDescriptor(
-                                bluetoothPeripheral: BluetoothPeripheral,
-                                bluetoothCharacteristicDescriptor: BluetoothCharacteristicDescriptor
-                            ) {
-                            }
-
-                            override fun didRssiUpdate(bluetoothPeripheral: BluetoothPeripheral) {
-                            }
-
-                            override fun didUpdateMTU(bluetoothPeripheral: BluetoothPeripheral) {
-                            }
-
-                            override fun didWriteCharacteristic(
-                                bluetoothPeripheral: BluetoothPeripheral,
-                                bluetoothCharacteristic: BluetoothCharacteristic,
-                                success: Boolean
-                            ) {
-                            }
-
-                            override fun didWriteDescriptor(
-                                bluetoothPeripheral: BluetoothPeripheral,
-                                bluetoothCharacteristicDescriptor: BluetoothCharacteristicDescriptor
-                            ) {
-                            }
-                        }
-                    )
                 }
 
                 Icon(
                     imageVector = if (!arePermissionsGranted)
                         Icons.Outlined.SettingsBluetooth
+                    else if (!isBtEnabled)
+                        Icons.Outlined.BluetoothDisabled
                     else if (isScanning)
                         Icons.Outlined.BluetoothSearching
                     else
@@ -158,10 +103,15 @@ fun AdminScanner(
 
                                 arePermissionsGranted = BluetoothPermissions.arePermissionGranted()
                             }
+                        } else if (!isBtEnabled) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                BluetoothPermissions.enableBluetooth()
+                            }
                         } else if (blueFalcon.isScanning) {
-                            blueFalcon.stopScanning()
+                            // blueFalcon.stopScanning()
                         } else {
-                            blueFalcon.scan()
+                            // blueFalcon.scan()
+                            BluetoothPermissions.scanForDevices()
                         }
                         isScanning = blueFalcon.isScanning
                     }

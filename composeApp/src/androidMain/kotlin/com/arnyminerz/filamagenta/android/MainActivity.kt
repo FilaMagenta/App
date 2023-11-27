@@ -1,11 +1,14 @@
 package com.arnyminerz.filamagenta.android
 
 import android.app.Activity
+import android.content.Intent
 import android.content.res.Configuration
 import android.nfc.NfcAdapter
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.activity.result.contract.ActivityResultContracts.StartIntentSenderForResult
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -75,9 +78,13 @@ class MainActivity : AppCompatActivity() {
     private val appUpdateManager by lazy { AppUpdateManagerFactory.create(this) }
 
     private val permissionResultFlow = MutableStateFlow<Map<String, Boolean>?>(null)
-
     private val requestPermissionLauncher = registerForActivityResult(RequestMultiplePermissions()) {
         permissionResultFlow.value = it
+    }
+
+    private val activityResult = MutableStateFlow<ActivityResult?>(null)
+    private val activityResultLauncher = registerForActivityResult(StartActivityForResult()) {
+        activityResult.value = it
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -211,6 +218,24 @@ class MainActivity : AppCompatActivity() {
                 permissionResultFlow.collect {
                     if (it != null) {
                         Napier.d("Permission request complete. Result: $it")
+                        cont.resume(it)
+                        cancel()
+                    }
+                }
+            }
+        } catch (_: CancellationException) {
+        }
+    }
+
+    suspend fun launchForActivityResult(intent: Intent) = suspendCancellableCoroutine { cont ->
+        activityResult.value = null
+
+        activityResultLauncher.launch(intent)
+
+        try {
+            runBlocking {
+                activityResult.collect {
+                    if (it != null) {
                         cont.resume(it)
                         cancel()
                     }
