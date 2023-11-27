@@ -14,26 +14,26 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 object EventsSyncHelper: SyncHelper {
-    private const val MONTH_INDEX_AUGUST = 8
+    private const val MONTH_INDEX_MAY = 4
 
     /**
      * Gets the start date of the current working year.
      * This can be used for fetching events only for the desired date range.
      *
      * @return The beginning date of the current working year.
-     * Will always be the 1st of August, the thing that changes is the year.
+     * Will always be the 1st of May, the thing that changes is the year.
      */
     private fun getWorkingYearStart(): LocalDate {
-        // Events will only be fetched for this year. Year is considered until August
+        // Events will only be fetched for this year. Year is considered until May
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-        val year = if (now.monthNumber > MONTH_INDEX_AUGUST) {
-            // If right now is after August, the working year is the current one
+        val year = if (now.monthNumber > MONTH_INDEX_MAY) {
+            // If right now is after May, the working year is the current one
             now.year
         } else {
-            // If before August, working year is the last one
+            // If before May, working year is the last one
             now.year - 1
         }
-        return LocalDate(year, Month.AUGUST, 1)
+        return LocalDate(year, Month.MAY, 1)
     }
 
     /**
@@ -42,7 +42,7 @@ object EventsSyncHelper: SyncHelper {
      * @param arguments Does not require any arguments.
      */
     override suspend fun synchronize(vararg arguments: Any?) {
-        // Events will only be fetched for this year. Year is considered until August
+        // Events will only be fetched for this year. Year is considered until May
         val modifiedAfter = getWorkingYearStart()
 
         Napier.d("Getting products from server after $modifiedAfter...")
