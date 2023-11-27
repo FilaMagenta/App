@@ -23,12 +23,20 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.until
 
 /**
  * Every how many hours should the events list be refreshed automatically.
  */
 private const val SyncEventsEveryHours = 12
+
+/**
+ * Events will be hidden after this amount of hours has past since the event started.
+ */
+private const val HoldEventsForHours = 8
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -61,6 +69,12 @@ fun EventsPage(viewModel: MainViewModel) {
     events
         // Display incomplete events only to admins
         ?.filter { event -> isAdmin == true || event.isComplete }
+        // Filter past events
+        ?.filter { event ->
+            val instant = event.date?.toInstant(TimeZone.currentSystemDefault()) ?: return@filter true
+            val now = Clock.System.now()
+            instant.plus(HoldEventsForHours, DateTimeUnit.HOUR).until(now, DateTimeUnit.HOUR) < 0
+        }
         ?.let { list ->
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 350.dp),
