@@ -171,12 +171,13 @@ class EventScreen(private val event: Event) : Screen {
                 )
             }
 
-            EventGrid(screenModel, paddingValues, isAdmin, adminTickets, snackbarHostState)
+            EventGrid(event, screenModel, paddingValues, isAdmin, adminTickets, snackbarHostState)
         }
     }
 
     @Composable
     fun EventGrid(
+        event: Event,
         screenModel: EventScreenModel,
         paddingValues: PaddingValues,
         isAdmin: Boolean?,
