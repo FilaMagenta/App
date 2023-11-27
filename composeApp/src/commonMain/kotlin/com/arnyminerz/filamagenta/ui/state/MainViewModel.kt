@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import com.arnyminerz.filamagenta.BuildKonfig
 import com.arnyminerz.filamagenta.account.Account
 import com.arnyminerz.filamagenta.account.AccountData
+import com.arnyminerz.filamagenta.account.Category
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Event
@@ -72,6 +73,7 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MissingFieldException
+import kotlinx.serialization.SerializationException
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Suppress("TooManyFunctions")
@@ -419,6 +421,10 @@ class MainViewModel : ViewModel() {
         } catch (_: MissingFieldException) {
             // If data is corrupted, or new fields have been added, ignore the stored one and fetch again
             null
+        } catch (_: SerializationException) {
+            // This can happen if some data has been changed, for example, an enum stored has new
+            // elements, or something has been renamed
+            null
         }
         data?.let { return it }
 
@@ -436,6 +442,7 @@ class MainViewModel : ViewModel() {
                 "tbSocios.TlfMovil",
                 "tbSocios.TlfTrabajo",
                 "tbSocios.eMail",
+                "tbSocios.idTipoFestero",
                 InnerJoin(
                     sourceTable = "tbCodPostales",
                     modifyColumn = "tbSocios.idCodPostal",
@@ -468,6 +475,7 @@ class MainViewModel : ViewModel() {
             val mobilePhone = row.getString("TlfMovil")
             val workPhone = row.getString("TlfTrabajo")
             val email = row.getString("eMail")?.takeIf { it.isNotBlank() }
+            val category = row.getLong("idTipoFestero")?.let(Category::forDatabaseId)
             data = AccountData(
                 name,
                 surname,
@@ -478,7 +486,8 @@ class MainViewModel : ViewModel() {
                 particularPhone,
                 mobilePhone,
                 workPhone,
-                email
+                email,
+                category
             )
             Napier.v("Account data ready, storing in accounts...")
             accounts.setAccountData(account, data)
