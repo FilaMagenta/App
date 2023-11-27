@@ -38,7 +38,6 @@ kotlin {
             export(libs.moko.resources)
             export(libs.moko.graphics) // toUIColor here
 
-            export(libs.multiplatform.viewmodel)
             export(libs.sentry.multiplatform)
         }
     }
@@ -70,7 +69,6 @@ kotlin {
 
                 // Multiplatform libraries
                 api(libs.multiplatform.settings)
-                api(libs.multiplatform.viewmodel)
                 api(libs.napier)
                 api(libs.libsodium)
                 api(libs.sentry.multiplatform)
