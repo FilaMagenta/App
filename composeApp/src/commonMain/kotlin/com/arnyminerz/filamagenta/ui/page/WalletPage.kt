@@ -25,7 +25,7 @@ import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Cache.collectListAsState
 import com.arnyminerz.filamagenta.storage.SettingsKeys.SYS_WALLET_LAST_SYNC
 import com.arnyminerz.filamagenta.storage.settings
-import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import com.arnyminerz.filamagenta.ui.state.MainScreenModel
 import com.arnyminerz.filamagenta.ui.theme.ExtendedColors
 import com.arnyminerz.filamagenta.utils.euros
 import dev.icerock.moko.resources.compose.stringResource
@@ -40,7 +40,7 @@ import kotlinx.datetime.until
 private const val SyncWalletEveryHours = 12
 
 @Composable
-fun WalletPage(viewModel: MainViewModel) {
+fun WalletPage(viewModel: MainScreenModel) {
     val transactions by Cache.transactions.collectListAsState()
 
     DisposableEffect(transactions) {

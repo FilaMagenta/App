@@ -1,9 +1,9 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import java.io.FileFilter
 import java.time.LocalDateTime
 import java.util.Properties
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -38,7 +38,6 @@ kotlin {
             export(libs.moko.resources)
             export(libs.moko.graphics) // toUIColor here
 
-            export(libs.multiplatform.viewmodel)
             export(libs.sentry.multiplatform)
         }
     }
@@ -70,13 +69,15 @@ kotlin {
 
                 // Multiplatform libraries
                 api(libs.multiplatform.settings)
-                api(libs.multiplatform.viewmodel)
                 api(libs.napier)
                 api(libs.libsodium)
                 api(libs.sentry.multiplatform)
                 api(libs.qrcode.kotlin)
 
-                // Moko Resources
+                // Compose - Navigation
+                implementation(libs.voyager.navigator)
+
+                // Compose - Moko Resources
                 api(libs.moko.resources)
                 api(libs.moko.resourcescompose)
 

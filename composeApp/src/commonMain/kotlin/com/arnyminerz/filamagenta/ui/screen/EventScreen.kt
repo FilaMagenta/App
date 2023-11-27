@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,14 +25,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,7 +45,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cafe.adriel.voyager.core.model.rememberScreenModel
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.arnyminerz.filamagenta.MR
+import com.arnyminerz.filamagenta.account.accounts
+import com.arnyminerz.filamagenta.account.getSelected
+import com.arnyminerz.filamagenta.cache.AdminTickets
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Cache.collectListAsState
 import com.arnyminerz.filamagenta.cache.Event
@@ -58,7 +70,7 @@ import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
 import com.arnyminerz.filamagenta.ui.reusable.LoadingCard
 import com.arnyminerz.filamagenta.ui.section.event.AdminScanner
 import com.arnyminerz.filamagenta.ui.shape.BrokenPaperShape
-import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import com.arnyminerz.filamagenta.ui.state.EventScreenModel
 import dev.icerock.moko.resources.compose.fontFamilyResource
 import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.coroutines.CoroutineScope
@@ -67,73 +79,121 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-private const val BrokenPaperShapeSize = 100f
-
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class
+    ExperimentalEncodingApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalUnsignedTypes::class,
 )
-@Composable
-@Suppress("LongMethod")
-fun EventScreen(
-    event: Event,
-    viewModel: MainViewModel
-) {
-    val isAdmin by viewModel.isAdmin.collectAsState(false)
-    val loadingOrders by viewModel.isLoadingOrders.collectAsState(false)
-    val isDownloadingTickets by viewModel.isDownloadingTickets.collectAsState(false)
-    val isUploadingScannedTickets by viewModel.isUploadingScannedTickets.collectAsState(false)
+class EventScreen(private val event: Event) : Screen {
+    companion object {
+        private const val BrokenPaperShapeSize = 100f
+    }
 
-    val orders by Cache.ordersForEvent(event.id).collectListAsState()
-    val adminTickets by Cache.adminTicketsForEvent(event.id).collectListAsState()
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val screenModel = rememberScreenModel { EventScreenModel(event) }
 
-    val onEditRequested = viewModel::edit.takeIf { isAdmin == true }
+        val snackbarHostState = remember { SnackbarHostState() }
 
-    var showingPeopleDialog by remember { mutableStateOf(false) }
+        val event by screenModel.event.collectAsState()
 
-    val usersList = adminTickets
-        .map { ticket ->
-            ticket.isValidated to ticket
+        val account by accounts.getAccountsLive().getSelected().collectAsState(null)
+        val isAdmin = account?.let { accounts.isAdmin(it) }
+
+        val isLoadingOrders by screenModel.isLoadingOrders.collectAsState(initial = false)
+        val editingField by screenModel.editingField.collectAsState()
+
+        val adminTickets by Cache.adminTicketsForEvent(event.id).collectListAsState()
+
+        var showingPeopleDialog by remember { mutableStateOf(false) }
+
+        val usersList = adminTickets
+            .map { ticket ->
+                ticket.isValidated to ticket
+            }
+            .sortedWith(
+                compareBy({ !it.first }, { it.second.customerName })
+            )
+        val scannedTicketsCount = usersList.count { it.first }
+
+        DisposableEffect(Unit) {
+            val ordersForEvent = Cache.ordersForEvent(event.id).executeAsList()
+            val job = if (event.hasTicket && !isLoadingOrders && ordersForEvent.isEmpty()) {
+                screenModel.fetchOrders(event.id.toInt())
+            } else {
+                null
+            }
+
+            onDispose { job?.cancel() }
         }
-        .sortedWith(
-            compareBy({ !it.first }, { it.second.customerName })
-        )
-    val scannedTicketsCount = usersList.count { it.first }
 
-    val hasCamera = PlatformInformation.isCameraSupported()
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(event.cleanName) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = viewModel::stopViewingEvent
-                    ) {
-                        Icon(Icons.Rounded.ChevronLeft, stringResource(MR.strings.back))
-                    }
-                },
-                actions = {
-                    if (isAdmin == true && adminTickets.isNotEmpty()) {
-                        Text(
-                            text = "$scannedTicketsCount / ${adminTickets.size}",
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.secondary)
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                                .clickable { showingPeopleDialog = true },
-                            color = MaterialTheme.colorScheme.onSecondary
-                        )
-                    }
-                }
+        editingField?.let { field ->
+            field.editor.Dialog(
+                title = event.cleanName + " - " + stringResource(field.displayName),
+                onSubmit = { screenModel.performUpdate(event, field) },
+                onDismissRequest = screenModel::cancelEdit
             )
         }
-    ) { paddingValues ->
-        if (showingPeopleDialog) {
-            UsersModalBottomSheet(
-                usersList = usersList,
-                onDismissRequest = { showingPeopleDialog = false }
-            )
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(event.cleanName) },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = { navigator.pop() }
+                        ) {
+                            Icon(Icons.Rounded.ChevronLeft, stringResource(MR.strings.back))
+                        }
+                    },
+                    actions = {
+                        if (isAdmin == true && adminTickets.isNotEmpty()) {
+                            Text(
+                                text = "$scannedTicketsCount / ${adminTickets.size}",
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.secondary)
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    .clickable { showingPeopleDialog = true },
+                                color = MaterialTheme.colorScheme.onSecondary
+                            )
+                        }
+                    }
+                )
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { paddingValues ->
+            if (showingPeopleDialog) {
+                UsersModalBottomSheet(
+                    usersList = usersList,
+                    onDismissRequest = { showingPeopleDialog = false }
+                )
+            }
+
+            EventGrid(screenModel, paddingValues, isAdmin, adminTickets, snackbarHostState)
         }
+    }
+
+    @Composable
+    fun EventGrid(
+        screenModel: EventScreenModel,
+        paddingValues: PaddingValues,
+        isAdmin: Boolean?,
+        adminTickets: List<AdminTickets>,
+        snackbarHostState: SnackbarHostState
+    ) {
+        val scope = rememberCoroutineScope()
+
+        val onEditRequested = screenModel::edit.takeIf { isAdmin == true }
+
+        val loadingOrders by screenModel.isLoadingOrders.collectAsState(false)
+        val isDownloadingTickets by screenModel.isDownloadingTickets.collectAsState(false)
+        val isUploadingScannedTickets by screenModel.isUploadingScannedTickets.collectAsState(false)
+
+        val orders by Cache.ordersForEvent(event.id).collectListAsState()
+
+        val hasCamera = PlatformInformation.isCameraSupported()
 
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 500.dp),
@@ -153,7 +213,8 @@ fun EventScreen(
                     Text(
                         text = stringResource(MR.strings.event_info),
                         style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(top = 8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                            .padding(top = 8.dp)
                     )
 
                     EventInformationRow(
@@ -182,12 +243,16 @@ fun EventScreen(
             if (hasCamera) {
                 item(key = "admin-scanner", contentType = "admin-panel") {
                     AdminScanner(
-                        onDownloadTicketsRequested = { viewModel.downloadTickets(event.id) },
+                        onDownloadTicketsRequested = {
+                            screenModel.downloadTickets(event.id) {
+                                scope.launch { snackbarHostState.showSnackbar("No tickets") }
+                            }
+                        },
                         isDownloadingTickets = isDownloadingTickets,
-                        onStartScannerRequested = viewModel::startScanner,
+                        onStartScannerRequested = screenModel::startScanner,
                         areTicketsDownloaded = adminTickets.isNotEmpty(),
-                        onDeleteTicketsRequested = { viewModel.deleteTickets(event.id) },
-                        onSyncTicketsRequested = { viewModel.syncScannedTickets(event.id) },
+                        onDeleteTicketsRequested = { screenModel.deleteTickets(event.id) },
+                        onSyncTicketsRequested = { screenModel.syncScannedTickets(event.id) },
                         isUploadingScannedTickets = isUploadingScannedTickets
                     )
                 }
@@ -250,7 +315,8 @@ fun EventScreen(
 
                             Text(
                                 text = "- ${event.cleanName} -",
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp).padding(top = 8.dp),
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
+                                    .padding(top = 8.dp),
                                 textAlign = TextAlign.Center,
                                 fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
                                 fontSize = 22.sp

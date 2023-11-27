@@ -16,9 +16,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.settings
+import com.arnyminerz.filamagenta.ui.MainComposable
 import com.arnyminerz.filamagenta.ui.dialog.UpdateDialog
-import com.arnyminerz.filamagenta.ui.screen.MainScreen
-import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import com.arnyminerz.filamagenta.ui.logic.mainActivity
 import com.arnyminerz.filamagenta.ui.theme.AppTheme
 import com.arnyminerz.filamagenta.utils.Language
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -44,7 +44,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val viewModel by viewModels<Model>()
-    private val mainViewModel by viewModels<MainViewModel>()
 
     private var languageChangeListener: SettingsListener? = null
 
@@ -62,6 +61,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        mainActivity = this
 
         updateAppLocale()
 
@@ -81,11 +82,14 @@ class MainActivity : AppCompatActivity() {
         Napier.d("Intent action: ${intent.action}", tag = "MainActivity")
         Napier.d("Intent data: ${intent.data}", tag = "MainActivity")
 
+        // TODO - share nfc state
         val nfcData = if (intent.action == NfcAdapter.ACTION_NDEF_DISCOVERED) {
             intent.dataString
         } else {
             null
         }
+
+        val isAddingNewAccount = intent.getBooleanExtra(EXTRA_NEW_ACCOUNT, false)
 
         setContent {
             AppTheme {
@@ -97,12 +101,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
 
-                MainScreen(
-                    isAddingNewAccount = intent.getBooleanExtra(EXTRA_NEW_ACCOUNT, false),
-                    viewModel = mainViewModel,
-                    nfc = nfcData,
-                    onApplicationEndRequested = ::finish
-                )
+                MainComposable(isAddingNewAccount)
             }
         }
     }
@@ -111,6 +110,12 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         checkForUpdates()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        mainActivity = null
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

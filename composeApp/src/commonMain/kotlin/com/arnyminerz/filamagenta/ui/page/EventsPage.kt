@@ -11,13 +11,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.navigator.Navigator
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.data.isComplete
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.list.EventItem
 import com.arnyminerz.filamagenta.ui.reusable.LoadingBox
-import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import com.arnyminerz.filamagenta.ui.screen.EventScreen
+import com.arnyminerz.filamagenta.ui.state.MainScreenModel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
@@ -40,7 +42,7 @@ private const val HoldEventsForHours = 8
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun EventsPage(viewModel: MainViewModel) {
+fun EventsPage(viewModel: MainScreenModel, navigator: Navigator) {
     val isAdmin by viewModel.isAdmin.collectAsState(false)
 
     val events by Cache.events.collectAsState(null)
@@ -87,7 +89,9 @@ fun EventsPage(viewModel: MainViewModel) {
                     EventItem(
                         event = event,
                         modifier = Modifier.animateItemPlacement()
-                    ) { viewModel.viewEvent(event) }
+                    ) {
+                        navigator.push(EventScreen(event))
+                    }
                 }
             }
         } ?: LoadingBox()

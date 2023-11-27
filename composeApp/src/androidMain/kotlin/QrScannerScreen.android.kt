@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import cafe.adriel.voyager.core.screen.Screen
 import com.arnyminerz.filamagenta.MR
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
@@ -42,22 +43,26 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-@Composable
-actual fun QrScannerScreen(modifier: Modifier, onQrCodeScanned: (String) -> Unit) {
-    Box(modifier = modifier) {
-        QRCodeComposable(onQrCodeScanned)
-        Text(
-            text = stringResource(MR.strings.scan_barcode_instruction),
-            modifier = Modifier.background(Color.Black.copy(alpha = 0.3f))
-                .align(Alignment.TopCenter).padding(48.dp),
-            style = MaterialTheme.typography.titleSmall.copy(color = Color.White)
-        )
-        Text(
-            text = stringResource(MR.strings.scan_qr_code),
-            modifier = Modifier.background(Color.Black.copy(alpha = 0.3f))
-                .align(Alignment.BottomCenter).padding(48.dp),
-            style = MaterialTheme.typography.titleSmall.copy(color = Color.White)
-        )
+actual class QrScannerScreen(
+    actual val onQrCodeScanned: (String) -> Unit
+): Screen {
+    @Composable
+    override fun Content() {
+        Box(modifier = Modifier.fillMaxSize()) {
+            QRCodeComposable(onQrCodeScanned)
+            Text(
+                text = stringResource(MR.strings.scan_barcode_instruction),
+                modifier = Modifier.background(Color.Black.copy(alpha = 0.3f))
+                    .align(Alignment.TopCenter).padding(48.dp),
+                style = MaterialTheme.typography.titleSmall.copy(color = Color.White)
+            )
+            Text(
+                text = stringResource(MR.strings.scan_qr_code),
+                modifier = Modifier.background(Color.Black.copy(alpha = 0.3f))
+                    .align(Alignment.BottomCenter).padding(48.dp),
+                style = MaterialTheme.typography.titleSmall.copy(color = Color.White)
+            )
+        }
     }
 }
 

@@ -1,24 +1,18 @@
 package com.arnyminerz.filamagenta.ui.state
 
 import androidx.compose.ui.graphics.ImageBitmap
-import com.arnyminerz.filamagenta.BuildKonfig
+import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import com.arnyminerz.filamagenta.account.Account
 import com.arnyminerz.filamagenta.account.AccountData
 import com.arnyminerz.filamagenta.account.Category
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.Cache
-import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventField
-import com.arnyminerz.filamagenta.cache.data.EventType
-import com.arnyminerz.filamagenta.cache.data.extractMetadata
 import com.arnyminerz.filamagenta.cache.data.qrcode
-import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.cache.data.toProductOrder
-import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.data.QrCodeScanResult
 import com.arnyminerz.filamagenta.image.QRCodeGenerator
-import com.arnyminerz.filamagenta.image.QRCodeValidator
-import com.arnyminerz.filamagenta.network.Authorization
 import com.arnyminerz.filamagenta.network.database.SqlServer
 import com.arnyminerz.filamagenta.network.database.SqlServer.SelectParameter.InnerJoin
 import com.arnyminerz.filamagenta.network.database.SqlServer.SelectParameter.Where
@@ -26,36 +20,17 @@ import com.arnyminerz.filamagenta.network.database.SqlTunnelException
 import com.arnyminerz.filamagenta.network.database.getDate
 import com.arnyminerz.filamagenta.network.database.getLong
 import com.arnyminerz.filamagenta.network.database.getString
-import com.arnyminerz.filamagenta.network.httpClient
-import com.arnyminerz.filamagenta.network.oauth.LoginData
 import com.arnyminerz.filamagenta.network.server.exception.WordpressException
 import com.arnyminerz.filamagenta.network.woo.WooCommerce
-import com.arnyminerz.filamagenta.network.woo.models.Metadata
 import com.arnyminerz.filamagenta.network.woo.models.Order
-import com.arnyminerz.filamagenta.network.woo.update.BatchMetadataUpdate
-import com.arnyminerz.filamagenta.network.woo.update.MetadataUpdate
-import com.arnyminerz.filamagenta.network.woo.utils.ProductMeta
-import com.arnyminerz.filamagenta.network.woo.utils.set
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.sync.EventsSyncHelper
 import com.arnyminerz.filamagenta.sync.WalletSyncHelper
 import com.arnyminerz.filamagenta.sync.utils.AccountUtils
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
-import com.arnyminerz.filamagenta.utils.toEpochMillisecondsString
-import com.doublesymmetry.viewmodel.ViewModel
-import com.russhwolf.settings.set
 import io.github.aakira.napier.Napier
 import io.ktor.client.network.sockets.SocketTimeoutException
-import io.ktor.client.request.forms.submitForm
-import io.ktor.client.request.get
-import io.ktor.http.HttpHeaders
-import io.ktor.http.Parameters
-import io.ktor.http.URLBuilder
-import io.ktor.http.URLProtocol
-import io.ktor.http.Url
-import io.ktor.http.parameters
-import io.ktor.serialization.kotlinx.json.DefaultJson
 import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.errors.IOException
 import io.sentry.kotlin.multiplatform.Sentry
@@ -69,20 +44,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
-import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.MissingFieldException
 import kotlinx.serialization.SerializationException
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 @Suppress("TooManyFunctions")
-class MainViewModel : ViewModel() {
-
-    private val _isRequestingToken = MutableStateFlow(false)
-
-    /** Reports the progress of [requestToken]. */
-    val isRequestingToken: StateFlow<Boolean> get() = _isRequestingToken
+class MainScreenModel : ScreenModel {
 
     private val _isLoadingWallet = MutableStateFlow(false)
     val isLoadingWallet: StateFlow<Boolean> get() = _isLoadingWallet
@@ -102,14 +70,8 @@ class MainViewModel : ViewModel() {
     private val _isUploadingScannedTickets = MutableStateFlow(false)
     val isUploadingScannedTickets: StateFlow<Boolean> get() = _isUploadingScannedTickets
 
-    private val _viewingEvent = MutableStateFlow<Event?>(null)
-    val viewingEvent: StateFlow<Event?> get() = _viewingEvent
-
     private val _editingField = MutableStateFlow<EventField<*>?>(null)
     val editingField: StateFlow<EventField<*>?> get() = _editingField
-
-    private val _scanningQr = MutableStateFlow(false)
-    val scanningQr: StateFlow<Boolean> get() = _scanningQr
 
     private val _scanResult = MutableStateFlow<QrCodeScanResult?>(null)
     val scanResult: StateFlow<QrCodeScanResult?> get() = _scanResult
@@ -143,7 +105,7 @@ class MainViewModel : ViewModel() {
 
     /**
      * For each index of the pages in the main navigation, which function can be used for refreshing. If null, refresh
-     * by [MainViewModel] is not supported.
+     * by [MainScreenModel] is not supported.
      */
     val refreshFunctions = listOf<(() -> Job)?>(
         // Wallet
@@ -171,99 +133,7 @@ class MainViewModel : ViewModel() {
         MutableStateFlow(false)
     )
 
-    val loginError = MutableStateFlow(false)
-
-    /**
-     * Provides the login form target URL.
-     */
-    private val loginUrl: String
-        get() = URLBuilder(
-            protocol = URLProtocol.HTTPS,
-            host = BuildKonfig.ServerHostname,
-            pathSegments = listOf("wp-login.php")
-        ).buildString()
-
-    private fun getAuthorizeUrl() =
-        // First, request the server
-        URLBuilder(
-            protocol = URLProtocol.HTTPS,
-            host = BuildKonfig.ServerHostname,
-            pathSegments = listOf("oauth", "authorize"),
-            parameters = Parameters.build {
-                set("client_id", BuildKonfig.OAuthClientId)
-                set("redirect_uri", "app://filamagenta")
-                set("response_type", "code")
-            }
-        ).buildString()
-
-    fun login(username: String, password: String): Job = viewModelScope.launch(Dispatchers.IO) {
-        val loginData = LoginData(
-            BuildKonfig.OAuthClientId,
-            username,
-            password,
-            getAuthorizeUrl()
-        )
-
-        loginError.emit(false)
-
-        Napier.d("Trying to log in with credentials... Username=$username")
-
-        val next = httpClient.submitForm(
-            url = loginUrl,
-            formParameters = parameters {
-                loginData.append(this)
-            }
-        ).let { it.headers[HttpHeaders.Location] }
-
-        if (next == null) {
-            Napier.e("Login credentials are not correct.")
-
-            loginError.emit(true)
-            return@launch
-        }
-
-        val codeLocation = httpClient.get(next).let { it.headers[HttpHeaders.Location] }
-        if (codeLocation?.startsWith("app://filamagenta") == true) {
-            // Redirection complete, extract code
-            val query = Url(codeLocation)
-                .encodedQuery
-                .split("&")
-                .associate { it.split("=").let { (k, v) -> k to v } }
-            val code = query["code"]
-            if (code == null) {
-                _error.emit(
-                    RuntimeException("Authentication was redirected without a valid code.")
-                )
-                return@launch
-            }
-
-            requestToken(code)
-        } else {
-            Napier.e("Authorization failed. Location: $codeLocation. Next: $next")
-
-            loginError.emit(true)
-            return@launch
-        }
-    }
-
-    /**
-     * Requests the server for a token and refresh token, then adds the account to the account manager.
-     */
-    private fun requestToken(code: String) = viewModelScope.launch(Dispatchers.IO) {
-        if (_isRequestingToken.value) {
-            println("Tried to request token while another request was in progress.")
-            return@launch
-        }
-        _isRequestingToken.emit(true)
-
-        val token = Authorization.requestToken(code)
-        val me = Authorization.requestMe(token)
-
-        val account = Account(me.userLogin)
-        accounts.addAccount(account, token.toAccessToken(), me.userRoles.contains("administrator"), me.userEmail)
-    }.invokeOnCompletion { _isRequestingToken.value = false }
-
-    fun updateSelectedAccount() = viewModelScope.launch {
+    fun updateSelectedAccount() = screenModelScope.launch {
         val accountsList = accounts.getAccounts()
 
         if (accountsList.isNotEmpty()) {
@@ -300,94 +170,13 @@ class MainViewModel : ViewModel() {
     }
 
     /**
-     * Requests the UI to display the given event.
-     *
-     * Use [stopViewingEvent] to stop displaying.
-     */
-    fun viewEvent(event: Event) = viewModelScope.launch {
-        Napier.d("Viewing event ${event.id}")
-        _viewingEvent.emit(event)
-
-        settings[SettingsKeys.SYS_VIEWING_EVENT] = event.id
-    }
-
-    /**
-     * Requests the UI to stop displaying the selected event, if any ([viewingEvent]).
-     *
-     * Use [viewEvent] to start displaying an event.
-     */
-    fun stopViewingEvent() = viewModelScope.launch {
-        Napier.d("Stopped viewing event")
-        settings.remove(SettingsKeys.SYS_VIEWING_EVENT)
-
-        _viewingEvent.emit(null)
-        _editingField.emit(null)
-    }
-
-    /**
-     * Starts editing the given [field] for the currently selected event ([viewingEvent]).
-     * Does nothing if [viewingEvent] is null.
-     */
-    fun edit(field: EventField<*>) {
-        if (_viewingEvent.value == null) return
-        viewModelScope.launch { _editingField.emit(field) }
-    }
-
-    /**
-     * Clears the value of [editingField].
-     */
-    fun cancelEdit() {
-        viewModelScope.launch { _editingField.emit(null) }
-    }
-
-    /**
-     * Updates [scanningQr] to `true`.
-     */
-    fun startScanner() {
-        _scanningQr.value = true
-    }
-
-    /**
-     * Updates [scanningQr] to `false`.
-     */
-    fun stopScanner() {
-        _scanningQr.value = false
-    }
-
-    /**
-     * Requests the server to store the update made at [field].
-     */
-    fun <T> performUpdate(event: Event, field: EventField<T>): Job {
-        return viewModelScope.launch(Dispatchers.IO) {
-            val rawValue = field.value
-            val (key, value) = when (field) {
-                is EventField.Name -> throw UnsupportedOperationException("Cannot change names right now")
-                is EventField.Date -> ProductMeta.EVENT_DATE to (rawValue as LocalDateTime).toEpochMillisecondsString()
-                is EventField.Type -> ProductMeta.CATEGORY to (rawValue as EventType).name
-            }
-
-            val product = WooCommerce.Products.update(
-                event.id,
-                MetadataUpdate(
-                    event.extractMetadata().set(key, value)
-                )
-            )
-            // fixme - should include variations
-            val newEvent = product.toEvent(emptyList())
-
-            Cache.insertOrUpdate(newEvent)
-            viewEvent(newEvent)
-        }
-    }
-
-    /**
      * Tries getting the IdSocio from [accounts] for the selected [account].
      * If it's still not set, fetches it from the SQL server according to the user's [Account.name]
      *
      * @throws NullPointerException If [account] doesn't have a selected account.
      * @throws IllegalStateException If the server doesn't return a valid idSocio for [account].
      */
-    suspend fun getOrFetchIdSocio(): Int? {
+    private suspend fun getOrFetchIdSocio(): Int? {
         val account = account.value!!
         return try {
             AccountUtils.getOrFetchIdSocio(account)
@@ -508,7 +297,7 @@ class MainViewModel : ViewModel() {
     /**
      * Fetches all the transactions from the SQL server, and updates the local cache.
      */
-    fun refreshWallet() = viewModelScope.launch(Dispatchers.IO) {
+    fun refreshWallet() = screenModelScope.launch(Dispatchers.IO) {
         try {
             _isLoadingWallet.emit(true)
 
@@ -523,40 +312,9 @@ class MainViewModel : ViewModel() {
     }
 
     /**
-     * Returns the stored WooCommerce's Customer ID for the selected [account] if there's one stored, or searches in the
-     * server for one if there's none stored.
-     *
-     * @throws NullPointerException If [account] doesn't have a selected account.
-     * @throws IllegalStateException If the server doesn't return a valid customer id for [account].
-     */
-    suspend fun getOrFetchCustomerId(): Int {
-        val account = account.value!!
-        var customerId = accounts.getCustomerId(account)
-
-        if (customerId == null) {
-            try {
-                Napier.i("Account doesn't have an stored customerId. Searching now...")
-
-                val customer = WooCommerce.Customers.search(account.name)
-                checkNotNull(customer) { "A user that matches \"${account.name}\" was not found in the server." }
-
-                customerId = customer.id
-                accounts.setCustomerId(account, customerId)
-                Napier.i("Updated customerId for $account: $customerId")
-            } catch (e: SqlTunnelException) {
-                Napier.e("SQLServer returned an error.", throwable = e)
-            }
-        }
-
-        checkNotNull(customerId) { "customerId must not be null." }
-
-        return customerId
-    }
-
-    /**
      * Fetches all events from the server and updates the local cache.
      */
-    fun refreshEvents() = viewModelScope.launch(Dispatchers.IO) {
+    fun refreshEvents() = screenModelScope.launch(Dispatchers.IO) {
         try {
             _isLoadingEvents.emit(true)
 
@@ -570,7 +328,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun fetchOrders(productId: Int) = viewModelScope.launch(Dispatchers.IO) {
+    fun fetchOrders(productId: Int) = screenModelScope.launch(Dispatchers.IO) {
         // Wait until another thread finishes loading
         while (_isLoadingOrders.value) {
             delay(1)
@@ -601,14 +359,15 @@ class MainViewModel : ViewModel() {
         _scanResult.value = null
     }
 
+    /*
     /**
      * Validates the data contained in a QR for event assistance.
      */
-    fun validateQr(source: String) = viewModelScope.launch(Dispatchers.IO) {
+    fun validateQr(source: String) = screenModelScope.launch(Dispatchers.IO) {
         QRCodeValidator.validateQRCode(source, _scanResult, viewingEvent.value)
     }
 
-    fun processNfcTag(data: String) = viewModelScope.launch(Dispatchers.IO) {
+    fun processNfcTag(data: String) = screenModelScope.launch(Dispatchers.IO) {
         _scanResult.emit(QrCodeScanResult.Loading)
 
         val viewingEventId = settings.getLongOrNull(SettingsKeys.SYS_VIEWING_EVENT)
@@ -627,68 +386,17 @@ class MainViewModel : ViewModel() {
         }
 
         validateQr(data)
-    }
-
-    fun downloadTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
-        try {
-            _isDownloadingTickets.emit(true)
-
-            val orders = WooCommerce.Orders.getOrdersForProduct(eventId.toInt())
-            for (order: Order in orders) {
-                order.toProductOrder().forEach(Cache::insertOrUpdateAdminTicket)
-            }
-        } finally {
-            _isDownloadingTickets.emit(false)
-        }
-    }
-
-    fun deleteTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
-        database.adminTicketsQueries.deleteByEventId(eventId)
-    }
-
-    fun syncScannedTickets(eventId: Long) = viewModelScope.launch(Dispatchers.IO) {
-        try {
-            _isUploadingScannedTickets.emit(true)
-
-            val update = mutableListOf<BatchMetadataUpdate.Entry>()
-
-            val tickets = database.adminTicketsQueries.getByEventId(eventId).executeAsList()
-
-            for (ticket in tickets) {
-                // First get the order associated with the event
-                val order = database.productOrderQueries.getById(ticket.orderId).executeAsOneOrNull() ?: continue
-                // Now compare the update time of the order with the one stored at the ticket, they should match
-                if (order.lastUpdate < ticket.lastUpdate) {
-                    // If the ticket was updated after the order, add for the update
-                    val existingMeta = DefaultJson.decodeFromString<List<Metadata>>(ticket._cache_meta_data)
-                        .set("validated", "true")
-
-                    update.add(
-                        BatchMetadataUpdate.Entry(
-                            ticket.orderId,
-                            existingMeta
-                        )
-                    )
-                }
-            }
-
-            WooCommerce.Orders.batchUpdateMetadata(
-                BatchMetadataUpdate(update)
-            )
-        } finally {
-            _isUploadingScannedTickets.emit(false)
-        }
-    }
+    }*/
 
     /**
      * Dismisses the current value of [error], if any.
      */
-    fun dismissError() = viewModelScope.launch { _error.emit(null) }
+    fun dismissError() = screenModelScope.launch { _error.emit(null) }
 
     /**
      * Requests de cache or SQL server for the current user's account data, and updates [accountData] accordingly.
      */
-    fun refreshAccount() = viewModelScope.launch(Dispatchers.IO) {
+    fun refreshAccount() = screenModelScope.launch(Dispatchers.IO) {
         val data = getOrFetchAccountData()
         _accountData.emit(data)
     }
@@ -700,7 +408,7 @@ class MainViewModel : ViewModel() {
      */
     @ExperimentalEncodingApi
     @ExperimentalUnsignedTypes
-    fun loadProfileQRCode() = viewModelScope.launch(Dispatchers.IO) {
+    fun loadProfileQRCode() = screenModelScope.launch(Dispatchers.IO) {
         // Make sure the fields have been loaded before calling qrcode
         getOrFetchIdSocio()
         getOrFetchCustomerId()

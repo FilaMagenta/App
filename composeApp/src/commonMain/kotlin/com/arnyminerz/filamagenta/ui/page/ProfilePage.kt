@@ -34,7 +34,7 @@ import com.arnyminerz.filamagenta.ui.modifier.placeholder.placeholder
 import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
 import com.arnyminerz.filamagenta.ui.reusable.LoadingBox
 import com.arnyminerz.filamagenta.ui.reusable.form.FormField
-import com.arnyminerz.filamagenta.ui.state.MainViewModel
+import com.arnyminerz.filamagenta.ui.state.MainScreenModel
 import dev.icerock.moko.resources.compose.stringResource
 import io.github.aakira.napier.Napier
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -45,7 +45,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
     ExperimentalUnsignedTypes::class
 )
 @Composable
-fun ProfilePage(viewModel: MainViewModel) {
+fun ProfilePage(viewModel: MainScreenModel) {
     val viewModelAccount by viewModel.account.collectAsState()
 
     val loadingAccountData by viewModel.isLoadingAccount.collectAsState(false)
