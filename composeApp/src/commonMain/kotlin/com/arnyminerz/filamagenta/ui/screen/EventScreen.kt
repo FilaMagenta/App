@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +25,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -33,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +51,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.accounts
+import com.arnyminerz.filamagenta.account.getSelected
+import com.arnyminerz.filamagenta.cache.AdminTickets
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Cache.collectListAsState
 import com.arnyminerz.filamagenta.cache.Event
@@ -57,9 +63,6 @@ import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.data.qrcode
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.image.QRCodeGenerator
-import com.arnyminerz.filamagenta.storage.SettingsKeys
-import com.arnyminerz.filamagenta.storage.getStringState
-import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.dialog.UsersModalBottomSheet
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.EventInformationRow
@@ -91,22 +94,17 @@ class EventScreen(private val event: Event) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { EventScreenModel(event) }
 
+        val snackbarHostState = remember { SnackbarHostState() }
+
         val event by screenModel.event.collectAsState()
 
-        val accountsList by accounts.getAccountsLive().collectAsState()
-        val selectedAccount by settings.getStringState(SettingsKeys.SELECTED_ACCOUNT, "")
-        val isAdmin = accountsList?.find { it.name == selectedAccount }?.let { accounts.isAdmin(it) }
+        val account by accounts.getAccountsLive().getSelected().collectAsState(null)
+        val isAdmin = account?.let { accounts.isAdmin(it) }
 
-        val loadingOrders by screenModel.isLoadingOrders.collectAsState(false)
-        val isDownloadingTickets by screenModel.isDownloadingTickets.collectAsState(false)
-        val isUploadingScannedTickets by screenModel.isUploadingScannedTickets.collectAsState(false)
         val isLoadingOrders by screenModel.isLoadingOrders.collectAsState(initial = false)
         val editingField by screenModel.editingField.collectAsState()
 
-        val orders by Cache.ordersForEvent(event.id).collectListAsState()
         val adminTickets by Cache.adminTicketsForEvent(event.id).collectListAsState()
-
-        val onEditRequested = screenModel::edit.takeIf { isAdmin == true }
 
         var showingPeopleDialog by remember { mutableStateOf(false) }
 
@@ -118,8 +116,6 @@ class EventScreen(private val event: Event) : Screen {
                 compareBy({ !it.first }, { it.second.customerName })
             )
         val scannedTicketsCount = usersList.count { it.first }
-
-        val hasCamera = PlatformInformation.isCameraSupported()
 
         DisposableEffect(Unit) {
             val ordersForEvent = Cache.ordersForEvent(event.id).executeAsList()
@@ -165,7 +161,8 @@ class EventScreen(private val event: Event) : Screen {
                         }
                     }
                 )
-            }
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { paddingValues ->
             if (showingPeopleDialog) {
                 UsersModalBottomSheet(
@@ -174,158 +171,185 @@ class EventScreen(private val event: Event) : Screen {
                 )
             }
 
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 500.dp),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item(key = "event-information", contentType = "information") {
-                    OutlinedCard(
-                        modifier = Modifier
-                            .widthIn(max = 600.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Text(
-                            text = stringResource(MR.strings.event_info),
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
-                                .padding(top = 8.dp)
-                        )
+            EventGrid(screenModel, paddingValues, isAdmin, adminTickets, snackbarHostState)
+        }
+    }
 
-                        EventInformationRow(
-                            headline = stringResource(MR.strings.event_screen_name),
-                            text = event.cleanName,
-                            onEdit = onEditRequested?.let { { it(EventField.Name) } }
-                        )
+    @Composable
+    fun EventGrid(
+        screenModel: EventScreenModel,
+        paddingValues: PaddingValues,
+        isAdmin: Boolean?,
+        adminTickets: List<AdminTickets>,
+        snackbarHostState: SnackbarHostState
+    ) {
+        val scope = rememberCoroutineScope()
 
-                        EventInformationRow(
-                            headline = stringResource(MR.strings.event_screen_type),
-                            text = stringResource((event.type ?: EventType.Unknown).label),
-                            onEdit = onEditRequested?.let { { it(EventField.Type) } }
-                        )
+        val onEditRequested = screenModel::edit.takeIf { isAdmin == true }
 
-                        EventInformationRow(
-                            headline = stringResource(MR.strings.event_screen_date),
-                            text = event.date?.toString()?.replace('T', ' ')
-                                ?: stringResource(MR.strings.event_date_unknown),
-                            onEdit = onEditRequested?.let { { it(EventField.Date) } }
-                        )
+        val loadingOrders by screenModel.isLoadingOrders.collectAsState(false)
+        val isDownloadingTickets by screenModel.isDownloadingTickets.collectAsState(false)
+        val isUploadingScannedTickets by screenModel.isUploadingScannedTickets.collectAsState(false)
 
-                        Spacer(Modifier.height(8.dp))
-                    }
+        val orders by Cache.ordersForEvent(event.id).collectListAsState()
+
+        val hasCamera = PlatformInformation.isCameraSupported()
+
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 500.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item(key = "event-information", contentType = "information") {
+                OutlinedCard(
+                    modifier = Modifier
+                        .widthIn(max = 600.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(MR.strings.event_info),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                            .padding(top = 8.dp)
+                    )
+
+                    EventInformationRow(
+                        headline = stringResource(MR.strings.event_screen_name),
+                        text = event.cleanName,
+                        onEdit = onEditRequested?.let { { it(EventField.Name) } }
+                    )
+
+                    EventInformationRow(
+                        headline = stringResource(MR.strings.event_screen_type),
+                        text = stringResource((event.type ?: EventType.Unknown).label),
+                        onEdit = onEditRequested?.let { { it(EventField.Type) } }
+                    )
+
+                    EventInformationRow(
+                        headline = stringResource(MR.strings.event_screen_date),
+                        text = event.date?.toString()?.replace('T', ' ')
+                            ?: stringResource(MR.strings.event_date_unknown),
+                        onEdit = onEditRequested?.let { { it(EventField.Date) } }
+                    )
+
+                    Spacer(Modifier.height(8.dp))
                 }
+            }
 
-                if (hasCamera) {
-                    item(key = "admin-scanner", contentType = "admin-panel") {
-                        AdminScanner(
-                            onDownloadTicketsRequested = { screenModel.downloadTickets(event.id) },
-                            isDownloadingTickets = isDownloadingTickets,
-                            onStartScannerRequested = screenModel::startScanner,
-                            areTicketsDownloaded = adminTickets.isNotEmpty(),
-                            onDeleteTicketsRequested = { screenModel.deleteTickets(event.id) },
-                            onSyncTicketsRequested = { screenModel.syncScannedTickets(event.id) },
-                            isUploadingScannedTickets = isUploadingScannedTickets
-                        )
-                    }
-                }
-
-                item(key = "order-loading-indicator", contentType = "loading-indicator") {
-                    LoadingCard(
-                        visible = loadingOrders && orders.isEmpty(),
-                        modifier = Modifier.padding(top = 12.dp),
-                        label = stringResource(MR.strings.event_screen_loading_order)
+            if (hasCamera) {
+                item(key = "admin-scanner", contentType = "admin-panel") {
+                    AdminScanner(
+                        onDownloadTicketsRequested = {
+                            screenModel.downloadTickets(event.id) {
+                                scope.launch { snackbarHostState.showSnackbar("No tickets") }
+                            }
+                        },
+                        isDownloadingTickets = isDownloadingTickets,
+                        onStartScannerRequested = screenModel::startScanner,
+                        areTicketsDownloaded = adminTickets.isNotEmpty(),
+                        onDeleteTicketsRequested = { screenModel.deleteTickets(event.id) },
+                        onSyncTicketsRequested = { screenModel.syncScannedTickets(event.id) },
+                        isUploadingScannedTickets = isUploadingScannedTickets
                     )
                 }
+            }
 
-                if (event.hasTicket && orders.isNotEmpty()) {
-                    val moreThanOne = orders.size > 1
-                    itemsIndexed(
-                        items = orders,
-                        span = { _, _ -> GridItemSpan(maxLineSpan) },
-                        key = { _, order -> "order-${order.id}" }
-                    ) { index, order ->
-                        OutlinedCard(
-                            shape = BrokenPaperShape(BrokenPaperShapeSize),
+            item(key = "order-loading-indicator", contentType = "loading-indicator") {
+                LoadingCard(
+                    visible = loadingOrders && orders.isEmpty(),
+                    modifier = Modifier.padding(top = 12.dp),
+                    label = stringResource(MR.strings.event_screen_loading_order)
+                )
+            }
+
+            if (event.hasTicket && orders.isNotEmpty()) {
+                val moreThanOne = orders.size > 1
+                itemsIndexed(
+                    items = orders,
+                    span = { _, _ -> GridItemSpan(maxLineSpan) },
+                    key = { _, order -> "order-${order.id}" }
+                ) { index, order ->
+                    OutlinedCard(
+                        shape = BrokenPaperShape(BrokenPaperShapeSize),
+                        modifier = Modifier
+                            .widthIn(max = 350.dp)
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        val brokenPaperPadding =
+                            with(LocalDensity.current) { (BrokenPaperShapeSize / 2).toDp() }
+
+                        var image by remember { mutableStateOf<ByteArray?>(null) }
+
+                        LaunchedEffect(order) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val data = order.qrcode().encrypt()
+                                image = QRCodeGenerator.generate(data)
+                            }
+                        }
+
+                        Column(
                             modifier = Modifier
-                                .widthIn(max = 350.dp)
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp)
+                                .padding(vertical = brokenPaperPadding)
+                                .padding(top = 4.dp, bottom = 24.dp)
                         ) {
-                            val brokenPaperPadding =
-                                with(LocalDensity.current) { (BrokenPaperShapeSize / 2).toDp() }
+                            Text(
+                                text = stringResource(MR.strings.event_screen_ticket_title),
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                                textAlign = TextAlign.Center,
+                                fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
+                                fontSize = 28.sp
+                            )
+                            Text(
+                                text = stringResource(MR.strings.event_screen_ticket_subtitle),
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                                textAlign = TextAlign.Center,
+                                fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
+                                fontSize = 22.sp
+                            )
 
-                            var image by remember { mutableStateOf<ByteArray?>(null) }
+                            Text(
+                                text = "- ${event.cleanName} -",
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
+                                    .padding(top = 8.dp),
+                                textAlign = TextAlign.Center,
+                                fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
+                                fontSize = 22.sp
+                            )
+                            Text(
+                                text = order.customerName + if (moreThanOne) " - $index" else "",
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                                textAlign = TextAlign.Center,
+                                fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
+                                fontSize = 22.sp
+                            )
 
-                            LaunchedEffect(order) {
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    val data = order.qrcode().encrypt()
-                                    image = QRCodeGenerator.generate(data)
-                                }
-                            }
-
-                            Column(
+                            ImageLoader(
+                                image = image?.toImageBitmap(),
+                                contentDescription = order.orderNumber,
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = brokenPaperPadding)
-                                    .padding(top = 4.dp, bottom = 24.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(MR.strings.event_screen_ticket_title),
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                                    textAlign = TextAlign.Center,
-                                    fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
-                                    fontSize = 28.sp
-                                )
-                                Text(
-                                    text = stringResource(MR.strings.event_screen_ticket_subtitle),
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                                    textAlign = TextAlign.Center,
-                                    fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
-                                    fontSize = 22.sp
-                                )
-
-                                Text(
-                                    text = "- ${event.cleanName} -",
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
-                                        .padding(top = 8.dp),
-                                    textAlign = TextAlign.Center,
-                                    fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
-                                    fontSize = 22.sp
-                                )
-                                Text(
-                                    text = order.customerName + if (moreThanOne) " - $index" else "",
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                                    textAlign = TextAlign.Center,
-                                    fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
-                                    fontSize = 22.sp
-                                )
-
-                                ImageLoader(
-                                    image = image?.toImageBitmap(),
-                                    contentDescription = order.orderNumber,
-                                    modifier = Modifier
-                                        .size(256.dp)
-                                        .align(Alignment.CenterHorizontally)
-                                        .padding(top = 24.dp)
-                                )
-                                Text(
-                                    text = "#${order.orderNumber}",
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
-                                    fontSize = 18.sp
-                                )
-                            }
+                                    .size(256.dp)
+                                    .align(Alignment.CenterHorizontally)
+                                    .padding(top = 24.dp)
+                            )
+                            Text(
+                                text = "#${order.orderNumber}",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                fontFamily = fontFamilyResource(MR.fonts.VT323.regular),
+                                fontSize = 18.sp
+                            )
                         }
                     }
                 }
-
-                item(key = "final-spacer", contentType = "spacer") { Spacer(Modifier.height(12.dp)) }
             }
+
+            item(key = "final-spacer", contentType = "spacer") { Spacer(Modifier.height(12.dp)) }
         }
     }
 }

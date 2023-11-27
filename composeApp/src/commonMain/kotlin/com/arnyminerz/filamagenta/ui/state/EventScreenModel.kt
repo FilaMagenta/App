@@ -107,12 +107,17 @@ class EventScreenModel(event: Event): ScreenModel {
         }
     }
 
-    fun downloadTickets(eventId: Long) = screenModelScope.launch(Dispatchers.IO) {
+    fun downloadTickets(
+        eventId: Long,
+        runIfEmpty: () -> Unit
+    ) = screenModelScope.launch(Dispatchers.IO) {
         try {
             _isDownloadingTickets.emit(true)
 
             val orders = WooCommerce.Orders.getOrdersForProduct(eventId.toInt())
-            for (order: Order in orders) {
+            if (orders.isEmpty()) {
+                runIfEmpty()
+            } else for (order: Order in orders) {
                 order.toProductOrder().forEach(Cache::insertOrUpdateAdminTicket)
             }
         } finally {
