@@ -14,6 +14,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import cafe.adriel.voyager.navigator.Navigator
 import com.arnyminerz.filamagenta.storage.SettingsKeys
 import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.ui.dialog.UpdateDialog
@@ -97,11 +98,13 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
 
-                MainScreen(
-                    isAddingNewAccount = intent.getBooleanExtra(EXTRA_NEW_ACCOUNT, false),
-                    viewModel = mainViewModel,
-                    nfc = nfcData,
-                    onApplicationEndRequested = ::finish
+                Navigator(
+                    MainScreen(
+                        isAddingNewAccount = intent.getBooleanExtra(EXTRA_NEW_ACCOUNT, false),
+                        viewModel = mainViewModel,
+                        nfc = nfcData,
+                        onApplicationEndRequested = ::finish
+                    )
                 )
             }
         }
