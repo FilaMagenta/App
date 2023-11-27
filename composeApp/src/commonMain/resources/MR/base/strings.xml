@@ -144,6 +144,18 @@
     <string name="profile_birthday">Birthday</string>
     <string name="profile_warning_email_match">The email stored in the database and the one in the website do not match. Please contact with an administrator to solve the issue.</string>
 
+    <!-- Category display names -->
+    <string name="category_acompanyante">Companion</string>
+    <string name="category_invitado">Guest</string>
+    <string name="category_alevin">Fry</string>
+    <string name="category_infantil">Infantile</string>
+    <string name="category_fester">Fester</string>
+    <string name="category_jubilado">Retired</string>
+    <string name="category_col_prot">Prot. Coll.</string>
+    <string name="category_col_prot_pack">Prot. Coll. w/ Pack</string>
+    <string name="category_col_fester">Coll. Fester</string>
+    <string name="category_col_fami">Family Coll.</string>
+
     <!-- Update Available dialog -->
     <string name="update_available_dialog_title">Update Available</string>
     <string name="update_available_dialog_message">Restart the app to install the update</string>

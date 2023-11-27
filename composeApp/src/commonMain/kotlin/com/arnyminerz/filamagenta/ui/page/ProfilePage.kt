@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Badge
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
@@ -36,7 +39,11 @@ import dev.icerock.moko.resources.compose.stringResource
 import io.github.aakira.napier.Napier
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-@OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class)
+@OptIn(
+    ExperimentalEncodingApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalUnsignedTypes::class
+)
 @Composable
 fun ProfilePage(viewModel: MainViewModel) {
     val viewModelAccount by viewModel.account.collectAsState()
@@ -94,6 +101,14 @@ fun ProfilePage(viewModel: MainViewModel) {
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Bold
             )
+            Badge(
+                containerColor = accountData?.category?.color ?: Color.Unspecified,
+                modifier = Modifier.placeholder(visible = accountData == null)
+            ) {
+                Text(
+                    text = accountData?.category?.displayName?.let { stringResource(it) } ?: "0123456"
+                )
+            }
 
             AnimatedContent(
                 targetState = accountData,
