@@ -14,7 +14,8 @@ data class AccountData(
     val particularPhone: String?,
     val mobilePhone: String?,
     val workPhone: String?,
-    val email: String?
+    val email: String?,
+    val category: Category?
 ) {
     /**
      * Returns the full name of a person.
