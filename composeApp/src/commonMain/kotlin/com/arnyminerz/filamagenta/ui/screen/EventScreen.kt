@@ -18,11 +18,13 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -48,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.accounts
@@ -171,12 +174,21 @@ class EventScreen(private val event: Event) : Screen {
                 )
             }
 
-            EventGrid(event, screenModel, paddingValues, isAdmin, adminTickets, snackbarHostState)
+            EventGrid(
+                navigator,
+                event,
+                screenModel,
+                paddingValues,
+                isAdmin,
+                adminTickets,
+                snackbarHostState
+            )
         }
     }
 
     @Composable
     fun EventGrid(
+        navigator: Navigator,
         event: Event,
         screenModel: EventScreenModel,
         paddingValues: PaddingValues,
@@ -265,6 +277,17 @@ class EventScreen(private val event: Event) : Screen {
                     modifier = Modifier.padding(top = 12.dp),
                     label = stringResource(MR.strings.event_screen_loading_order)
                 )
+            }
+
+            if (!event.hasTicket) item(key = "join-event-button", contentType = "action") {
+                OutlinedButton(
+                    onClick = {
+                        navigator.push(JoinEventScreen(event))
+                    }
+                ) {
+                    Icon(Icons.Rounded.Add, null)
+                    Text(stringResource(MR.strings.event_screen_join_event))
+                }
             }
 
             if (event.hasTicket && orders.isNotEmpty()) {
