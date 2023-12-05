@@ -2,10 +2,12 @@ package com.arnyminerz.filamagenta.android
 
 import android.app.Application
 import android.content.pm.PackageManager
+import android.os.Environment
 import com.arnyminerz.filamagenta.account.AccountsProvider
 import com.arnyminerz.filamagenta.account.accounts
 import com.arnyminerz.filamagenta.cache.DriverFactory
 import com.arnyminerz.filamagenta.cache.createDatabase
+import com.arnyminerz.filamagenta.device.FSInformation
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.diagnostics.SentryDiagnostics
 import com.arnyminerz.filamagenta.lifecycle.initialize
@@ -32,6 +34,8 @@ class App : Application() {
 
         PlatformInformation.hasCameraFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
         PlatformInformation.hasNfcFeature = packageManager.hasSystemFeature(PackageManager.FEATURE_NFC)
+
+        FSInformation.downloadsDirectory = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
 
         createDatabase(
             DriverFactory(this)

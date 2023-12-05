@@ -1,5 +1,6 @@
 package com.arnyminerz.filamagenta.ui.screen
 
+import QrScannerScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.account.accounts
@@ -61,8 +63,11 @@ import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.data.qrcode
+import com.arnyminerz.filamagenta.data.QrCodeScanResult
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.image.QRCodeGenerator
+import com.arnyminerz.filamagenta.image.QRCodeValidator
+import com.arnyminerz.filamagenta.ui.dialog.ScanResultDialog
 import com.arnyminerz.filamagenta.ui.dialog.UsersModalBottomSheet
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.EventInformationRow
@@ -171,12 +176,13 @@ class EventScreen(private val event: Event) : Screen {
                 )
             }
 
-            EventGrid(screenModel, paddingValues, isAdmin, adminTickets, snackbarHostState)
+            EventGrid(navigator, screenModel, paddingValues, isAdmin, adminTickets, snackbarHostState)
         }
     }
 
     @Composable
     fun EventGrid(
+        navigator: Navigator,
         screenModel: EventScreenModel,
         paddingValues: PaddingValues,
         isAdmin: Boolean?,
@@ -195,6 +201,11 @@ class EventScreen(private val event: Event) : Screen {
         val orders by Cache.ordersForEvent(event.id).collectListAsState()
 
         val hasCamera = PlatformInformation.isCameraSupported()
+
+        val scanResult by screenModel.scanResult.collectAsState(null)
+        scanResult?.let { result ->
+            ScanResultDialog(result, screenModel::dismissScanResult)
+        }
 
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 500.dp),
@@ -250,13 +261,20 @@ class EventScreen(private val event: Event) : Screen {
                             }
                         },
                         isDownloadingTickets = isDownloadingTickets,
-                        onStartScannerRequested = screenModel::startScanner,
+                        onStartScannerRequested = {
+                            navigator.push(
+                                QrScannerScreen { data ->
+                                    screenModel.validateQRCode(data)
+                                    navigator.popUntil { it is EventScreen }
+                                }
+                            )
+                        },
                         areTicketsDownloaded = adminTickets.isNotEmpty(),
                         onDeleteTicketsRequested = { screenModel.deleteTickets(event.id) },
                         onSyncTicketsRequested = { screenModel.syncScannedTickets(event.id) },
                         isUploadingScannedTickets = isUploadingScannedTickets,
                         isExportingTickets = isExportingTickets,
-                        onExportTicketsRequested = {}
+                        onExportTicketsRequested = { screenModel.exportTickets(event.id) }
                     )
                 }
             }

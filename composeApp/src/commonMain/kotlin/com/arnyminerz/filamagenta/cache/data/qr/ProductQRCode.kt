@@ -1,5 +1,6 @@
 package com.arnyminerz.filamagenta.cache.data.qr
 
+import com.arnyminerz.filamagenta.cache.AdminTickets
 import com.arnyminerz.filamagenta.cache.ProductOrder
 import com.arnyminerz.filamagenta.cache.data.QRTypeOrder
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -48,5 +49,13 @@ class ProductQRCode(
         qrCode.data[2],
         qrCode.data[3].toLong(),
         qrCode.data[4]
+    )
+
+    constructor(ticket: AdminTickets) : this(
+        ticket.eventId,
+        ticket.orderId,
+        ticket.orderNumber,
+        ticket.customerId,
+        ticket.customerName
     )
 }

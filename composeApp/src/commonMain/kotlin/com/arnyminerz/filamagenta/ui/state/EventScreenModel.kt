@@ -7,9 +7,15 @@ import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.extractMetadata
+import com.arnyminerz.filamagenta.cache.data.qr.ProductQRCode
+import com.arnyminerz.filamagenta.cache.data.qrcode
 import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.cache.data.toProductOrder
 import com.arnyminerz.filamagenta.cache.database
+import com.arnyminerz.filamagenta.data.QrCodeScanResult
+import com.arnyminerz.filamagenta.device.FSInformation
+import com.arnyminerz.filamagenta.image.QRCodeGenerator
+import com.arnyminerz.filamagenta.image.QRCodeValidator
 import com.arnyminerz.filamagenta.network.woo.WooCommerce
 import com.arnyminerz.filamagenta.network.woo.models.Metadata
 import com.arnyminerz.filamagenta.network.woo.models.Order
@@ -28,7 +34,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
+import kotlinx.io.Buffer
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 class EventScreenModel(event: Event): ScreenModel {
     private val _event = MutableStateFlow(event)
@@ -46,11 +56,14 @@ class EventScreenModel(event: Event): ScreenModel {
     private val _isUploadingScannedTickets = MutableStateFlow(false)
     val isUploadingScannedTickets: StateFlow<Boolean> get() = _isUploadingScannedTickets
 
+    private val _isExportingTickets = MutableStateFlow(false)
+    val isExportingTickets: StateFlow<Boolean> get() = _isExportingTickets
+
+    private val _scanResult = MutableStateFlow<QrCodeScanResult?>(null)
+    val scanResult: StateFlow<QrCodeScanResult?> get() = _scanResult
+
     private val _editingField = MutableStateFlow<EventField<*>?>(null)
     val editingField: StateFlow<EventField<*>?> get() = _editingField
-
-    private val _scanningQr = MutableStateFlow(false)
-    val scanningQr: StateFlow<Boolean> get() = _scanningQr
 
     /**
      * Starts editing the given [field] for the currently selected event.
@@ -66,18 +79,12 @@ class EventScreenModel(event: Event): ScreenModel {
         screenModelScope.launch { _editingField.emit(null) }
     }
 
-    /**
-     * Updates [scanningQr] to `true`.
-     */
-    fun startScanner() {
-        _scanningQr.value = true
+    fun dismissScanResult() {
+        _scanResult.value = null
     }
 
-    /**
-     * Updates [scanningQr] to `false`.
-     */
-    fun stopScanner() {
-        _scanningQr.value = false
+    fun validateQRCode(data: String) = screenModelScope.launch(Dispatchers.IO) {
+        QRCodeValidator.validateQRCode(data, _scanResult, event.value)
     }
 
     fun fetchOrders(productId: Int) = screenModelScope.launch(Dispatchers.IO) {
@@ -127,6 +134,34 @@ class EventScreenModel(event: Event): ScreenModel {
 
     fun deleteTickets(eventId: Long) = screenModelScope.launch(Dispatchers.IO) {
         database.adminTicketsQueries.deleteByEventId(eventId)
+    }
+
+    @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class)
+    fun exportTickets(eventId: Long) = screenModelScope.launch(Dispatchers.IO) {
+        _isExportingTickets.emit(true)
+
+        val ticketsDirectory = FSInformation.exportedTicketsDirectory()
+        if (!SystemFileSystem.exists(ticketsDirectory)) {
+            SystemFileSystem.createDirectories(ticketsDirectory)
+        }
+
+        val tickets = database.adminTicketsQueries.getByEventId(eventId).executeAsList()
+        Napier.i { "Exporting all tickets (${tickets.size}) to $ticketsDirectory..." }
+        for (ticket in tickets) {
+            val data = ProductQRCode(ticket).encrypt()
+            val image = QRCodeGenerator.generate(data)
+            val file = Path(ticketsDirectory, "${ticket.orderId}-${ticket.customerName}.png")
+            val sink = SystemFileSystem.sink(file)
+            Napier.i { "Writing ticket ${ticket.orderId} into $file" }
+            try {
+                val buffer = Buffer().also { it.write(image) }
+                sink.write(buffer, buffer.size)
+            } finally {
+                sink.close()
+            }
+        }
+
+        _isExportingTickets.emit(false)
     }
 
     fun syncScannedTickets(eventId: Long) = screenModelScope.launch(Dispatchers.IO) {
