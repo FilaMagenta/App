@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,33 +34,75 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import cafe.adriel.voyager.core.screen.Screen
 import com.arnyminerz.filamagenta.MR
+import com.arnyminerz.filamagenta.cache.Event
+import com.arnyminerz.filamagenta.cache.database
+import com.arnyminerz.filamagenta.data.QrCodeScanResult
+import com.arnyminerz.filamagenta.image.QRCodeValidator
+import com.arnyminerz.filamagenta.ui.dialog.ScanResultDialog
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import dev.icerock.moko.resources.compose.stringResource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 actual class QrScannerScreen actual constructor(
-    actual val onQrCodeScanned: (String) -> Unit
-): Screen {
+    actual val onQrCodeScanned: ((String) -> Unit)?,
+    actual val eventId: Long?
+) : Screen {
+    private val qrCodeScanResult = MutableStateFlow<QrCodeScanResult?>(null)
+
     @Composable
     override fun Content() {
+        val qrCodeScanResult: QrCodeScanResult? by qrCodeScanResult.collectAsState()
+        var event: Event? by remember { mutableStateOf(null) }
+
+        LaunchedEffect(eventId) {
+            val eventId = eventId
+            if (eventId != null) CoroutineScope(Dispatchers.IO).launch {
+                event = database.eventQueries.getById(eventId).executeAsOneOrNull()
+            }
+        }
+
+        qrCodeScanResult?.let {
+            ScanResultDialog(result = it) {
+                this.qrCodeScanResult.value = null
+            }
+        }
+
         Box(modifier = Modifier.fillMaxSize()) {
-            QRCodeComposable(onQrCodeScanned)
+            QRCodeComposable { data ->
+                if (qrCodeScanResult != null) return@QRCodeComposable
+
+                onQrCodeScanned?.invoke(data) ?: CoroutineScope(Dispatchers.IO).launch {
+                    QRCodeValidator.validateQRCode(
+                        data,
+                        this@QrScannerScreen.qrCodeScanResult,
+                        event
+                    )
+                }
+            }
             Text(
                 text = stringResource(MR.strings.scan_barcode_instruction),
-                modifier = Modifier.background(Color.Black.copy(alpha = 0.3f))
-                    .align(Alignment.TopCenter).padding(48.dp),
+                modifier = Modifier
+                    .background(Color.Black.copy(alpha = 0.3f))
+                    .align(Alignment.TopCenter)
+                    .padding(48.dp),
                 style = MaterialTheme.typography.titleSmall.copy(color = Color.White)
             )
             Text(
                 text = stringResource(MR.strings.scan_qr_code),
-                modifier = Modifier.background(Color.Black.copy(alpha = 0.3f))
-                    .align(Alignment.BottomCenter).padding(48.dp),
+                modifier = Modifier
+                    .background(Color.Black.copy(alpha = 0.3f))
+                    .align(Alignment.BottomCenter)
+                    .padding(48.dp),
                 style = MaterialTheme.typography.titleSmall.copy(color = Color.White)
             )
         }

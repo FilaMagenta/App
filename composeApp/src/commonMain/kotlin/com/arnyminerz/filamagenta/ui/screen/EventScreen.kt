@@ -263,10 +263,10 @@ class EventScreen(private val event: Event) : Screen {
                         isDownloadingTickets = isDownloadingTickets,
                         onStartScannerRequested = {
                             navigator.push(
-                                QrScannerScreen { data ->
-                                    screenModel.validateQRCode(data)
-                                    navigator.popUntil { it is EventScreen }
-                                }
+                                QrScannerScreen(
+                                    onQrCodeScanned = null,
+                                    eventId = event.id
+                                )
                             )
                         },
                         areTicketsDownloaded = adminTickets.isNotEmpty(),
