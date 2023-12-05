@@ -26,16 +26,10 @@ object MainScreen: Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { MainScreenModel() }
-        
-        val accountsList by accounts.getAccountsLive().collectAsState()
 
         val error by screenModel.error.collectAsState()
 
         val scanResult by screenModel.scanResult.collectAsState(null)
-
-        LaunchedEffect(accountsList) {
-            screenModel.updateSelectedAccount()
-        }
 
         // TODO - reimplement nfc
         /*LaunchedEffect(nfc) {

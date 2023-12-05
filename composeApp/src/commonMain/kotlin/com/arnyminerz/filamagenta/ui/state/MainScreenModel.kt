@@ -24,6 +24,7 @@ import com.arnyminerz.filamagenta.network.server.exception.WordpressException
 import com.arnyminerz.filamagenta.network.woo.WooCommerce
 import com.arnyminerz.filamagenta.network.woo.models.Order
 import com.arnyminerz.filamagenta.storage.SettingsKeys
+import com.arnyminerz.filamagenta.storage.getStringState
 import com.arnyminerz.filamagenta.storage.settings
 import com.arnyminerz.filamagenta.sync.EventsSyncHelper
 import com.arnyminerz.filamagenta.sync.WalletSyncHelper
@@ -35,6 +36,7 @@ import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.errors.IOException
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.protocol.User
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
@@ -96,7 +98,19 @@ class MainScreenModel : ScreenModel {
     /**
      * Stores the currently selected account.
      */
-    val account = MutableStateFlow<Account?>(null)
+    val account = MutableStateFlow(
+        settings.getStringOrNull(SettingsKeys.SELECTED_ACCOUNT).let { accountName ->
+            val accountsList = accounts.getAccounts()
+
+            if (accountName != null) {
+                Napier.v("Selecting account $accountName")
+                accountsList.find { it.name == accountName }
+            } else {
+                Napier.v("There isn't any account selected, choosing the first one...")
+                accountsList.first()
+            }
+        }
+    )
 
     /**
      * Stores whether the selected [account] is an admin.
@@ -133,38 +147,39 @@ class MainScreenModel : ScreenModel {
         MutableStateFlow(false)
     )
 
-    fun updateSelectedAccount() = screenModelScope.launch {
+    init {
         val accountsList = accounts.getAccounts()
 
-        if (accountsList.isNotEmpty()) {
-            Napier.v("Checking if there's already a selected account...")
-            val accountName = settings.getStringOrNull(SettingsKeys.SELECTED_ACCOUNT)
-            val newAccount = if (accountName != null) {
-                Napier.v("Selecting account $accountName")
-                accountsList.find { it.name == accountName }
-            } else {
-                Napier.v("There isn't any account selected, choosing the first one...")
-                accountsList.first()
-            }
-            Napier.v("Selecting account ${newAccount?.name}")
-            account.emit(newAccount)
+        settings.addStringListener(SettingsKeys.SELECTED_ACCOUNT, "") { an ->
+            CoroutineScope(Dispatchers.IO).launch {
+                val accountName = an.takeIf { it.isNotBlank() }
+                val newAccount = if (accountName != null) {
+                    Napier.v("Selecting account $accountName")
+                    accountsList.find { it.name == accountName }
+                } else {
+                    Napier.v("There isn't any account selected, choosing the first one...")
+                    accountsList.first()
+                }
+                Napier.v("Selecting account ${newAccount?.name}")
+                account.emit(newAccount)
 
-            // Update the diagnostics information
-            if (newAccount != null) {
-                getOrFetchAccountData() // make sure the data is available
+                // Update the diagnostics information
+                if (newAccount != null) {
+                    getOrFetchAccountData() // make sure the data is available
 
-                val username = newAccount.name
-                val email = accounts.getEmail(newAccount)
-                Napier.v("Updating diagnostics information...")
-                Sentry.setUser(
-                    User().apply {
-                        this.username = username
-                        this.email = email
-                    }
-                )
-            } else {
-                Napier.v("newAccount is null, removing diagnostics information...")
-                Sentry.setUser(null)
+                    val username = newAccount.name
+                    val email = accounts.getEmail(newAccount)
+                    Napier.v("Updating diagnostics information...")
+                    Sentry.setUser(
+                        User().apply {
+                            this.username = username
+                            this.email = email
+                        }
+                    )
+                } else {
+                    Napier.v("newAccount is null, removing diagnostics information...")
+                    Sentry.setUser(null)
+                }
             }
         }
     }
@@ -199,6 +214,7 @@ class MainScreenModel : ScreenModel {
      *
      * @throws IllegalStateException if data is null after fetching from the database.
      * @throws SqlTunnelException if there is an error in the SQLServer query.
+     * @throws NullPointerException if [account]'s value is null
      */
     @OptIn(ExperimentalSerializationApi::class)
     private suspend fun getOrFetchAccountData(): AccountData? {
