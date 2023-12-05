@@ -19,6 +19,7 @@
     <string name="server_status" comment="Shown when there's an error, to launch the server status page, and know if something is down.">Estat del Servidor</string>
     <string name="restart" comment="An action button that restarts the app">Reiniciar</string>
     <string name="install" comment="Performs an install in the app, usually means installing an update">Instal·lar</string>
+    <string name="export">Export</string>
     <!-- Generic form strings -->
     <string name="password_hide">Amagar contrasenya</string>
     <string name="password_show">Mostrar contrasenya</string>
@@ -129,6 +130,17 @@
     <string name="profile_city">Ciutat</string>
     <string name="profile_birthday">Data de naixement</string>
     <string name="profile_warning_email_match">El correu electrònic desat a la base de dades i el que tens assignat a la pàgina web no coincideixen. Per favor, contacta amb un administrador per solucionar el problema.</string>
+    <!-- Category display names -->
+    <string name="category_acompanyante">Companion</string>
+    <string name="category_invitado">Guest</string>
+    <string name="category_alevin">Fry</string>
+    <string name="category_infantil">Infantile</string>
+    <string name="category_fester">Fester</string>
+    <string name="category_jubilado">Retired</string>
+    <string name="category_col_prot">Prot. Coll.</string>
+    <string name="category_col_prot_pack">Prot. Coll. w/ Pack</string>
+    <string name="category_col_fester">Coll. Fester</string>
+    <string name="category_col_fami">Family Coll.</string>
     <!-- Update Available dialog -->
     <string name="update_available_dialog_title">Actualització disponible</string>
     <string name="update_available_dialog_message">Reinicia l\'app per a instal·lar l\'actualització</string>
