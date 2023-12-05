@@ -190,6 +190,7 @@ class EventScreen(private val event: Event) : Screen {
         val loadingOrders by screenModel.isLoadingOrders.collectAsState(false)
         val isDownloadingTickets by screenModel.isDownloadingTickets.collectAsState(false)
         val isUploadingScannedTickets by screenModel.isUploadingScannedTickets.collectAsState(false)
+        val isExportingTickets by screenModel.isExportingTickets.collectAsState(false)
 
         val orders by Cache.ordersForEvent(event.id).collectListAsState()
 
@@ -253,7 +254,9 @@ class EventScreen(private val event: Event) : Screen {
                         areTicketsDownloaded = adminTickets.isNotEmpty(),
                         onDeleteTicketsRequested = { screenModel.deleteTickets(event.id) },
                         onSyncTicketsRequested = { screenModel.syncScannedTickets(event.id) },
-                        isUploadingScannedTickets = isUploadingScannedTickets
+                        isUploadingScannedTickets = isUploadingScannedTickets,
+                        isExportingTickets = isExportingTickets,
+                        onExportTicketsRequested = {}
                     )
                 }
             }

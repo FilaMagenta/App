@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -34,6 +35,8 @@ fun AdminScanner(
     onStartScannerRequested: () -> Unit,
     areTicketsDownloaded: Boolean,
     onDeleteTicketsRequested: () -> Unit,
+    isExportingTickets: Boolean,
+    onExportTicketsRequested: () -> Unit,
     onSyncTicketsRequested: () -> Unit,
     isUploadingScannedTickets: Boolean
 ) {
@@ -96,6 +99,16 @@ fun AdminScanner(
                     enabled = !isDownloadingTickets
                 ) {
                     Icon(Icons.Rounded.Delete, stringResource(MR.strings.delete))
+                }
+            }
+            AnimatedVisibility(
+                visible = areTicketsDownloaded
+            ) {
+                IconButton(
+                    onClick = onExportTicketsRequested,
+                    enabled = !isExportingTickets
+                ) {
+                    Icon(Icons.Rounded.FileDownload, stringResource(MR.strings.export))
                 }
             }
         }

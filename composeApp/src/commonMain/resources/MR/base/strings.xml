@@ -21,6 +21,7 @@
     <string name="server_status" comment="Shown when there's an error, to launch the server status page, and know if something is down.">Server Status</string>
     <string name="restart" comment="An action button that restarts the app">Restart</string>
     <string name="install" comment="Performs an install in the app, usually means installing an update">Install</string>
+    <string name="export">Export</string>
 
     <!-- Generic form strings -->
     <string name="password_hide">Hide Password</string>
