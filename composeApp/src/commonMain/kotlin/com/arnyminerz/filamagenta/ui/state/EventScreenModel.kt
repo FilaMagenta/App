@@ -7,8 +7,8 @@ import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.EventField
 import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.extractMetadata
+import com.arnyminerz.filamagenta.cache.data.qr.ExternalOrderQRCode
 import com.arnyminerz.filamagenta.cache.data.qr.ProductQRCode
-import com.arnyminerz.filamagenta.cache.data.qrcode
 import com.arnyminerz.filamagenta.cache.data.toEvent
 import com.arnyminerz.filamagenta.cache.data.toProductOrder
 import com.arnyminerz.filamagenta.cache.database
@@ -23,9 +23,13 @@ import com.arnyminerz.filamagenta.network.woo.update.BatchMetadataUpdate
 import com.arnyminerz.filamagenta.network.woo.update.MetadataUpdate
 import com.arnyminerz.filamagenta.network.woo.utils.ProductMeta
 import com.arnyminerz.filamagenta.network.woo.utils.set
+import com.arnyminerz.filamagenta.storage.external.ExternalOrder
 import com.arnyminerz.filamagenta.utils.toEpochMillisecondsString
 import io.github.aakira.napier.Napier
 import io.ktor.serialization.kotlinx.json.DefaultJson
+import kotlin.coroutines.cancellation.CancellationException
+import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
@@ -37,12 +41,10 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.io.Buffer
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
-import kotlin.coroutines.cancellation.CancellationException
-import kotlin.io.encoding.ExperimentalEncodingApi
 
-class EventScreenModel(event: Event): ScreenModel {
-    private val _event = MutableStateFlow(event)
-    val event: StateFlow<Event> get() = _event
+class EventScreenModel(eventId: Long): ScreenModel {
+    private val _event = MutableStateFlow<Event?>(null)
+    val event: StateFlow<Event?> get() = _event
 
     private val _isLoadingEvents = MutableStateFlow(false)
     val isLoadingEvents: StateFlow<Boolean> get() = _isLoadingEvents
@@ -64,6 +66,12 @@ class EventScreenModel(event: Event): ScreenModel {
 
     private val _editingField = MutableStateFlow<EventField<*>?>(null)
     val editingField: StateFlow<EventField<*>?> get() = _editingField
+
+    init {
+        CoroutineScope(Dispatchers.IO).launch {
+            database.eventQueries.getById(eventId).executeAsOne().let { _event.emit(it) }
+        }
+    }
 
     /**
      * Starts editing the given [field] for the currently selected event.
@@ -136,8 +144,8 @@ class EventScreenModel(event: Event): ScreenModel {
         database.adminTicketsQueries.deleteByEventId(eventId)
     }
 
-    @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class)
-    fun exportTickets(eventId: Long) = screenModelScope.launch(Dispatchers.IO) {
+    @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class, ExperimentalStdlibApi::class)
+    fun exportTickets(eventId: Long, externalOrders: List<ExternalOrder>) = screenModelScope.launch(Dispatchers.IO) {
         _isExportingTickets.emit(true)
 
         val ticketsDirectory = FSInformation.exportedTicketsDirectory()
@@ -145,19 +153,36 @@ class EventScreenModel(event: Event): ScreenModel {
             SystemFileSystem.createDirectories(ticketsDirectory)
         }
 
-        val tickets = database.adminTicketsQueries.getByEventId(eventId).executeAsList()
-        Napier.i { "Exporting all tickets (${tickets.size}) to $ticketsDirectory..." }
-        for (ticket in tickets) {
-            val data = ProductQRCode(ticket).encrypt()
-            val image = QRCodeGenerator.generate(data)
-            val file = Path(ticketsDirectory, "${ticket.orderId}-${ticket.customerName}.png")
-            val sink = SystemFileSystem.sink(file)
-            Napier.i { "Writing ticket ${ticket.orderId} into $file" }
-            try {
-                val buffer = Buffer().also { it.write(image) }
-                sink.write(buffer, buffer.size)
-            } finally {
-                sink.close()
+        if (externalOrders.isNotEmpty()) {
+            Napier.i { "Exporting external orders (${externalOrders.size}) to $ticketsDirectory..." }
+            for (order in externalOrders) {
+                val data = ExternalOrderQRCode(order).encrypt()
+                val image = QRCodeGenerator.generate(data)
+                val file = Path(ticketsDirectory, "${order.order}-${order.phone}-${order.name}.png")
+                val sink = SystemFileSystem.sink(file)
+                Napier.i { "Writing order ${order.order} into $file" }
+                try {
+                    val buffer = Buffer().also { it.write(image) }
+                    sink.write(buffer, buffer.size)
+                } finally {
+                    sink.close()
+                }
+            }
+        } else {
+            val tickets = database.adminTicketsQueries.getByEventId(eventId).executeAsList()
+            Napier.i { "Exporting all tickets (${tickets.size}) to $ticketsDirectory..." }
+            for (ticket in tickets) {
+                val data = ProductQRCode(ticket).encrypt()
+                val image = QRCodeGenerator.generate(data)
+                val file = Path(ticketsDirectory, "${ticket.orderId}-${ticket.customerName}.png")
+                val sink = SystemFileSystem.sink(file)
+                Napier.i { "Writing ticket ${ticket.orderId} into $file" }
+                try {
+                    val buffer = Buffer().also { it.write(image) }
+                    sink.write(buffer, buffer.size)
+                } finally {
+                    sink.close()
+                }
             }
         }
 

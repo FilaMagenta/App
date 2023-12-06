@@ -3,16 +3,17 @@ package com.arnyminerz.filamagenta.image
 import com.arnyminerz.filamagenta.cache.Cache
 import com.arnyminerz.filamagenta.cache.Event
 import com.arnyminerz.filamagenta.cache.data.qr.AccountQRCode
+import com.arnyminerz.filamagenta.cache.data.qr.ExternalOrderQRCode
 import com.arnyminerz.filamagenta.cache.data.qr.ProductQRCode
 import com.arnyminerz.filamagenta.cache.database
 import com.arnyminerz.filamagenta.data.QrCodeScanResult
 import com.ionspin.kotlin.crypto.secretbox.SecretBoxCorruptedOrTamperedDataExceptionOrInvalidKey
 import io.github.aakira.napier.Napier
 import io.ktor.http.Url
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 object QRCodeValidator {
     @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class)
@@ -60,7 +61,7 @@ object QRCodeValidator {
         )
     }
 
-    @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class)
+    @OptIn(ExperimentalEncodingApi::class, ExperimentalUnsignedTypes::class, ExperimentalStdlibApi::class)
     suspend fun validateQRCode(source: String, result: MutableStateFlow<QrCodeScanResult?>, event: Event?) {
         try {
             if (source.startsWith("app://filamagenta")) {
@@ -143,11 +144,31 @@ object QRCodeValidator {
                         QrCodeScanResult.Success(qrCode.customerName, qrCode.orderNumber)
                     )
                 }
+            } else if (ExternalOrderQRCode.validate(source)) {
+                Napier.i("Got an external QR code.")
+                val qrCode = ExternalOrderQRCode.decrypt(source)
+
+                Napier.i("Got valid QR. Validating hash...")
+                val hash = qrCode.hash.hexToInt()
+
+                if (hash != qrCode.hashCode()) {
+                    Napier.i { "QR hash ($hash) does not match class hash (${qrCode.hashCode()})" }
+                    result.emit(QrCodeScanResult.Invalid)
+                    return
+                }
+
+                result.emit(
+                    QrCodeScanResult.Success(qrCode.name, qrCode.order)
+                )
             } else {
                 Napier.i("Got invalid QR")
                 result.emit(QrCodeScanResult.Invalid)
             }
         } catch (e: SecretBoxCorruptedOrTamperedDataExceptionOrInvalidKey) {
+            Napier.e("The scanned QR code or NFC tag is corrupted", throwable = e)
+            result.emit(QrCodeScanResult.Invalid)
+        } catch (e: IllegalArgumentException) {
+            // Caused by a QR code not encoded in Base64
             Napier.e("The scanned QR code or NFC tag is corrupted", throwable = e)
             result.emit(QrCodeScanResult.Invalid)
         }

@@ -1,6 +1,7 @@
 [versions]
-agp = "8.2.0"
-android-minSdk = "24"
+agp = "8.1.4"
+# Increased from 24 for excel importing feature
+android-minSdk = "26"
 android-compileSdk = "34"
 android-targetSdk = "34"
 androidx-activityCompose = "1.8.1"
@@ -32,6 +33,12 @@ qrcode = "4.0.7"
 sentry-multiplatform = "0.3.0"
 sqldelight = "2.0.1"
 voyager = "1.0.0-rc10"
+
+# Temporal libraries
+apache-poi = "5.2.5"
+jxls-jexcel = "1.0.9"
+fastexcel = "0.16.4"
+mpfilepicker = "3.0.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -76,6 +83,14 @@ sqldelight-native = { module = "app.cash.sqldelight:native-driver", version.ref 
 sqldelight-primitiveAdapters = { module = "app.cash.sqldelight:primitive-adapters", version.ref = "sqldelight" }
 sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
+
+# Temporal libraries
+apache-poi-base = { module = "org.apache.poi:poi", version.ref = "apache-poi" }
+apache-poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "apache-poi" }
+jxls-jexcel = { module = "org.jxls:jxls-jexcel", version.ref = "jxls-jexcel" }
+fastexcel-base = { module = "org.dhatim:fastexcel", version.ref = "fastexcel" }
+fastexcel-reader = { module = "org.dhatim:fastexcel-reader", version.ref = "fastexcel" }
+mpfilepicker = { module = "com.darkrockstudios:mpfilepicker", version.ref = "mpfilepicker" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

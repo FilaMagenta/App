@@ -9,6 +9,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 
 const val QRTypeOrder = "ORDER"
 const val QRTypeAccount = "ACCOUNT"
+const val QRTypeExternal = "EXTERNAL"
 
 @ExperimentalEncodingApi
 @ExperimentalUnsignedTypes

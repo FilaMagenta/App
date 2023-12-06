@@ -1,9 +1,9 @@
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.BOOLEAN
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import java.io.FileFilter
 import java.time.LocalDateTime
 import java.util.Properties
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -82,6 +82,9 @@ kotlin {
                 api(libs.moko.resources)
                 api(libs.moko.resourcescompose)
 
+                // Compose - File Picker
+                implementation(libs.mpfilepicker)
+
                 // Ktor
                 implementation(libs.ktor.core)
                 implementation(libs.ktor.client.auth)
@@ -128,6 +131,19 @@ kotlin {
                 implementation(libs.mlkit.barcode)
 
                 implementation(libs.sqldelight.android)
+
+                // Excel processing
+                implementation(libs.apache.poi.base)
+                implementation(libs.apache.poi.ooxml)
+                implementation(libs.jxls.jexcel)
+                implementation(libs.fastexcel.base)
+                implementation(libs.fastexcel.reader)
+            }
+
+            configurations {
+                all {
+                    exclude(group = "commons-logging", module = "commons-logging")
+                }
             }
         }
 

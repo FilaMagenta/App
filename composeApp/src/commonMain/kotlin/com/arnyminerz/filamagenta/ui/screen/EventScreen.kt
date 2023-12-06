@@ -26,6 +26,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -63,45 +64,53 @@ import com.arnyminerz.filamagenta.cache.data.EventType
 import com.arnyminerz.filamagenta.cache.data.cleanName
 import com.arnyminerz.filamagenta.cache.data.hasTicket
 import com.arnyminerz.filamagenta.cache.data.qrcode
-import com.arnyminerz.filamagenta.data.QrCodeScanResult
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import com.arnyminerz.filamagenta.image.QRCodeGenerator
-import com.arnyminerz.filamagenta.image.QRCodeValidator
+import com.arnyminerz.filamagenta.storage.external.ExternalDatabase
+import com.arnyminerz.filamagenta.storage.external.ExternalOrder
 import com.arnyminerz.filamagenta.ui.dialog.ScanResultDialog
 import com.arnyminerz.filamagenta.ui.dialog.UsersModalBottomSheet
 import com.arnyminerz.filamagenta.ui.native.toImageBitmap
 import com.arnyminerz.filamagenta.ui.reusable.EventInformationRow
 import com.arnyminerz.filamagenta.ui.reusable.ImageLoader
+import com.arnyminerz.filamagenta.ui.reusable.LoadingBox
 import com.arnyminerz.filamagenta.ui.reusable.LoadingCard
 import com.arnyminerz.filamagenta.ui.section.event.AdminScanner
 import com.arnyminerz.filamagenta.ui.shape.BrokenPaperShape
 import com.arnyminerz.filamagenta.ui.state.EventScreenModel
+import com.darkrockstudios.libraries.mpfilepicker.FilePicker
 import dev.icerock.moko.resources.compose.fontFamilyResource
 import dev.icerock.moko.resources.compose.stringResource
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 @OptIn(
     ExperimentalEncodingApi::class,
     ExperimentalMaterial3Api::class,
     ExperimentalUnsignedTypes::class,
 )
-class EventScreen(private val event: Event) : Screen {
+class EventScreen(private val eventId: Long) : Screen {
     companion object {
         private const val BrokenPaperShapeSize = 100f
     }
 
     @Composable
     override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { EventScreenModel(event) }
-
-        val snackbarHostState = remember { SnackbarHostState() }
+        val screenModel = rememberScreenModel { EventScreenModel(eventId) }
 
         val event by screenModel.event.collectAsState()
+
+        event?.let { Screen(it, screenModel) } ?: LoadingBox()
+    }
+
+    @Composable
+    fun Screen(event: Event, screenModel: EventScreenModel) {
+        val navigator = LocalNavigator.currentOrThrow
+
+        val snackbarHostState = remember { SnackbarHostState() }
 
         val account by accounts.getAccountsLive().getSelected().collectAsState(null)
         val isAdmin = account?.let { accounts.isAdmin(it) }
@@ -110,6 +119,8 @@ class EventScreen(private val event: Event) : Screen {
         val editingField by screenModel.editingField.collectAsState()
 
         val adminTickets by Cache.adminTicketsForEvent(event.id).collectListAsState()
+        var externalOrders by remember { mutableStateOf(emptyList<ExternalOrder>()) }
+        val tickets = externalOrders.takeIf { it.isNotEmpty() } ?: adminTickets
 
         var showingPeopleDialog by remember { mutableStateOf(false) }
 
@@ -153,14 +164,14 @@ class EventScreen(private val event: Event) : Screen {
                         }
                     },
                     actions = {
-                        if (isAdmin == true && adminTickets.isNotEmpty()) {
+                        if (isAdmin == true && tickets.isNotEmpty()) {
                             Text(
-                                text = "$scannedTicketsCount / ${adminTickets.size}",
+                                text = "$scannedTicketsCount / ${tickets.size}",
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(MaterialTheme.colorScheme.secondary)
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
-                                    .clickable { showingPeopleDialog = true },
+                                    .clickable(enabled = externalOrders.isEmpty()) { showingPeopleDialog = true },
                                 color = MaterialTheme.colorScheme.onSecondary
                             )
                         }
@@ -176,18 +187,32 @@ class EventScreen(private val event: Event) : Screen {
                 )
             }
 
-            EventGrid(navigator, screenModel, paddingValues, isAdmin, adminTickets, snackbarHostState)
+            EventGrid(
+                navigator,
+                event,
+                screenModel,
+                paddingValues,
+                isAdmin,
+                adminTickets,
+                snackbarHostState,
+                tickets.isNotEmpty(),
+                externalOrders
+            ) { externalOrders = it }
         }
     }
 
     @Composable
     fun EventGrid(
         navigator: Navigator,
+        event: Event,
         screenModel: EventScreenModel,
         paddingValues: PaddingValues,
         isAdmin: Boolean?,
         adminTickets: List<AdminTickets>,
-        snackbarHostState: SnackbarHostState
+        snackbarHostState: SnackbarHostState,
+        isScannerEnabled: Boolean,
+        externalOrders: List<ExternalOrder>,
+        onLoadExternalOrders: (List<ExternalOrder>) -> Unit
     ) {
         val scope = rememberCoroutineScope()
 
@@ -205,6 +230,32 @@ class EventScreen(private val event: Event) : Screen {
         val scanResult by screenModel.scanResult.collectAsState(null)
         scanResult?.let { result ->
             ScanResultDialog(result, screenModel::dismissScanResult)
+        }
+
+        var pickingExternalDatabase by remember { mutableStateOf(false) }
+        FilePicker(show = pickingExternalDatabase, fileExtensions = listOf("xlsx")) { file ->
+            if (file != null) {
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = "Loading...",
+                        duration = SnackbarDuration.Indefinite
+                    )
+                }
+                CoroutineScope(Dispatchers.IO).launch {
+                    val (list, warnings) = ExternalDatabase.import(file)
+                    onLoadExternalOrders(list)
+
+                    scope.launch {
+                        snackbarHostState.currentSnackbarData?.dismiss()
+                        if (warnings.isEmpty()) {
+                            snackbarHostState.showSnackbar("Loaded ${list.size} orders")
+                        } else {
+                            snackbarHostState.showSnackbar("Got ${warnings.size} warnings!")
+                        }
+                    }
+                }
+            }
+            pickingExternalDatabase = false
         }
 
         LazyVerticalGrid(
@@ -269,12 +320,30 @@ class EventScreen(private val event: Event) : Screen {
                                 )
                             )
                         },
+                        areTicketsDownloadedIncludesExternal = isScannerEnabled,
                         areTicketsDownloaded = adminTickets.isNotEmpty(),
                         onDeleteTicketsRequested = { screenModel.deleteTickets(event.id) },
                         onSyncTicketsRequested = { screenModel.syncScannedTickets(event.id) },
                         isUploadingScannedTickets = isUploadingScannedTickets,
                         isExportingTickets = isExportingTickets,
-                        onExportTicketsRequested = { screenModel.exportTickets(event.id) }
+                        onExportTicketsRequested = {
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "Exporting QR codes...",
+                                    duration = SnackbarDuration.Indefinite
+                                )
+                            }
+                            screenModel.exportTickets(event.id, externalOrders).invokeOnCompletion {
+                                scope.launch {
+                                    snackbarHostState.currentSnackbarData?.dismiss()
+                                    snackbarHostState.showSnackbar(
+                                        message = "QR codes exported",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                }
+                            }
+                        },
+                        onPickExternalDatabaseRequested = { pickingExternalDatabase = true }
                     )
                 }
             }

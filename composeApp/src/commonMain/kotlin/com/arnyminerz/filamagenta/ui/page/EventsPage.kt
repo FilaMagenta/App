@@ -90,7 +90,7 @@ fun EventsPage(viewModel: MainScreenModel, navigator: Navigator) {
                         event = event,
                         modifier = Modifier.animateItemPlacement()
                     ) {
-                        navigator.push(EventScreen(event))
+                        navigator.push(EventScreen(event.id))
                     }
                 }
             }

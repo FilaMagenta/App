@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.FileDownload
+import androidx.compose.material.icons.rounded.FileUpload
 import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -28,17 +29,20 @@ import com.arnyminerz.filamagenta.MR
 import com.arnyminerz.filamagenta.device.PlatformInformation
 import dev.icerock.moko.resources.compose.stringResource
 
+@Suppress("LongParameterList")
 @Composable
 fun AdminScanner(
     onDownloadTicketsRequested: () -> Unit,
     isDownloadingTickets: Boolean,
     onStartScannerRequested: () -> Unit,
     areTicketsDownloaded: Boolean,
+    areTicketsDownloadedIncludesExternal: Boolean,
     onDeleteTicketsRequested: () -> Unit,
     isExportingTickets: Boolean,
     onExportTicketsRequested: () -> Unit,
     onSyncTicketsRequested: () -> Unit,
-    isUploadingScannedTickets: Boolean
+    isUploadingScannedTickets: Boolean,
+    onPickExternalDatabaseRequested: () -> Unit
 ) {
     OutlinedCard(
         modifier = Modifier
@@ -84,7 +88,7 @@ fun AdminScanner(
 
             IconButton(
                 onClick = onStartScannerRequested,
-                enabled = areTicketsDownloaded && !isDownloadingTickets
+                enabled = areTicketsDownloadedIncludesExternal && !isDownloadingTickets
             ) {
                 Icon(
                     imageVector = Icons.Rounded.QrCodeScanner,
@@ -102,13 +106,22 @@ fun AdminScanner(
                 }
             }
             AnimatedVisibility(
-                visible = areTicketsDownloaded
+                visible = areTicketsDownloadedIncludesExternal
             ) {
                 IconButton(
                     onClick = onExportTicketsRequested,
                     enabled = !isExportingTickets
                 ) {
                     Icon(Icons.Rounded.FileDownload, stringResource(MR.strings.export))
+                }
+            }
+            AnimatedVisibility(
+                visible = !areTicketsDownloadedIncludesExternal
+            ) {
+                IconButton(
+                    onClick = onPickExternalDatabaseRequested
+                ) {
+                    Icon(Icons.Rounded.FileUpload, null)
                 }
             }
         }

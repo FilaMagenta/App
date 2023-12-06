@@ -15,4 +15,9 @@ expect object PlatformInformation {
      * Checks whether the device supports NFC.
      */
     fun isNfcSupported(): Boolean
+
+    /**
+     * Whether the device supports processing Excel files.
+     */
+    fun isExcelSupported(): Boolean
 }

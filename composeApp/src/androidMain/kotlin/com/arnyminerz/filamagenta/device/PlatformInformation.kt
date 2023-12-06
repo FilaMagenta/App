@@ -26,4 +26,9 @@ actual object PlatformInformation {
      * Checks whether the device supports NFC.
      */
     actual fun isNfcSupported(): Boolean = hasNfcFeature
+
+    /**
+     * Whether the device supports processing Excel files.
+     */
+    actual fun isExcelSupported(): Boolean = true
 }
