@@ -1,6 +1,5 @@
 package com.arnyminerz.filamagenta.device
 
-import kotlinx.io.files.Path
 import java.io.File
 
 actual object FSInformation {
@@ -9,8 +8,8 @@ actual object FSInformation {
     /**
      * Provides the path of the directory where tickets shall be exported.
      */
-    actual fun exportedTicketsDirectory(): Path {
-        val downloads = Path(downloadsDirectory!!.absolutePath)
-        return Path(downloads, "Tickets")
+    actual fun exportedTicketsDirectory(): com.oldguy.common.io.File {
+        val downloads = com.oldguy.common.io.File(downloadsDirectory!!.absolutePath)
+        return com.oldguy.common.io.File(downloads, "Tickets")
     }
 }

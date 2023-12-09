@@ -11,7 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Nfc
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.FileDownload
-import androidx.compose.material.icons.rounded.FileUpload
+import androidx.compose.material.icons.rounded.FileOpen
 import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -121,7 +121,7 @@ fun AdminScanner(
                 IconButton(
                     onClick = onPickExternalDatabaseRequested
                 ) {
-                    Icon(Icons.Rounded.FileUpload, null)
+                    Icon(Icons.Rounded.FileOpen, null)
                 }
             }
         }

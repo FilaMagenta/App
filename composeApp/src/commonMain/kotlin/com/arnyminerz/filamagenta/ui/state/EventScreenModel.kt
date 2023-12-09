@@ -25,6 +25,12 @@ import com.arnyminerz.filamagenta.network.woo.utils.ProductMeta
 import com.arnyminerz.filamagenta.network.woo.utils.set
 import com.arnyminerz.filamagenta.storage.external.ExternalOrder
 import com.arnyminerz.filamagenta.utils.toEpochMillisecondsString
+import com.oldguy.common.io.ByteBuffer
+import com.oldguy.common.io.File
+import com.oldguy.common.io.FileMode
+import com.oldguy.common.io.RawFile
+import com.oldguy.common.io.ZipFile
+import com.oldguy.common.io.use
 import io.github.aakira.napier.Napier
 import io.ktor.serialization.kotlinx.json.DefaultJson
 import kotlin.coroutines.cancellation.CancellationException
@@ -38,9 +44,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
-import kotlinx.io.Buffer
-import kotlinx.io.files.Path
-import kotlinx.io.files.SystemFileSystem
 
 class EventScreenModel(eventId: Long): ScreenModel {
     private val _event = MutableStateFlow<Event?>(null)
@@ -149,8 +152,8 @@ class EventScreenModel(eventId: Long): ScreenModel {
         _isExportingTickets.emit(true)
 
         val ticketsDirectory = FSInformation.exportedTicketsDirectory()
-        if (!SystemFileSystem.exists(ticketsDirectory)) {
-            SystemFileSystem.createDirectories(ticketsDirectory)
+        if (!ticketsDirectory.exists) {
+            ticketsDirectory.makeDirectory()
         }
 
         if (externalOrders.isNotEmpty()) {
@@ -158,14 +161,12 @@ class EventScreenModel(eventId: Long): ScreenModel {
             for (order in externalOrders) {
                 val data = ExternalOrderQRCode(order).encrypt()
                 val image = QRCodeGenerator.generate(data)
-                val file = Path(ticketsDirectory, "${order.order}-${order.phone}-${order.name}.png")
-                val sink = SystemFileSystem.sink(file)
-                Napier.i { "Writing order ${order.order} into $file" }
-                try {
-                    val buffer = Buffer().also { it.write(image) }
-                    sink.write(buffer, buffer.size)
-                } finally {
-                    sink.close()
+                val file = File(ticketsDirectory, "${order.name}-${order.phone}.png")
+                Napier.i { "Writing order ${order.order} into ${file.path}" }
+                RawFile(file, FileMode.Write).use { output ->
+                    output.write(
+                        ByteBuffer(image)
+                    )
                 }
             }
         } else {
@@ -174,16 +175,26 @@ class EventScreenModel(eventId: Long): ScreenModel {
             for (ticket in tickets) {
                 val data = ProductQRCode(ticket).encrypt()
                 val image = QRCodeGenerator.generate(data)
-                val file = Path(ticketsDirectory, "${ticket.orderId}-${ticket.customerName}.png")
-                val sink = SystemFileSystem.sink(file)
-                Napier.i { "Writing ticket ${ticket.orderId} into $file" }
-                try {
-                    val buffer = Buffer().also { it.write(image) }
-                    sink.write(buffer, buffer.size)
-                } finally {
-                    sink.close()
+                val file = File(ticketsDirectory, "${ticket.customerName}-${ticket.orderId}.png")
+                Napier.i { "Writing ticket ${ticket.orderId} into ${file.path}" }
+                RawFile(file, FileMode.Write).use { output ->
+                    output.write(
+                        ByteBuffer(image)
+                    )
                 }
             }
+        }
+
+        // Create zip file
+        Napier.i { "Creating zip file..." }
+        val zip = File(ticketsDirectory, "exported.zip").also { if (it.exists) it.delete() }
+        val generatedFiles = ticketsDirectory.listFiles.filterNot { it.isDirectory }
+        Napier.d { "Adding ${generatedFiles.size} files to the zip file..." }
+        ZipFile(zip, FileMode.Write).use {
+            it.zipDirectory(
+                ticketsDirectory,
+                shallow = false
+            ) { name -> name.endsWith(".png") }
         }
 
         _isExportingTickets.emit(false)

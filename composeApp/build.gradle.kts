@@ -65,10 +65,11 @@ kotlin {
                 // Kotlin libraries
                 api(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.coroutines)
-                implementation(libs.kotlinx.io)
+                // implementation(libs.kotlinx.io)
                 implementation(libs.kotlinx.serialization)
 
                 // Multiplatform libraries
+                api(libs.kmpIo)
                 api(libs.multiplatform.settings)
                 api(libs.napier)
                 api(libs.libsodium)

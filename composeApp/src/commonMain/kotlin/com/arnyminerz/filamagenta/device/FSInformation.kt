@@ -1,10 +1,10 @@
 package com.arnyminerz.filamagenta.device
 
-import kotlinx.io.files.Path
+import com.oldguy.common.io.File
 
 expect object FSInformation {
     /**
      * Provides the path of the directory where tickets shall be exported.
      */
-    fun exportedTicketsDirectory(): Path
+    fun exportedTicketsDirectory(): File
 }
