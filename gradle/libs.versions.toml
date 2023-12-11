@@ -33,7 +33,7 @@ play-appUpdate = "2.1.0"
 qrcode = "4.0.7"
 sentry-multiplatform = "0.3.0"
 sqldelight = "2.0.1"
-voyager = "1.0.0-rc10"
+voyager = "1.0.0"
 
 # Temporal libraries
 apache-poi = "5.2.5"
