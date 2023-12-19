@@ -64,7 +64,7 @@ jobs:
             buildkonfig.flavor=production
       - name: Artifact
         id: artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Artifact
           path: |
