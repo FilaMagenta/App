@@ -38,7 +38,7 @@ voyager = "1.0.0-rc10"
 # Temporal libraries
 apache-poi = "5.2.5"
 jxls-jexcel = "1.0.9"
-fastexcel = "0.16.4"
+fastexcel = "0.16.5"
 mpfilepicker = "3.1.0"
 
 [libraries]
