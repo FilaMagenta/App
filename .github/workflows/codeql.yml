@@ -44,11 +44,8 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
-      - name: Prepare Gradle secure file
-        run: echo '${{ secrets.LOCAL_PROPERTIES }}' >> local.properties
-
       - name: Build
-        run: ./gradlew --no-daemon composeApp:assembleDebug
+        run: ./gradlew composeApp:assembleDebug
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
